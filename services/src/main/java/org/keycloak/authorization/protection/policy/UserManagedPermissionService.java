@@ -1,12 +1,13 @@
 /*
- * Copyright 2022 Red Hat, Inc. and/or its affiliates
- * and other contributors as indicated by the @author tags.
+ * JBoss, Home of Professional Open Source.
+ * Copyright 2016 Red Hat, Inc., and individual contributors
+ * as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -131,7 +132,7 @@ public class UserManagedPermissionService {
     }
 
     private Policy getPolicy(@PathParam("policyId") String policyId) {
-        Policy existing = authorization.getStoreFactory().getPolicyStore().findById(resourceServer.getRealm(), resourceServer, policyId);
+        Policy existing = authorization.getStoreFactory().getPolicyStore().findById(policyId, resourceServer.getId());
 
         if (existing == null) {
             throw new ErrorResponseException(OAuthErrorException.INVALID_REQUEST, "Policy with [" + policyId + "] does not exist", Status.NOT_FOUND);
@@ -142,7 +143,7 @@ public class UserManagedPermissionService {
 
     private void checkRequest(String resourceId, UmaPermissionRepresentation representation) {
         ResourceStore resourceStore = this.authorization.getStoreFactory().getResourceStore();
-        Resource resource = resourceStore.findById(resourceServer.getRealm(), resourceServer, resourceId);
+        Resource resource = resourceStore.findById(resourceId, resourceServer.getId());
 
         if (resource == null) {
             throw new ErrorResponseException(OAuthErrorException.INVALID_REQUEST, "Resource [" + resourceId + "] cannot be found", Response.Status.BAD_REQUEST);
@@ -171,6 +172,12 @@ public class UserManagedPermissionService {
 
             if (!resourceScopes.containsAll(scopes)) {
                 throw new ErrorResponseException(OAuthErrorException.INVALID_REQUEST, "Some of the scopes [" + scopes + "] are not valid for resource [" + resourceId + "]", Response.Status.BAD_REQUEST);
+            }
+
+            if (representation.getCondition() != null) {
+                if (!Profile.isFeatureEnabled(Profile.Feature.UPLOAD_SCRIPTS)) {
+                    throw new ErrorResponseException(OAuthErrorException.INVALID_REQUEST, "Script upload not supported", Status.BAD_REQUEST);
+                }
             }
         }
     }

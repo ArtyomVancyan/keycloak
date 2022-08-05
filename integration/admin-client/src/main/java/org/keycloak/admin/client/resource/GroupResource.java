@@ -17,6 +17,7 @@
 
 package org.keycloak.admin.client.resource;
 
+import org.jboss.resteasy.annotations.cache.NoCache;
 import org.keycloak.representations.idm.GroupRepresentation;
 import org.keycloak.representations.idm.ManagementPermissionReference;
 import org.keycloak.representations.idm.ManagementPermissionRepresentation;
@@ -70,6 +71,7 @@ public interface GroupResource {
      * @return
      */
     @GET
+    @NoCache
     @Produces(MediaType.APPLICATION_JSON)
     GroupRepresentation toRepresentation();
 
@@ -94,6 +96,7 @@ public interface GroupResource {
      */
     @POST
     @Path("children")
+    @NoCache
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     Response subGroup(GroupRepresentation rep);
@@ -110,6 +113,7 @@ public interface GroupResource {
      * @return  Returns a max size of 100 users
      */
     @GET
+    @NoCache
     @Path("/members")
     @Produces(MediaType.APPLICATION_JSON)
     List<UserRepresentation> members();
@@ -124,6 +128,7 @@ public interface GroupResource {
      * @return
      */
     @GET
+    @NoCache
     @Path("/members")
     @Produces(MediaType.APPLICATION_JSON)
     List<UserRepresentation> members(@QueryParam("first") Integer firstResult,
@@ -142,6 +147,7 @@ public interface GroupResource {
      * @return
      */
     @GET
+    @NoCache
     @Path("/members")
     @Produces(MediaType.APPLICATION_JSON)
     List<UserRepresentation> members(@QueryParam("first") Integer firstResult,

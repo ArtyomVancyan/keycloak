@@ -3,7 +3,7 @@
     "id": "personal-info",
     "path": "personal-info",
     "icon": "pf-icon-user",
-    "label": "personalInfoSidebarTitle",
+    "label": "personalInfoHtmlTitle",
     "descriptionLabel": "personalInfoIntroMessage",
     "modulePath": "/content/account-page/AccountPage.js",
     "componentName": "AccountPage"
@@ -11,27 +11,27 @@
   {
     "id": "security",
     "icon": "pf-icon-security",
-    "label": "accountSecuritySidebarTitle",
+    "label": "accountSecurityTitle",
     "descriptionLabel": "accountSecurityIntroMessage",
     "content": [
       {
         "id": "signingin",
         "path": "security/signingin",
-        "label": "signingInSidebarTitle",
+        "label": "signingIn",
         "modulePath": "/content/signingin-page/SigningInPage.js",
         "componentName": "SigningInPage"
       },
       {
         "id": "device-activity",
         "path": "security/device-activity",
-        "label": "deviceActivitySidebarTitle",
+        "label": "device-activity",
         "modulePath": "/content/device-activity-page/DeviceActivityPage.js",
         "componentName": "DeviceActivityPage"
       },
       {
         "id": "linked-accounts",
         "path": "security/linked-accounts",
-        "label": "linkedAccountsSidebarTitle",
+        "label": "linkedAccountsHtmlTitle",
         "modulePath": "/content/linked-accounts-page/LinkedAccountsPage.js",
         "componentName": "LinkedAccountsPage",
         "hidden": "!features.isLinkedAccountsEnabled"

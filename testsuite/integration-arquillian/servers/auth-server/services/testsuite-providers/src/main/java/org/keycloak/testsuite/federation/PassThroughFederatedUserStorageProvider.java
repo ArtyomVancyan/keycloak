@@ -27,7 +27,6 @@ import org.keycloak.models.UserModel;
 import org.keycloak.models.credential.PasswordCredentialModel;
 import org.keycloak.storage.StorageId;
 import org.keycloak.storage.UserStorageProvider;
-import org.keycloak.storage.UserStorageUtil;
 import org.keycloak.storage.adapter.AbstractUserAdapterFederatedStorage;
 import org.keycloak.storage.user.UserLookupProvider;
 
@@ -83,7 +82,7 @@ public class PassThroughFederatedUserStorageProvider implements
              if (INITIAL_PASSWORD.equals(input.getChallengeResponse())) {
                  return true;
              }
-            return UserStorageUtil.userFederatedStorage(session).getStoredCredentialsByTypeStream(realm, user.getId(), "CLEAR_TEXT_PASSWORD")
+            return session.userFederatedStorage().getStoredCredentialsByTypeStream(realm, user.getId(), "CLEAR_TEXT_PASSWORD")
                     .map(credentialModel -> credentialModel.getSecretData())
                     .anyMatch(Predicate.isEqual("{\"value\":\"" + input.getChallengeResponse() + "\"}"));
         }
@@ -94,19 +93,19 @@ public class PassThroughFederatedUserStorageProvider implements
     public boolean updateCredential(RealmModel realm, UserModel user, CredentialInput input) {
         // testing federated credential attributes
         if (input.getType().equals(PasswordCredentialModel.TYPE)) {
-            Optional<CredentialModel> existing = UserStorageUtil.userFederatedStorage(session)
+            Optional<CredentialModel> existing = session.userFederatedStorage()
                     .getStoredCredentialsByTypeStream(realm, user.getId(), "CLEAR_TEXT_PASSWORD")
                     .findFirst();
             if (existing.isPresent()) {
                 CredentialModel model = existing.get();
                 model.setType("CLEAR_TEXT_PASSWORD");
                 model.setSecretData("{\"value\":\"" + input.getChallengeResponse() + "\"}");
-                UserStorageUtil.userFederatedStorage(session).updateCredential(realm, user.getId(), model);
+                session.userFederatedStorage().updateCredential(realm, user.getId(), model);
             } else {
                 CredentialModel model = new CredentialModel();
                 model.setType("CLEAR_TEXT_PASSWORD");
                 model.setSecretData("{\"value\":\"" + input.getChallengeResponse() + "\"}");
-                UserStorageUtil.userFederatedStorage(session).createCredential(realm, user.getId(), model);
+                session.userFederatedStorage().createCredential(realm, user.getId(), model);
             }
             return true;
         }
@@ -115,9 +114,9 @@ public class PassThroughFederatedUserStorageProvider implements
 
     @Override
     public void disableCredentialType(RealmModel realm, UserModel user, String credentialType) {
-        UserStorageUtil.userFederatedStorage(session).getStoredCredentialsByTypeStream(realm, user.getId(), "CLEAR_TEXT_PASSWORD")
+        session.userFederatedStorage().getStoredCredentialsByTypeStream(realm, user.getId(), "CLEAR_TEXT_PASSWORD")
                 .collect(Collectors.toList())
-                .forEach(credModel -> UserStorageUtil.userFederatedStorage(session).removeStoredCredential(realm, user.getId(), credModel.getId()));
+                .forEach(credModel -> session.userFederatedStorage().removeStoredCredential(realm, user.getId(), credModel.getId()));
     }
 
     @Override
@@ -145,7 +144,7 @@ public class PassThroughFederatedUserStorageProvider implements
 
     @Override
     public UserModel getUserByEmail(RealmModel realm, String email) {
-        Optional<StorageId> result = UserStorageUtil.userFederatedStorage(session)
+        Optional<StorageId> result = session.userFederatedStorage()
                 .getUsersByUserAttributeStream(realm, AbstractUserAdapterFederatedStorage.EMAIL_ATTRIBUTE, email)
                 .map(StorageId::new)
                 .filter(storageId -> Objects.equals(storageId.getExternalId(), PASSTHROUGH_USERNAME))
@@ -163,6 +162,7 @@ public class PassThroughFederatedUserStorageProvider implements
 
             @Override
             public void setUsername(String username) {
+
             }
         };
     }

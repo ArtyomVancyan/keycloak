@@ -17,8 +17,6 @@
 
 package org.keycloak.broker.oidc.mappers;
 
-import static org.keycloak.utils.JsonUtils.splitClaimPath;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import org.jboss.logging.Logger;
 import org.keycloak.broker.oidc.OIDCIdentityProvider;
@@ -29,6 +27,7 @@ import org.keycloak.models.IdentityProviderSyncMode;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
+import org.keycloak.protocol.oidc.mappers.OIDCAttributeMapperHelper;
 import org.keycloak.provider.ProviderConfigProperty;
 
 import java.util.ArrayList;
@@ -207,7 +206,7 @@ public abstract class AbstractJsonUserAttributeMapper extends AbstractIdentityPr
 		logger.debug("Going to process JsonNode path " + fieldPath + " on data " + baseNode);
 		if (baseNode != null) {
 
-			List<String> fields = splitClaimPath(fieldPath);
+			List<String> fields = OIDCAttributeMapperHelper.splitClaimPath(fieldPath);
 			if (fields.isEmpty() || fieldPath.endsWith(".")) {
 				logger.debug("JSON path is invalid " + fieldPath);
 				return null;

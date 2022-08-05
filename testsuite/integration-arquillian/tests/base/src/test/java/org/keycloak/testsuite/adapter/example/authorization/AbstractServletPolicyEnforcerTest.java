@@ -29,7 +29,6 @@ import java.net.URL;
 import java.util.List;
 
 import org.jboss.arquillian.container.test.api.Deployer;
-import org.jboss.arquillian.graphene.page.Page;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -43,8 +42,6 @@ import org.keycloak.representations.idm.authorization.ResourcePermissionRepresen
 import org.keycloak.representations.idm.authorization.ResourceRepresentation;
 import org.keycloak.testsuite.ProfileAssume;
 import org.keycloak.testsuite.adapter.AbstractExampleAdapterTest;
-import org.keycloak.testsuite.pages.InfoPage;
-import org.keycloak.testsuite.pages.LogoutConfirmPage;
 import org.keycloak.testsuite.util.ServerURLs;
 import org.keycloak.testsuite.util.UIUtils;
 import org.openqa.selenium.By;
@@ -59,12 +56,6 @@ public class AbstractServletPolicyEnforcerTest extends AbstractExampleAdapterTes
 
     @ArquillianResource
     private Deployer deployer;
-
-    @Page
-    protected LogoutConfirmPage logoutConfirmPage;
-
-    @Page
-    protected InfoPage infoPage;
 
     @BeforeClass
     public static void enabled() {
@@ -557,10 +548,6 @@ public class AbstractServletPolicyEnforcerTest extends AbstractExampleAdapterTes
     private void logOut() {
         navigateTo();
         UIUtils.clickLink(driver.findElement(By.xpath("//a[text() = 'Sign Out']")));
-
-        logoutConfirmPage.assertCurrent();
-        logoutConfirmPage.confirmLogout();
-        infoPage.assertCurrent();
     }
 
     private  void login(String username, String password) {

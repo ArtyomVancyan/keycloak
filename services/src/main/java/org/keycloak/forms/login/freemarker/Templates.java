@@ -36,10 +36,6 @@ public class Templates {
                 return "login-otp.ftl";
             case LOGIN_CONFIG_TOTP:
                 return "login-config-totp.ftl";
-            case LOGIN_RECOVERY_AUTHN_CODES_INPUT:
-                return "login-recovery-authn-code-input.ftl";
-            case LOGIN_RECOVERY_AUTHN_CODES_CONFIG:
-                return "login-recovery-authn-code-config.ftl";
             case LOGIN_WEBAUTHN:
                 return "webauthn-authenticate.ftl";
             case LOGIN_VERIFY_EMAIL:
@@ -70,8 +66,6 @@ public class Templates {
                 return "webauthn-error.ftl";
             case LOGIN_UPDATE_PROFILE:
                 return "login-update-profile.ftl";
-            case UPDATE_EMAIL:
-                return "update-email.ftl";
             case CODE:
                 return "code.ftl";
             case LOGIN_PAGE_EXPIRED:
@@ -86,8 +80,6 @@ public class Templates {
                 return "idp-review-user-profile.ftl";
             case FRONTCHANNEL_LOGOUT:
                 return "frontchannel-logout.ftl";
-            case LOGOUT_CONFIRM:
-                return "logout-confirm.ftl";
             default:
                 throw new IllegalArgumentException();
         }

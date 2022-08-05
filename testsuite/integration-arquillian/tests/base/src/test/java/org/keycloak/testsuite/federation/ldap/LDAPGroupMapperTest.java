@@ -30,7 +30,6 @@ import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
 import org.keycloak.models.utils.KeycloakModelUtils;
 import org.keycloak.representations.idm.ComponentRepresentation;
-import org.keycloak.storage.UserStoragePrivateUtil;
 import org.keycloak.storage.ldap.LDAPConfig;
 import org.keycloak.storage.ldap.LDAPStorageProvider;
 import org.keycloak.storage.ldap.LDAPUtils;
@@ -128,7 +127,7 @@ public class LDAPGroupMapperTest extends AbstractLDAPTest {
                 LDAPTestContext ctx = LDAPTestContext.init(session);
                 RealmModel appRealm = ctx.getRealm();
 
-                UserModel johnDb = UserStoragePrivateUtil.userLocalStorage(session).getUserByUsername(appRealm, "johnkeycloak");
+                UserModel johnDb = session.userLocalStorage().getUserByUsername(appRealm, "johnkeycloak");
                 Assert.assertEquals(2, johnDb.getGroupsStream().count());
                 Assert.assertEquals(2, johnDb.getGroupsStream("Gr", 0, 10).count());
                 Assert.assertEquals(1, johnDb.getGroupsStream("Gr", 1, 10).count());
@@ -317,7 +316,7 @@ public class LDAPGroupMapperTest extends AbstractLDAPTest {
                 GroupModel group11 = KeycloakModelUtils.findGroupByPath(appRealm, "/group1/group11");
                 GroupModel group12 = KeycloakModelUtils.findGroupByPath(appRealm, "/group1/group12");
 
-                UserModel maryDB = UserStoragePrivateUtil.userLocalStorage(session).getUserByUsername(appRealm, "marykeycloak");
+                UserModel maryDB = session.userLocalStorage().getUserByUsername(appRealm, "marykeycloak");
 
                 Set<GroupModel> maryDBGroups = maryDB.getGroupsStream().collect(Collectors.toSet());
                 Assert.assertFalse(maryDBGroups.contains(group1));

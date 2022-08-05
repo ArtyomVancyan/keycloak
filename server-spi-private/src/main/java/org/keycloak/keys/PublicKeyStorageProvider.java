@@ -47,4 +47,9 @@ public interface PublicKeyStorageProvider extends Provider {
      */
     KeyWrapper getFirstPublicKey(String modelKey, String algorithm, PublicKeyLoader loader);
 
+    /**
+     * Clears all the cached public keys, so they need to be loaded again
+     */
+    void clearCache();
+
 }

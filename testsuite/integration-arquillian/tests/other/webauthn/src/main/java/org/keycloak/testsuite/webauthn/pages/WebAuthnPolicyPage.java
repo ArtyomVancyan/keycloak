@@ -20,15 +20,17 @@ package org.keycloak.testsuite.webauthn.pages;
 import com.webauthn4j.data.AttestationConveyancePreference;
 import com.webauthn4j.data.AuthenticatorAttachment;
 import com.webauthn4j.data.UserVerificationRequirement;
+import org.jboss.arquillian.graphene.elements.GrapheneSelect;
 import org.jboss.arquillian.graphene.page.Page;
 import org.keycloak.testsuite.console.page.authentication.Authentication;
 import org.keycloak.testsuite.console.page.fragment.OnOffSwitch;
 import org.keycloak.testsuite.console.page.idp.mappers.MultivaluedStringProperty;
+import org.keycloak.testsuite.page.AbstractPatternFlyAlert;
 import org.keycloak.testsuite.webauthn.utils.PropertyRequirement;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
-import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.support.ui.ISelect;
 
 import java.util.List;
 import java.util.function.Supplier;
@@ -37,7 +39,6 @@ import static org.keycloak.testsuite.util.UIUtils.getTextInputValue;
 import static org.keycloak.testsuite.util.UIUtils.setTextInputValue;
 import static org.keycloak.testsuite.util.WaitUtils.waitForPageToLoad;
 import static org.keycloak.testsuite.util.WaitUtils.waitUntilElement;
-import static org.keycloak.utils.StringUtil.isNotBlank;
 
 /**
  * Helper class for WebAuthnPolicy Page
@@ -50,22 +51,22 @@ public class WebAuthnPolicyPage extends Authentication {
     private WebElement rpEntityName;
 
     @FindBy(xpath = "//select[@id='sigalg']")
-    private Select signatureAlgorithms;
+    private GrapheneSelect signatureAlgorithms;
 
     @FindBy(id = "rpid")
     private WebElement rpEntityId;
 
     @FindBy(id = "attpref")
-    private Select attestationConveyancePreference;
+    private GrapheneSelect attestationConveyancePreference;
 
     @FindBy(id = "authnatt")
-    private Select authenticatorAttachment;
+    private GrapheneSelect authenticatorAttachment;
 
     @FindBy(id = "reqresident")
-    private Select requireResidentKey;
+    private GrapheneSelect requireResidentKey;
 
     @FindBy(id = "usrverify")
-    private Select userVerification;
+    private GrapheneSelect userVerification;
 
     @FindBy(id = "timeout")
     private WebElement timeout;
@@ -105,8 +106,10 @@ public class WebAuthnPolicyPage extends Authentication {
 
     /* Signature Algorithms */
 
-    public Select getSignatureAlgorithms() {
-        return checkElement(() -> signatureAlgorithms);
+    public ISelect getSignatureAlgorithms() {
+        GrapheneSelect select = checkElement(() -> signatureAlgorithms);
+        select.setIsMulti(true);
+        return select;
     }
 
     /* Relaying Party Entity ID */
@@ -128,10 +131,11 @@ public class WebAuthnPolicyPage extends Authentication {
     }
 
     public AttestationConveyancePreference getAttestationConveyancePreference() {
-        return getRequirementOrNull(() -> {
-            final String value = checkElement(() -> attestationConveyancePreference.getFirstSelectedOption().getText());
-            return isNotBlank(value) ? AttestationConveyancePreference.create(value) : null;
-        });
+        return getRequirementOrNull(() ->
+                AttestationConveyancePreference.create(checkElement(() -> attestationConveyancePreference
+                        .getFirstSelectedOption()
+                        .getText()))
+        );
     }
 
     public void setAttestationConveyancePreference(AttestationConveyancePreference attestation) {
@@ -146,10 +150,11 @@ public class WebAuthnPolicyPage extends Authentication {
     }
 
     public AuthenticatorAttachment getAuthenticatorAttachment() {
-        return getRequirementOrNull(() -> {
-            final String value = checkElement(() -> authenticatorAttachment.getFirstSelectedOption().getText());
-            return isNotBlank(value) ? AuthenticatorAttachment.create(value) : null;
-        });
+        return getRequirementOrNull(() ->
+                AuthenticatorAttachment.create(checkElement(() -> authenticatorAttachment
+                        .getFirstSelectedOption()
+                        .getText()))
+        );
     }
 
     public void setAuthenticatorAttachment(AuthenticatorAttachment attachment) {
@@ -169,7 +174,7 @@ public class WebAuthnPolicyPage extends Authentication {
     // If parameter state is null, the requirement is considered as not set up
     public void requireResidentKey(PropertyRequirement requiresProperty) {
         if (requiresProperty == null) return;
-        Select select = checkElement(() -> requireResidentKey);
+        GrapheneSelect select = checkElement(() -> requireResidentKey);
         select.selectByVisibleText(requiresProperty.getValue());
     }
 
@@ -180,10 +185,11 @@ public class WebAuthnPolicyPage extends Authentication {
     }
 
     public UserVerificationRequirement getUserVerification() {
-        return getRequirementOrNull(() -> {
-            final String value = checkElement(() -> userVerification.getFirstSelectedOption().getText());
-            return isNotBlank(value) ? UserVerificationRequirement.create(value) : null;
-        });
+        return getRequirementOrNull(() ->
+                UserVerificationRequirement.create(checkElement(() -> userVerification
+                        .getFirstSelectedOption()
+                        .getText()))
+        );
     }
 
     public void setUserVerification(UserVerificationRequirement verification) {

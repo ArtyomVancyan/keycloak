@@ -21,14 +21,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.keycloak.Config.Scope;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.models.KeycloakSession;
+import org.keycloak.models.KeycloakSessionFactory;
 import org.keycloak.provider.ProviderConfigProperty;
 
 /**
  * @author <a href="mailto:takashi.norimatsu.ws@hitachi.com">Takashi Norimatsu</a>
  */
-public class ClientScopesConditionFactory extends AbstractClientPolicyConditionProviderFactory {
+public class ClientScopesConditionFactory implements ClientPolicyConditionProviderFactory {
 
     public static final String PROVIDER_ID = "client-scopes";
 
@@ -40,8 +42,6 @@ public class ClientScopesConditionFactory extends AbstractClientPolicyConditionP
     private static final List<ProviderConfigProperty> configProperties = new ArrayList<ProviderConfigProperty>();
 
     static {
-        addCommonConfigProperties(configProperties);
-
         ProviderConfigProperty property = new ProviderConfigProperty(SCOPES, PROVIDER_ID + "-condition.label", PROVIDER_ID + "-condition.tooltip", ProviderConfigProperty.MULTIVALUED_STRING_TYPE, OAuth2Constants.OFFLINE_ACCESS);
         configProperties.add(property);
         property = new ProviderConfigProperty(TYPE, "Scope Type",
@@ -58,6 +58,18 @@ public class ClientScopesConditionFactory extends AbstractClientPolicyConditionP
     }
 
     @Override
+    public void init(Scope config) {
+    }
+
+    @Override
+    public void postInit(KeycloakSessionFactory factory) {
+    }
+
+    @Override
+    public void close() {
+    }
+
+    @Override
     public String getId() {
         return PROVIDER_ID;
     }
@@ -71,4 +83,5 @@ public class ClientScopesConditionFactory extends AbstractClientPolicyConditionP
     public List<ProviderConfigProperty> getConfigProperties() {
         return configProperties;
     }
+
 }

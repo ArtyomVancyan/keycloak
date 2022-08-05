@@ -188,7 +188,7 @@ public class FlowOverrideTest extends AbstractTestRealmKeycloakTest {
             challengeOTP.setTopLevel(true);
             challengeOTP.setBuiltIn(true);
 
-            challengeOTP = realm.addAuthenticationFlow(challengeOTP);
+            realm.addAuthenticationFlow(challengeOTP);
 
             execution = new AuthenticationExecutionModel();
             execution.setParentFlow(challengeOTP.getId());

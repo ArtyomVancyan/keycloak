@@ -1,12 +1,13 @@
 /*
- * Copyright 2022 Red Hat, Inc. and/or its affiliates
- * and other contributors as indicated by the @author tags.
+ * JBoss, Home of Professional Open Source.
+ * Copyright 2016 Red Hat, Inc., and individual contributors
+ * as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -87,7 +88,7 @@ public class PolicyService {
             return doCreatePolicyTypeResource(type);
         }
 
-        Policy policy = authorization.getStoreFactory().getPolicyStore().findById(resourceServer.getRealm(), resourceServer, type);
+        Policy policy = authorization.getStoreFactory().getPolicyStore().findById(type, resourceServer.getId());
 
         return doCreatePolicyResource(policy);
     }
@@ -133,13 +134,13 @@ public class PolicyService {
 
     public Policy create(AbstractPolicyRepresentation representation) {
         PolicyStore policyStore = authorization.getStoreFactory().getPolicyStore();
-        Policy existing = policyStore.findByName(resourceServer, representation.getName());
+        Policy existing = policyStore.findByName(representation.getName(), resourceServer.getId());
 
         if (existing != null) {
             throw new ErrorResponseException("Policy with name [" + representation.getName() + "] already exists", "Conflicting policy", Status.CONFLICT);
         }
 
-        return policyStore.create(resourceServer, representation);
+        return policyStore.create(representation, resourceServer);
     }
 
     @Path("/search")
@@ -157,7 +158,7 @@ public class PolicyService {
             return Response.status(Status.BAD_REQUEST).build();
         }
 
-        Policy model = storeFactory.getPolicyStore().findByName(this.resourceServer, name);
+        Policy model = storeFactory.getPolicyStore().findByName(name, this.resourceServer.getId());
 
         if (model == null) {
             return Response.noContent().build();
@@ -205,7 +206,7 @@ public class PolicyService {
 
         if (resource != null && !"".equals(resource.trim())) {
             ResourceStore resourceStore = storeFactory.getResourceStore();
-            Resource resourceModel = resourceStore.findById(resourceServer.getRealm(), resourceServer, resource);
+            Resource resourceModel = resourceStore.findById(resource, resourceServer.getId());
 
             if (resourceModel == null) {
                 Map<Resource.FilterOption, String[]> resourceFilters = new EnumMap<>(Resource.FilterOption.class);
@@ -216,7 +217,7 @@ public class PolicyService {
                     resourceFilters.put(Resource.FilterOption.OWNER, new String[]{owner});
                 }
 
-                Set<String> resources = resourceStore.find(resourceServer.getRealm(), resourceServer, resourceFilters, -1, 1).stream().map(Resource::getId).collect(Collectors.toSet());
+                Set<String> resources = resourceStore.findByResourceServer(resourceFilters, resourceServer.getId(), -1, 1).stream().map(Resource::getId).collect(Collectors.toSet());
 
                 if (resources.isEmpty()) {
                     return Response.noContent().build();
@@ -230,14 +231,14 @@ public class PolicyService {
 
         if (scope != null && !"".equals(scope.trim())) {
             ScopeStore scopeStore = storeFactory.getScopeStore();
-            Scope scopeModel = scopeStore.findById(resourceServer.getRealm(), resourceServer, scope);
+            Scope scopeModel = scopeStore.findById(scope, resourceServer.getId());
 
             if (scopeModel == null) {
                 Map<Scope.FilterOption, String[]> scopeFilters = new EnumMap<>(Scope.FilterOption.class);
 
                 scopeFilters.put(Scope.FilterOption.NAME, new String[]{scope});
 
-                Set<String> scopes = scopeStore.findByResourceServer(resourceServer, scopeFilters, -1, 1).stream().map(Scope::getId).collect(Collectors.toSet());
+                Set<String> scopes = scopeStore.findByResourceServer(scopeFilters, resourceServer.getId(), -1, 1).stream().map(Scope::getId).collect(Collectors.toSet());
 
                 if (scopes.isEmpty()) {
                     return Response.noContent().build();
@@ -264,7 +265,7 @@ public class PolicyService {
 
     protected List<Object> doSearch(Integer firstResult, Integer maxResult, String fields, Map<Policy.FilterOption, String[]> filters) {
         PolicyStore policyStore = authorization.getStoreFactory().getPolicyStore();
-        return policyStore.find(resourceServer.getRealm(), resourceServer, filters, firstResult != null ? firstResult : -1, maxResult != null ? maxResult : Constants.DEFAULT_MAX_RESULTS).stream()
+        return policyStore.findByResourceServer(filters, resourceServer.getId(), firstResult != null ? firstResult : -1, maxResult != null ? maxResult : Constants.DEFAULT_MAX_RESULTS).stream()
                 .map(policy -> toRepresentation(policy, fields, authorization))
                 .collect(Collectors.toList());
     }

@@ -24,6 +24,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import org.jboss.resteasy.annotations.cache.NoCache;
 import org.keycloak.representations.idm.ComponentTypeRepresentation;
 
 /**
@@ -33,6 +34,7 @@ public interface ClientRegistrationPolicyResource {
 
     @Path("providers")
     @GET
+    @NoCache
     @Produces(MediaType.APPLICATION_JSON)
     List<ComponentTypeRepresentation> getProviders();
 }

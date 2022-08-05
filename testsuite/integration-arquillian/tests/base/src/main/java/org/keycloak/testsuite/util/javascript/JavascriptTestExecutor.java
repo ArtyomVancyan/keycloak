@@ -1,10 +1,7 @@
 package org.keycloak.testsuite.util.javascript;
 
-import org.jboss.logging.Logger;
 import org.keycloak.representations.idm.UserRepresentation;
-import org.keycloak.services.managers.AuthenticationManager;
 import org.keycloak.testsuite.auth.page.login.OIDCLogin;
-import org.keycloak.testsuite.pages.LogoutConfirmPage;
 import org.keycloak.testsuite.util.WaitUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
@@ -29,8 +26,6 @@ public class JavascriptTestExecutor {
     protected WebElement events;
     private OIDCLogin loginPage;
     protected boolean configured;
-
-    private static final Logger logger = Logger.getLogger(JavascriptTestExecutor.class);
 
     public static JavascriptTestExecutor create(WebDriver driver, OIDCLogin loginPage) {
         return new JavascriptTestExecutor(driver, loginPage);
@@ -130,23 +125,7 @@ public class JavascriptTestExecutor {
     }
 
     public JavascriptTestExecutor logout(JavascriptStateValidator validator) {
-        return logout(validator, null);
-    }
-
-    public JavascriptTestExecutor logout(JavascriptStateValidator validator, LogoutConfirmPage logoutConfirmPage) {
         jsExecutor.executeScript("keycloak.logout()");
-
-        try {
-            // simple check if we are at the logout confirm page, if so just click 'Yes'
-            if (logoutConfirmPage != null && logoutConfirmPage.isCurrent(jsDriver)) {
-                logoutConfirmPage.confirmLogout(jsDriver);
-                waitForPageToLoad();
-            }
-        } catch (Exception ex) {
-            // ignore errors when checking logoutConfirm page, if an error tests will also fail
-            logger.error("Exception during checking logout confirmation page", ex);
-        }
-
         if (validator != null) {
             validator.validate(jsDriver, output, events);
         }

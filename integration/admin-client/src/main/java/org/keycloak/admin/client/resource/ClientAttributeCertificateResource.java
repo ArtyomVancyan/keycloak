@@ -17,6 +17,8 @@
 
 package org.keycloak.admin.client.resource;
 
+import org.jboss.resteasy.annotations.cache.NoCache;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
 import org.keycloak.representations.KeyStoreConfig;
 import org.keycloak.representations.idm.CertificateRepresentation;
 
@@ -39,6 +41,7 @@ public interface ClientAttributeCertificateResource {
      * @return
      */
     @GET
+    @NoCache
     @Produces(MediaType.APPLICATION_JSON)
     CertificateRepresentation getKeyInfo();
 
@@ -48,6 +51,7 @@ public interface ClientAttributeCertificateResource {
      * @return
      */
     @POST
+    @NoCache
     @Path("generate")
     @Produces(MediaType.APPLICATION_JSON)
     CertificateRepresentation generate();
@@ -62,7 +66,7 @@ public interface ClientAttributeCertificateResource {
     @Path("upload")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
-    CertificateRepresentation uploadJks(Object output);
+    CertificateRepresentation uploadJks(MultipartFormDataOutput output);
 
     /**
      * Upload only certificate, not private key
@@ -74,7 +78,7 @@ public interface ClientAttributeCertificateResource {
     @Path("upload-certificate")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
-    CertificateRepresentation uploadJksCertificate(Object output);
+    CertificateRepresentation uploadJksCertificate(MultipartFormDataOutput output);
 
     /**
      * Get a keystore file for the client, containing private key and public certificate
@@ -83,6 +87,7 @@ public interface ClientAttributeCertificateResource {
      * @return
      */
     @POST
+    @NoCache
     @Path("/download")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Consumes(MediaType.APPLICATION_JSON)
@@ -98,6 +103,7 @@ public interface ClientAttributeCertificateResource {
      * @return
      */
     @POST
+    @NoCache
     @Path("/generate-and-download")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Consumes(MediaType.APPLICATION_JSON)

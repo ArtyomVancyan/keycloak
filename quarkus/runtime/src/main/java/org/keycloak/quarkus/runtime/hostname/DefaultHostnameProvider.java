@@ -40,9 +40,8 @@ import org.keycloak.urls.UrlType;
 public final class DefaultHostnameProvider implements HostnameProvider, HostnameProviderFactory {
 
     private static final Logger LOGGER = Logger.getLogger(DefaultHostnameProvider.class);
+
     private static final String REALM_URI_SESSION_ATTRIBUTE = DefaultHostnameProvider.class.getName() + ".realmUrl";
-    private static final int DEFAULT_HTTPS_PORT_VALUE = 443;
-    private static final int RESTEASY_DEFAULT_PORT_VALUE = -1;
 
     private String frontChannelHostName;
     private String defaultPath;
@@ -52,8 +51,6 @@ public final class DefaultHostnameProvider implements HostnameProvider, Hostname
     private String adminHostName;
     private Boolean strictBackChannel;
     private boolean hostnameEnabled;
-    private boolean strictHttps;
-    private int hostnamePort;
 
     @Override
     public String getScheme(UriInfo originalUriInfo, UrlType urlType) {
@@ -61,10 +58,6 @@ public final class DefaultHostnameProvider implements HostnameProvider, Hostname
 
         if (scheme != null) {
             return scheme;
-        }
-
-        if (ADMIN.equals(urlType)) {
-            return getScheme(originalUriInfo);
         }
 
         return fromFrontChannel(originalUriInfo, URI::getScheme, this::getScheme, defaultHttpScheme);
@@ -78,8 +71,9 @@ public final class DefaultHostnameProvider implements HostnameProvider, Hostname
             return hostname;
         }
 
-        if (ADMIN.equals(urlType)) {
-            return adminHostName == null ? getHostname(originalUriInfo) : adminHostName;
+        // admin hostname has precedence over frontchannel
+        if (ADMIN.equals(urlType) && adminHostName != null) {
+            return adminHostName;
         }
 
         return fromFrontChannel(originalUriInfo, URI::getHost, this::getHostname, frontChannelHostName);
@@ -103,10 +97,6 @@ public final class DefaultHostnameProvider implements HostnameProvider, Hostname
 
     @Override
     public int getPort(UriInfo originalUriInfo, UrlType urlType) {
-        if (ADMIN.equals(urlType)) {
-            return getRequestPort();
-        }
-
         Integer port = forNonStrictBackChannel(originalUriInfo, urlType, this::getPort, this::getPort);
 
         if (port != null) {
@@ -115,15 +105,17 @@ public final class DefaultHostnameProvider implements HostnameProvider, Hostname
 
         if (hostnameEnabled && !noProxy) {
             // if proxy is enabled and hostname is set, assume the server is exposed using default ports
-            return hostnamePort;
+            return -1;
         }
 
-        return fromFrontChannel(originalUriInfo, URI::getPort, this::getPort, hostnamePort == -1 ? getPort(originalUriInfo) : hostnamePort);
+        return fromFrontChannel(originalUriInfo, URI::getPort, this::getPort, null);
     }
 
     @Override
     public int getPort(UriInfo originalUriInfo) {
-        return noProxy && strictHttps ? defaultTlsPort : getRequestPort();
+        KeycloakSession session = Resteasy.getContextData(KeycloakSession.class);
+        int requestPort = session.getContext().getContextObject(HttpRequest.class).getUri().getBaseUri().getPort();
+        return noProxy ? defaultTlsPort : requestPort;
     }
 
     private <T> T forNonStrictBackChannel(UriInfo originalUriInfo, UrlType urlType,
@@ -166,22 +158,19 @@ public final class DefaultHostnameProvider implements HostnameProvider, Hostname
 
     protected URI getRealmFrontEndUrl() {
         KeycloakSession session = Resteasy.getContextData(KeycloakSession.class);
-        RealmModel realm = session.getContext().getRealm();
-
-        if (realm == null) {
-            return null;
-        }
-
-        String realmUriKey = realm.getId() + REALM_URI_SESSION_ATTRIBUTE;
-        URI realmUrl = (URI) session.getAttribute(realmUriKey);
+        URI realmUrl = (URI) session.getAttribute(REALM_URI_SESSION_ATTRIBUTE);
 
         if (realmUrl == null) {
-            String frontendUrl = realm.getAttribute("frontendUrl");
+            RealmModel realm = session.getContext().getRealm();
 
-            if (isNotBlank(frontendUrl)) {
-                realmUrl = URI.create(frontendUrl);
-                session.setAttribute(realmUriKey, realmUrl);
-                return realmUrl;
+            if (realm != null) {
+                String frontendUrl = realm.getAttribute("frontendUrl");
+
+                if (isNotBlank(frontendUrl)) {
+                    realmUrl = URI.create(frontendUrl);
+                    session.setAttribute(DefaultHostnameProvider.REALM_URI_SESSION_ATTRIBUTE, realmUrl);
+                    return realmUrl;
+                }
             }
         }
 
@@ -213,36 +202,23 @@ public final class DefaultHostnameProvider implements HostnameProvider, Hostname
 
         hostnameEnabled = frontChannelHostName != null;
 
-        strictHttps = config.getBoolean("strict-https", false);
+        Boolean strictHttps = config.getBoolean("strict-https", false);
 
         if (strictHttps) {
             defaultHttpScheme = "https";
         }
 
         defaultPath = config.get("path");
-        noProxy = Configuration.getConfigValue("kc.proxy").getValue().equals("false");
-        defaultTlsPort = Integer.parseInt(Configuration.getConfigValue("kc.https-port").getValue());
-
-        if (defaultTlsPort == DEFAULT_HTTPS_PORT_VALUE) {
-            defaultTlsPort = RESTEASY_DEFAULT_PORT_VALUE;
-        }
-
-        hostnamePort = Integer.parseInt(Configuration.getConfigValue("kc.hostname-port").getValue());
+        noProxy = Configuration.getConfigValue("kc.proxy").getValue().equals("none");
+        defaultTlsPort = Integer.parseInt(Configuration.getConfigValue("kc.https.port").getValue());
         adminHostName = config.get("admin");
         strictBackChannel = config.getBoolean("strict-backchannel", false);
 
-        LOGGER.infov("Hostname settings: FrontEnd: {0}, Strict HTTPS: {1}, Path: {2}, Strict BackChannel: {3}, Admin: {4}, Port: {5}, Proxied: {6}",
+        LOGGER.infov("Hostname settings: FrontEnd: {0}, Strict HTTPS: {1}, Path: {2}, Strict BackChannel: {3}, Admin: {4}",
                 frontChannelHostName == null ? "<request>" : frontChannelHostName,
                 strictHttps,
                 defaultPath == null ? "<request>" : defaultPath,
                 strictBackChannel,
-                adminHostName == null ? "<request>" : adminHostName,
-                hostnamePort,
-                !noProxy);
-    }
-
-    private int getRequestPort() {
-        KeycloakSession session = Resteasy.getContextData(KeycloakSession.class);
-        return session.getContext().getContextObject(HttpRequest.class).getUri().getBaseUri().getPort();
+                adminHostName == null ? "<request>" : adminHostName);
     }
 }

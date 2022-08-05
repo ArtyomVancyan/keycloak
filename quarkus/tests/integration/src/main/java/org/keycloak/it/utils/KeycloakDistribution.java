@@ -1,19 +1,13 @@
 package org.keycloak.it.utils;
 
-import org.keycloak.it.junit5.extension.CLIResult;
-import org.keycloak.quarkus.runtime.Environment;
-import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
+
+import static org.keycloak.quarkus.runtime.Environment.LAUNCH_MODE;
 
 public interface KeycloakDistribution {
 
-    String SCRIPT_CMD = Environment.isWindows() ? "kc.bat" : "kc.sh";
-    String SCRIPT_CMD_INVOKABLE = Environment.isWindows() ? SCRIPT_CMD : "./"+SCRIPT_CMD;
-
-    CLIResult run(List<String> arguments);
-    default CLIResult run(String... arguments) {
-        return run(List.of(arguments));
-    }
+    void start(List<String> arguments);
 
     void stop();
 
@@ -28,34 +22,20 @@ public interface KeycloakDistribution {
     boolean isManualStop();
 
     default String[] getCliArgs(List<String> arguments) {
-        throw new RuntimeException("Not implemented");
-    }
+        List<String> commands = new ArrayList<>();
 
-    default void setManualStop(boolean manualStop) {
-        throw new RuntimeException("Not implemented");
-    }
+        commands.add("./kc.sh");
 
-    default void setQuarkusProperty(String key, String value) {
-        throw new RuntimeException("Not implemented");
-    }
+        if (this.isDebug()) {
+            commands.add("--debug");
+        }
 
-    default void setProperty(String key, String value) {
-        throw new RuntimeException("Not implemented");
-    }
+        if (!this.isManualStop()) {
+            commands.add("-D" + LAUNCH_MODE + "=test");
+        }
 
-    default void deleteQuarkusProperties() {
-        throw new RuntimeException("Not implemented");
-    }
+        commands.addAll(arguments);
 
-    default void copyOrReplaceFileFromClasspath(String file, Path distDir) {
-        throw new RuntimeException("Not implemented");
-    }
-
-    default void removeProperty(String name) {
-        throw new RuntimeException("Not implemented");
-    }
-
-    default void setEnvVar(String kc_db_username, String bad) {
-        throw new RuntimeException("Not implemented");
+        return commands.toArray(new String[0]);
     }
 }

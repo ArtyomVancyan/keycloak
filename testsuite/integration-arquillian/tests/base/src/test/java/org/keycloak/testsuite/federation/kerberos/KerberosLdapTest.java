@@ -24,7 +24,6 @@ import java.util.Map;
 import javax.ws.rs.core.Response;
 
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.keycloak.common.Profile;
@@ -39,7 +38,6 @@ import org.keycloak.representations.idm.UserRepresentation;
 import org.keycloak.storage.UserStorageProvider;
 import org.keycloak.storage.ldap.LDAPStorageProviderFactory;
 import org.keycloak.storage.ldap.kerberos.LDAPProviderKerberosConfig;
-import org.keycloak.testsuite.ProfileAssume;
 import org.keycloak.testsuite.arquillian.annotation.DisableFeature;
 import org.keycloak.testsuite.util.KerberosRule;
 import org.keycloak.testsuite.KerberosEmbeddedServer;
@@ -51,6 +49,7 @@ import org.keycloak.testsuite.KerberosEmbeddedServer;
  */
 @DisableFeature(value = Profile.Feature.ACCOUNT2, skipRestart = true) // TODO remove this (KEYCLOAK-16228)
 public class KerberosLdapTest extends AbstractKerberosSingleRealmTest {
+
     private static final String PROVIDER_CONFIG_LOCATION = "classpath:kerberos/kerberos-ldap-connection.properties";
 
     @ClassRule
@@ -73,11 +72,7 @@ public class KerberosLdapTest extends AbstractKerberosSingleRealmTest {
         return getUserStorageConfiguration("kerberos-ldap", LDAPStorageProviderFactory.PROVIDER_NAME);
     }
 
-    @Before
-    public void before() {
-        // don't run this test when map storage is enabled, as map storage doesn't support the legacy style federation
-        ProfileAssume.assumeFeatureDisabled(Profile.Feature.MAP_STORAGE);
-    }
+
 
     @Test
     public void spnegoLoginTest() throws Exception {

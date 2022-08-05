@@ -38,8 +38,3 @@ export interface Permission {
   scopes: Scope[] | string[];  // this should be Scope[] - fix API
   username: string;
 }
-
-export interface Permissions {
-  permissions: Permission[];
-  row?: number;
-}

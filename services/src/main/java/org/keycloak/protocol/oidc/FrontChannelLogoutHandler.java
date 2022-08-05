@@ -72,8 +72,7 @@ public class FrontChannelLogoutHandler {
     }
 
     private URI createFrontChannelLogoutUrl(ClientModel client) {
-        OIDCAdvancedConfigWrapper config = OIDCAdvancedConfigWrapper.fromClientModel(client);
-        String frontChannelLogoutUrl = config.getFrontChannelLogoutUrl();
+        String frontChannelLogoutUrl = OIDCAdvancedConfigWrapper.fromClientModel(client).getFrontChannelLogoutUrl();
 
         if (StringUtil.isBlank(frontChannelLogoutUrl)) {
             frontChannelLogoutUrl = client.getBaseUrl();
@@ -85,10 +84,8 @@ public class FrontChannelLogoutHandler {
 
         UriBuilder builder = UriBuilder.fromUri(frontChannelLogoutUrl);
 
-        if (config.isFrontChannelLogoutSessionRequired()) {
-            builder.queryParam("sid", FrontChannelLogoutHandler.this.sid);
-            builder.queryParam("iss", FrontChannelLogoutHandler.this.issuer);
-        }
+        builder.queryParam("sid", FrontChannelLogoutHandler.this.sid);
+        builder.queryParam("iss", FrontChannelLogoutHandler.this.issuer);
 
         return builder.build();
     }

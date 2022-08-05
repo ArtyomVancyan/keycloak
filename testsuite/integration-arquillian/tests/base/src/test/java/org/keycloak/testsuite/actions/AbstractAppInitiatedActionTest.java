@@ -50,10 +50,7 @@ import static org.keycloak.testsuite.util.ServerURLs.getAuthServerContextRoot;
  * @author Stan Silvert
  */
 public abstract class AbstractAppInitiatedActionTest extends AbstractTestRealmKeycloakTest {
-
-    protected static final String SUCCESS = "success";
-    protected static final String CANCELLED = "cancelled";
-
+    
     @Page
     protected LoginPage loginPage;
     
@@ -62,12 +59,16 @@ public abstract class AbstractAppInitiatedActionTest extends AbstractTestRealmKe
     
     @Rule
     public AssertEvents events = new AssertEvents(this);
-
-    protected abstract String getAiaAction();
+    
+    protected final String aiaAction;
+    
+    public AbstractAppInitiatedActionTest(String aiaAction) {
+        this.aiaAction = aiaAction;
+    }
     
     protected void doAIA() {
         UriBuilder builder = OIDCLoginProtocolService.authUrl(authServerPage.createUriBuilder());
-        String uri = builder.queryParam(KC_ACTION, getAiaAction())
+        String uri = builder.queryParam(KC_ACTION, this.aiaAction)
                             .queryParam(RESPONSE_TYPE, "code")
                             .queryParam(CLIENT_ID, "test-app")
                             .queryParam(SCOPE, "openid")

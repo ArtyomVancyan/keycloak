@@ -122,18 +122,6 @@ public class LoginPage extends LanguageComboboxAwarePage {
         return usernameInput.isEnabled();
     }
 
-    public boolean isUsernameInputPresent() {
-        return !driver.findElements(By.id("username")).isEmpty();
-    }
-
-    public boolean isRegisterLinkPresent() {
-        return !driver.findElements(By.linkText("Register")).isEmpty();
-    }
-
-    public boolean isRememberMeCheckboxPresent() {
-        return !driver.findElements(By.id("rememberMe")).isEmpty();
-    }
-
     public String getPassword() {
         return passwordInput.getAttribute("value");
     }
@@ -166,11 +154,7 @@ public class LoginPage extends LanguageComboboxAwarePage {
         return loginSuccessMessage != null ? loginSuccessMessage.getText() : null;
     }
     public String getInfoMessage() {
-        try {
-            return getTextFromElement(loginInfoMessage);
-        } catch (NoSuchElementException e) {
-            return null;
-        }
+        return loginInfoMessage != null ? loginInfoMessage.getText() : null;
     }
 
 
@@ -201,11 +185,6 @@ public class LoginPage extends LanguageComboboxAwarePage {
     public WebElement findSocialButton(String alias) {
         String id = "social-" + alias;
         return DroneUtils.getCurrentDriver().findElement(By.id(id));
-    }
-
-    public boolean isSocialButtonPresent(String alias) {
-        String id = "social-" + alias;
-        return !DroneUtils.getCurrentDriver().findElements(By.id(id)).isEmpty();
     }
 
     public void resetPassword() {

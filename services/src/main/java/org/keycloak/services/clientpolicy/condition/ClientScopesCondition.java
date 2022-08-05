@@ -59,7 +59,7 @@ public class ClientScopesCondition extends AbstractClientPolicyConditionProvider
     public static class Configuration extends ClientPolicyConditionConfigurationRepresentation {
 
         protected String type;
-        protected List<String> scopes;
+        protected List<String> scope;
 
         public String getType() {
             return type;
@@ -69,12 +69,12 @@ public class ClientScopesCondition extends AbstractClientPolicyConditionProvider
             this.type = type;
         }
 
-        public List<String> getScopes() {
-            return scopes;
+        public List<String> getScope() {
+            return scope;
         }
 
-        public void setScopes(List<String> scope) {
-            this.scopes = scope;
+        public void setScope(List<String> scope) {
+            this.scope = scope;
         }
     }
 
@@ -155,7 +155,7 @@ public class ClientScopesCondition extends AbstractClientPolicyConditionProvider
     }
 
     private Set<String> getScopesForMatching() {
-        List<String> scopes = configuration.getScopes();
+        List<String> scopes = configuration.getScope();
         if (scopes == null) return null;
         return new HashSet<>(scopes);
     }

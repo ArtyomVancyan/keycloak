@@ -16,6 +16,7 @@
  */
 package org.keycloak.admin.client.resource;
 
+import org.jboss.resteasy.annotations.cache.NoCache;
 import org.keycloak.representations.idm.authorization.ResourceRepresentation;
 
 import javax.ws.rs.Consumes;
@@ -43,6 +44,7 @@ public interface ResourcesResource {
     ResourceResource resource(@PathParam("id") String id);
 
     @GET
+    @NoCache
     @Produces(MediaType.APPLICATION_JSON)
     List<ResourceRepresentation> find(@QueryParam("name") String name,
                   @QueryParam("uri") String uri,
@@ -53,14 +55,17 @@ public interface ResourcesResource {
                   @QueryParam("max") Integer maxResult);
 
     @GET
+    @NoCache
     @Produces(MediaType.APPLICATION_JSON)
     List<ResourceRepresentation> findByName(@QueryParam("name") String name);
 
     @GET
+    @NoCache
     @Produces(MediaType.APPLICATION_JSON)
     List<ResourceRepresentation> findByName(@QueryParam("name") String name, @QueryParam("owner") String owner);
 
     @GET
+    @NoCache
     @Produces(MediaType.APPLICATION_JSON)
     List<ResourceRepresentation> resources();
 }

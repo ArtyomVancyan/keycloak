@@ -46,21 +46,6 @@ public enum OIDCResponseMode {
         }
     }
 
-    public static OIDCResponseMode parseWhenInvalidResponseType(String responseMode) {
-        if (responseMode == null) {
-            return OIDCResponseMode.QUERY;
-        } else if(responseMode.equals("jwt")) {
-            return OIDCResponseMode.QUERY_JWT;
-        } else {
-            for (OIDCResponseMode c : OIDCResponseMode.values()) {
-                if (c.value.equals(responseMode)) {
-                    return c;
-                }
-            }
-            return OIDCResponseMode.QUERY;
-        }
-    }
-
     public String value() {
         return value;
     }

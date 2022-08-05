@@ -49,6 +49,7 @@ public class LoginTimeoutValidationTest extends AbstractTestRealmKeycloakTest {
     public  void before() {
         testingClient.server().run( session -> {
             RealmModel realm = session.realms().getRealmByName("test");
+            realm = session.realms().getRealm("test");
             session.users().addUser(realm, "user1");
         });
     }

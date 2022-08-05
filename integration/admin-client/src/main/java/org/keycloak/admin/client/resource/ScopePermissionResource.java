@@ -26,6 +26,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import org.jboss.resteasy.annotations.cache.NoCache;
 import org.keycloak.representations.idm.authorization.PolicyRepresentation;
 import org.keycloak.representations.idm.authorization.ResourceRepresentation;
 import org.keycloak.representations.idm.authorization.ScopePermissionRepresentation;
@@ -38,6 +39,7 @@ public interface ScopePermissionResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @NoCache
     ScopePermissionRepresentation toRepresentation();
 
     @PUT
@@ -50,20 +52,24 @@ public interface ScopePermissionResource {
     @Path("/associatedPolicies")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @NoCache
     List<PolicyRepresentation> associatedPolicies();
 
     @Path("/dependentPolicies")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @NoCache
     List<PolicyRepresentation> dependentPolicies();
 
     @Path("/resources")
     @GET
     @Produces("application/json")
+    @NoCache
     List<ResourceRepresentation> resources();
 
     @Path("/scopes")
     @GET
     @Produces("application/json")
+    @NoCache
     List<ScopeRepresentation> scopes();
 }

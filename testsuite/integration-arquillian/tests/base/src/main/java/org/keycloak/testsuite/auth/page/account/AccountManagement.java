@@ -43,7 +43,7 @@ public class AccountManagement extends AuthRealm implements PageWithLogOutAction
     @FindBy(xpath = "//a[@id='referer']")
     private WebElement backToRefererLink;
 
-    @FindBy(linkText = "Sign out")
+    @FindBy(linkText = "Sign Out")
     private WebElement signOutLink;
 
     @FindBy(linkText = "Account")

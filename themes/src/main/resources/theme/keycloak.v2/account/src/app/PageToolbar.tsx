@@ -46,19 +46,38 @@ export class PageToolbar extends React.Component<PageToolbarProps, PageToolbarSt
     };
 
     public render(): React.ReactNode {
+        const kebabDropdownItems = [];
+        if (this.hasReferrer) {
+            kebabDropdownItems.push(
+                <ReferrerDropdownItem key='referrerDropdownItem'/>
+            )
+        }
+
+        kebabDropdownItems.push(<LogoutDropdownItem key='LogoutDropdownItem'/>);
+
         return (
             <Toolbar>
                 {this.hasReferrer &&
-                    <ToolbarGroup key='referrerGroup' alignment={{default:"alignRight"}}>
+                    <ToolbarGroup key='referrerGroup'>
                         <ToolbarItem className="pf-m-icons" key='referrer'>
                             <ReferrerLink/>
                         </ToolbarItem>
                     </ToolbarGroup>
                 }
 
-                <ToolbarGroup key='secondGroup' alignment={{default:"alignRight"}}>
+                <ToolbarGroup key='secondGroup'>
                     <ToolbarItem className="pf-m-icons" key='logout'>
                         <LogoutButton/>
+                    </ToolbarItem>
+
+                    <ToolbarItem key='kebab' className="pf-m-mobile">
+                        <Dropdown
+                            isPlain
+                            position="right"
+                            toggle={<KebabToggle id="mobileKebab" onToggle={this.onKebabDropdownToggle} />}
+                            isOpen={this.state.isKebabDropdownOpen}
+                            dropdownItems={kebabDropdownItems}
+                        />
                     </ToolbarItem>
                 </ToolbarGroup>
             </Toolbar>

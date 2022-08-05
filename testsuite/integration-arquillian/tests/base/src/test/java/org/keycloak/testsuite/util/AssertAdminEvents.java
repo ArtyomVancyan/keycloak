@@ -277,8 +277,7 @@ public class AssertAdminEvents implements TestRule {
             AccessToken token = input.readJsonContent(AccessToken.class);
 
             AuthDetailsRepresentation authDetails = new AuthDetailsRepresentation();
-            String realmName = token.getIssuer().substring(token.getIssuer().lastIndexOf('/') + 1);
-            String realmId = context.getAdminClient().realm(realmName).toRepresentation().getId();
+            String realmId = token.getIssuer().substring(token.getIssuer().lastIndexOf('/') + 1);
             authDetails.setRealmId(realmId);
             authDetails.setUserId(token.getSubject());
             return authDetails;

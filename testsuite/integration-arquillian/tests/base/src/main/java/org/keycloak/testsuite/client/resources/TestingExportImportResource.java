@@ -46,59 +46,59 @@ public interface TestingExportImportResource {
     @Path("/get-users-per-file")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    Integer getUsersPerFile();
+    public Integer getUsersPerFile();
 
     @PUT
     @Path("/set-users-per-file")
     @Consumes(MediaType.APPLICATION_JSON)
-    void setUsersPerFile(@QueryParam("usersPerFile") Integer usersPerFile);
+    public void setUsersPerFile(@QueryParam("usersPerFile") Integer usersPerFile);
 
     @GET
     @Path("/get-dir")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    String getDir();
+    public String getDir();
 
     @PUT
     @Path("/set-dir")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    String setDir(@QueryParam("dir") String dir);
+    public String setDir(@QueryParam("dir") String dir);
 
     @PUT
     @Path("/set-import-strategy")
     @Consumes(MediaType.APPLICATION_JSON)
-    void setStrategy(@QueryParam("importStrategy") Strategy strategy);
+    public void setStrategy(@QueryParam("importStrategy") Strategy strategy);
 
     @PUT
     @Path("/export-import-provider")
     @Consumes(MediaType.APPLICATION_JSON)
-    void setProvider(@QueryParam("exportImportProvider") String exportImportProvider);
+    public void setProvider(@QueryParam("exportImportProvider") String exportImportProvider);
 
     @PUT
     @Path("/export-import-file")
     @Consumes(MediaType.APPLICATION_JSON)
-    void setFile(@QueryParam("file") String file);
+    public void setFile(@QueryParam("file") String file);
 
     @PUT
     @Path("/export-import-action")
     @Consumes(MediaType.APPLICATION_JSON)
-    void setAction(@QueryParam("exportImportAction") String exportImportAction);
+    public void setAction(@QueryParam("exportImportAction") String exportImportAction);
 
     @PUT
     @Path("/set-realm-name")
     @Consumes(MediaType.APPLICATION_JSON)
-    void setRealmName(@QueryParam("realmName") String realmName);
+    public void setRealmName(@QueryParam("realmName") String realmName);
 
     @GET
     @Path("/get-test-dir")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    String getExportImportTestDirectory();
+    public String getExportImportTestDirectory();
 
     @GET
     @Path("/clear")
     @Produces(MediaType.APPLICATION_JSON)
-    void clear();
+    public Response clear();
 
 }

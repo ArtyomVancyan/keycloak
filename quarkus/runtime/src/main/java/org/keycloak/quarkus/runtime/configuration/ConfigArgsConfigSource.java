@@ -21,18 +21,21 @@ import static java.util.Arrays.asList;
 import static org.keycloak.quarkus.runtime.cli.Picocli.ARG_SHORT_PREFIX;
 import static org.keycloak.quarkus.runtime.cli.command.AbstractStartCommand.AUTO_BUILD_OPTION_LONG;
 import static org.keycloak.quarkus.runtime.cli.command.AbstractStartCommand.AUTO_BUILD_OPTION_SHORT;
-import static org.keycloak.quarkus.runtime.configuration.Configuration.OPTION_PART_SEPARATOR_CHAR;
+import static org.keycloak.quarkus.runtime.configuration.Configuration.getMappedPropertyName;
 import static org.keycloak.quarkus.runtime.configuration.MicroProfileConfigProvider.NS_KEYCLOAK_PREFIX;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import io.smallrye.config.PropertiesConfigSource;
 
+import org.keycloak.quarkus.runtime.cli.Picocli;
 import org.keycloak.quarkus.runtime.configuration.mappers.PropertyMapper;
 import org.keycloak.quarkus.runtime.configuration.mappers.PropertyMappers;
 
@@ -48,13 +51,19 @@ import org.keycloak.quarkus.runtime.configuration.mappers.PropertyMappers;
 public class ConfigArgsConfigSource extends PropertiesConfigSource {
 
     public static final String CLI_ARGS = "kc.config.args";
-    public static final String NAME = "CliConfigSource";
     private static final String ARG_SEPARATOR = ";;";
     private static final Pattern ARG_SPLIT = Pattern.compile(";;");
     private static final Pattern ARG_KEY_VALUE_SPLIT = Pattern.compile("=");
+    private static final ConfigArgsConfigSource INSTANCE = new ConfigArgsConfigSource();
+    private static List<String> IGNORED_ARGS;
+
+    public static ConfigArgsConfigSource getInstance() {
+        return INSTANCE;
+    }
 
     protected ConfigArgsConfigSource() {
-        super(parseArgument(), NAME, 600);
+        // higher priority over default Quarkus config sources
+        super(parseArgument(), "CliConfigSource", 500);
     }
 
     public static void setCliArgs(String[] args) {
@@ -89,10 +98,12 @@ public class ConfigArgsConfigSource extends PropertiesConfigSource {
             return value;
         }
 
-        return properties.get(propertyName.replace(OPTION_PART_SEPARATOR_CHAR, '.'));
+        return properties.get(propertyName.replace('-', '.'));
     }
 
     private static Map<String, String> parseArgument() {
+        // init here because the class might be loaded by CL without init
+        IGNORED_ARGS = asList("--verbose", "-v", "--help", "-h", AUTO_BUILD_OPTION_LONG, AUTO_BUILD_OPTION_SHORT);
         String rawArgs = getRawConfigArgs();
         
         if (rawArgs == null || "".equals(rawArgs.trim())) {
@@ -108,26 +119,40 @@ public class ConfigArgsConfigSource extends PropertiesConfigSource {
 
                 properties.put(key, value);
 
-                PropertyMapper mapper = PropertyMappers.getMapper(key);
+                String mappedPropertyName = getMappedPropertyName(key);
+
+                properties.put(mappedPropertyName, value);
+
+                PropertyMapper mapper = PropertyMappers.getMapper(mappedPropertyName);
 
                 if (mapper != null) {
-                    String to = mapper.getTo();
-
-                    if (to != null) {
-                        properties.put(mapper.getTo(), value);
-                    }
-
                     properties.put(mapper.getFrom(), value);
                 }
+
+                // to make lookup easier, we normalize the key
+                properties.put(Picocli.normalizeKey(key), value);
             }
         });
 
         return properties;
     }
 
+    public static boolean hasOptionValue(Predicate<String> keyMatcher, String expectedValue) {
+        AtomicBoolean result = new AtomicBoolean();
+
+        parseConfigArgs(new BiConsumer<String, String>() {
+            @Override
+            public void accept(String key, String value) {
+                if (keyMatcher.test(key) && expectedValue.equals(value)) {
+                    result.set(true);
+                }
+            }
+        });
+
+        return result.get();
+    }
+
     public static void parseConfigArgs(BiConsumer<String, String> cliArgConsumer) {
-        // init here because the class might be loaded by CL without init
-        List<String> ignoredArgs = asList("--verbose", "-v", "--help", "-h", AUTO_BUILD_OPTION_LONG, AUTO_BUILD_OPTION_SHORT);
         String rawArgs = getRawConfigArgs();
 
         if (rawArgs == null || "".equals(rawArgs.trim())) {
@@ -139,7 +164,7 @@ public class ConfigArgsConfigSource extends PropertiesConfigSource {
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];
 
-            if (ignoredArgs.contains(arg)) {
+            if (IGNORED_ARGS.contains(arg)) {
                 continue;
             }
 
@@ -147,7 +172,7 @@ public class ConfigArgsConfigSource extends PropertiesConfigSource {
                 continue;
             }
 
-            String[] keyValue = ARG_KEY_VALUE_SPLIT.split(arg, 2);
+            String[] keyValue = ARG_KEY_VALUE_SPLIT.split(arg);
             String key = keyValue[0];
 
             if ("".equals(key.trim())) {

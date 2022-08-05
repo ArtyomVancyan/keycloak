@@ -50,8 +50,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.keycloak.testsuite.auth.page.AuthRealm.TEST;
-
 import org.keycloak.testsuite.util.RoleBuilder;
 
 /**
@@ -184,7 +182,7 @@ public class ClientRolesTest extends AbstractClientTest {
 
         mainRoleRsc.addComposites(createdRoles);
         mainRole = mainRoleRsc.toRepresentation();
-        RoleByIdResource roleByIdResource = adminClient.realm(TEST).rolesById();
+        RoleByIdResource roleByIdResource = adminClient.realm(getRealmId()).rolesById();
 
         // Search for all composites
         Set<RoleRepresentation> foundRoles = roleByIdResource.getRoleComposites(mainRole.getId());

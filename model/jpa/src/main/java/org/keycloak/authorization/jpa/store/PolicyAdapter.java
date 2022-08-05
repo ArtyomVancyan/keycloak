@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,7 +24,6 @@ import org.keycloak.authorization.model.Policy;
 import org.keycloak.authorization.model.Resource;
 import org.keycloak.authorization.model.ResourceServer;
 import org.keycloak.authorization.model.Scope;
-import org.keycloak.authorization.store.PermissionTicketStore;
 import org.keycloak.authorization.store.StoreFactory;
 import org.keycloak.models.jpa.JpaModel;
 import org.keycloak.representations.idm.authorization.DecisionStrategy;
@@ -154,7 +153,7 @@ public class PolicyAdapter extends AbstractAuthorizationModel implements Policy,
 
     @Override
     public ResourceServer getResourceServer() {
-        return storeFactory.getResourceServerStore().findById(JPAAuthorizationStoreFactory.NULL_REALM, entity.getResourceServer().getId());
+        return storeFactory.getResourceServerStore().findById(entity.getResourceServer().getId());
     }
 
     @Override
@@ -169,9 +168,8 @@ public class PolicyAdapter extends AbstractAuthorizationModel implements Policy,
     @Override
     public Set<Resource> getResources() {
         Set<Resource> set = new HashSet<>();
-        ResourceServer resourceServer = getResourceServer();
         for (ResourceEntity res : entity.getResources()) {
-            set.add(storeFactory.getResourceStore().findById(JPAAuthorizationStoreFactory.NULL_REALM, resourceServer, res.getId()));
+            set.add(storeFactory.getResourceStore().findById(res.getId(), entity.getResourceServer().getId()));
         }
         return Collections.unmodifiableSet(set);
     }
@@ -179,9 +177,8 @@ public class PolicyAdapter extends AbstractAuthorizationModel implements Policy,
     @Override
     public Set<Scope> getScopes() {
         Set<Scope> set = new HashSet<>();
-        ResourceServer resourceServer = getResourceServer();
         for (ScopeEntity res : entity.getScopes()) {
-            set.add(storeFactory.getScopeStore().findById(JPAAuthorizationStoreFactory.NULL_REALM, resourceServer, res.getId()));
+            set.add(storeFactory.getScopeStore().findById(res.getId(), entity.getResourceServer().getId()));
         }
         return Collections.unmodifiableSet(set);
     }

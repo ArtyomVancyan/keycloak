@@ -53,7 +53,17 @@ public class UmaPermissionTicketPushedClaimsTest extends AbstractResourceServerT
         JSPolicyRepresentation policy = new JSPolicyRepresentation();
 
         policy.setName("Withdraw Limit Policy");
-        policy.setType("script-scripts/withdraw-limit-policy.js");
+
+        StringBuilder code = new StringBuilder();
+
+        code.append("var context = $evaluation.getContext();");
+        code.append("var attributes = context.getAttributes();");
+        code.append("var withdrawValue = attributes.getValue('my.bank.account.withdraw.value');");
+        code.append("if (withdrawValue && withdrawValue.asDouble(0) <= 100) {");
+        code.append("   $evaluation.grant();");
+        code.append("}");
+
+        policy.setCode(code.toString());
 
         AuthorizationResource authorization = getClient(getRealm()).authorization();
 

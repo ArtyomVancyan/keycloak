@@ -65,7 +65,6 @@ public class OTPPolicyTest extends AbstractConsoleTest {
         assertAlertSuccess();
         
         realm = testRealmResource().toRepresentation();
-        assertEquals("totp", realm.getOtpPolicyType());
         assertEquals(Integer.valueOf(40), realm.getOtpPolicyPeriod());
     }      
     

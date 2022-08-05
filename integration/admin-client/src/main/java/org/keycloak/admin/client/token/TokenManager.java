@@ -17,11 +17,9 @@
 
 package org.keycloak.admin.client.token;
 
-import javax.ws.rs.client.WebTarget;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.keycloak.admin.client.Config;
-import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.BasicAuthFilter;
 import org.keycloak.common.util.Time;
 import org.keycloak.representations.AccessTokenResponse;
@@ -35,8 +33,6 @@ import static org.keycloak.OAuth2Constants.CLIENT_ID;
 import static org.keycloak.OAuth2Constants.GRANT_TYPE;
 import static org.keycloak.OAuth2Constants.PASSWORD;
 import static org.keycloak.OAuth2Constants.REFRESH_TOKEN;
-import static org.keycloak.OAuth2Constants.SCOPE;
-import static org.keycloak.OAuth2Constants.USERNAME;
 
 /**
  * @author rodrigo.sasaki@icarros.com.br
@@ -53,11 +49,11 @@ public class TokenManager {
 
     public TokenManager(Config config, Client client) {
         this.config = config;
-        WebTarget target = client.target(config.getServerUrl());
+        ResteasyWebTarget target = (ResteasyWebTarget) client.target(config.getServerUrl());
         if (!config.isPublicClient()) {
             target.register(new BasicAuthFilter(config.getClientId(), config.getClientSecret()));
         }
-        this.tokenService = Keycloak.getClientProvider().targetProxy(target, TokenService.class);
+        this.tokenService = target.proxy(TokenService.class);
         this.accessTokenGrantType = config.getGrantType();
 
         if (CLIENT_CREDENTIALS.equals(accessTokenGrantType) && config.isPublicClient()) {
@@ -81,12 +77,8 @@ public class TokenManager {
     public AccessTokenResponse grantToken() {
         Form form = new Form().param(GRANT_TYPE, accessTokenGrantType);
         if (PASSWORD.equals(accessTokenGrantType)) {
-            form.param(USERNAME, config.getUsername())
-                .param(PASSWORD, config.getPassword());
-        }
-
-        if (config.getScope() != null) {
-            form.param(SCOPE, config.getScope());
+            form.param("username", config.getUsername())
+                .param("password", config.getPassword());
         }
 
         if (config.isPublicClient()) {

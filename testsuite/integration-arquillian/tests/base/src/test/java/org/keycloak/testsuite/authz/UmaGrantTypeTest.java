@@ -93,7 +93,7 @@ public class UmaGrantTypeTest extends AbstractResourceServerTest {
         JSPolicyRepresentation policy = new JSPolicyRepresentation();
 
         policy.setName("Default Policy");
-        policy.setType("script-scripts/default-policy.js");
+        policy.setCode("$evaluation.grant();");
 
         authorization.policies().js().create(policy).close();
 
@@ -109,7 +109,7 @@ public class UmaGrantTypeTest extends AbstractResourceServerTest {
         policy = new JSPolicyRepresentation();
 
         policy.setName("Deny Policy");
-        policy.setType("script-scripts/always-deny-policy.js");
+        policy.setCode("$evaluation.deny();");
 
         authorization.policies().js().create(policy).close();
     }

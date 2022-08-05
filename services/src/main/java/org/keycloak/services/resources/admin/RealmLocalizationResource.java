@@ -39,17 +39,16 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.NotFoundException;
+import javax.ws.rs.PATCH;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import org.keycloak.services.resources.admin.permissions.AdminPermissions;
 import org.keycloak.util.JsonSerialization;
-import org.keycloak.utils.StringUtil;
 
 public class RealmLocalizationResource {
     private final RealmModel realm;
@@ -144,20 +143,12 @@ public class RealmLocalizationResource {
     @Path("{locale}")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Map<String, String> getRealmLocalizationTexts(@PathParam("locale") String locale, @QueryParam("useRealmDefaultLocaleFallback") Boolean useFallback) {
+    public Map<String, String> getRealmLocalizationTexts(@PathParam("locale") String locale) {
         if (!AdminPermissions.realms(session, auth.adminAuth()).isAdmin()) {
             throw new ForbiddenException();
         }
 
-        Map<String, String> realmLocalizationTexts = new HashMap<>();
-        if(useFallback != null && useFallback && StringUtil.isNotBlank(realm.getDefaultLocale())) {
-            realmLocalizationTexts.putAll(realm.getRealmLocalizationTextsByLocale(realm.getDefaultLocale()));
-        }
-
-        realmLocalizationTexts.putAll(realm.getRealmLocalizationTextsByLocale(locale));
-
-        return realmLocalizationTexts;
-
+        return realm.getRealmLocalizationTextsByLocale(locale);
     }
 
     @Path("{locale}/{key}")

@@ -17,8 +17,6 @@
 
 package org.keycloak.testsuite.arquillian.undertow;
 
-import static org.keycloak.testsuite.KeycloakServer.registerScriptProviders;
-
 import io.undertow.Undertow;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.handlers.PathHandler;
@@ -38,7 +36,6 @@ import org.jboss.arquillian.container.spi.client.protocol.metadata.HTTPContext;
 import org.jboss.arquillian.container.spi.client.protocol.metadata.ProtocolMetaData;
 import org.jboss.arquillian.container.spi.client.protocol.metadata.Servlet;
 import org.jboss.logging.Logger;
-import org.jboss.resteasy.core.ResteasyDeploymentImpl;
 import org.jboss.resteasy.plugins.server.servlet.ResteasyContextParameters;
 import org.jboss.resteasy.plugins.server.undertow.UndertowJaxrsServer;
 import org.jboss.resteasy.spi.ResteasyDeployment;
@@ -48,7 +45,7 @@ import org.jboss.shrinkwrap.descriptor.api.Descriptor;
 import org.jboss.shrinkwrap.undertow.api.UndertowWebArchive;
 import org.keycloak.common.util.reflections.Reflections;
 import org.keycloak.models.KeycloakSession;
-import org.keycloak.services.DefaultKeycloakSessionFactory;
+import org.keycloak.models.KeycloakSessionFactory;
 import org.keycloak.services.managers.ApplianceBootstrap;
 import org.keycloak.services.resources.KeycloakApplication;
 import org.keycloak.testsuite.JsonConfigProviderFactory;
@@ -77,22 +74,24 @@ public class KeycloakOnUndertow implements DeployableContainer<KeycloakOnUnderto
 
     private KeycloakUndertowJaxrsServer undertow;
     private KeycloakOnUndertowConfiguration configuration;
-    private DefaultKeycloakSessionFactory sessionFactory;
+    private KeycloakSessionFactory sessionFactory;
 
     Map<String, String> deployedArchivesToContextPath = new ConcurrentHashMap<>();
 
     private DeploymentInfo createAuthServerDeploymentInfo() {
-        ResteasyDeployment deployment = new ResteasyDeploymentImpl();
+        ResteasyDeployment deployment = new ResteasyDeployment();
         deployment.setApplicationClass(KeycloakApplication.class.getName());
 
         // RESTEASY-2034
         deployment.setProperty(ResteasyContextParameters.RESTEASY_DISABLE_HTML_SANITIZER, true);
 
+        // Prevent double gzip encoding of resources
+        deployment.getDisabledProviderClasses().add("org.jboss.resteasy.plugins.interceptors.encoding.GZIPEncodingInterceptor");
+
         DeploymentInfo di = undertow.undertowDeployment(deployment);
         di.setClassLoader(getClass().getClassLoader());
         di.setContextPath("/auth");
         di.setDeploymentName("Keycloak");
-        di.setDefaultEncoding("UTF-8");
         if (configuration.getKeycloakConfigPropertyOverridesMap() != null) {
             try {
                 di.addInitParameter(JsonConfigProviderFactory.SERVER_CONTEXT_CONFIG_PROPERTY_OVERRIDES,
@@ -222,9 +221,7 @@ public class KeycloakOnUndertow implements DeployableContainer<KeycloakOnUnderto
 
         DeploymentInfo di = createAuthServerDeploymentInfo();
         undertow.deploy(di);
-        sessionFactory = (DefaultKeycloakSessionFactory) KeycloakApplication.getSessionFactory();
-
-        registerScriptProviders(sessionFactory);
+        sessionFactory = KeycloakApplication.getSessionFactory();
 
         setupDevConfig();
 

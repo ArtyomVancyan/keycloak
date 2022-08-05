@@ -96,7 +96,7 @@ public class X509ClientCertificateAuthenticator extends AbstractX509ClientCertif
                 String errorMessage = "Certificate validation's failed.";
                 // TODO is calling form().setErrors enough to show errors on login screen?
                 context.challenge(createErrorResponse(context, certs[0].getSubjectDN().getName(),
-                        errorMessage, "Certificate revoked or incorrect."));
+                        errorMessage, e.getMessage()));
                 context.attempted();
                 return;
             }
@@ -139,7 +139,7 @@ public class X509ClientCertificateAuthenticator extends AbstractX509ClientCertif
                 return;
             }
 
-            String bruteForceError = getDisabledByBruteForceEventError(context, user);
+            String bruteForceError = getDisabledByBruteForceEventError(context.getProtector(), context.getSession(), context.getRealm(), user);
             if (bruteForceError != null) {
                 context.getEvent().user(user);
                 context.getEvent().error(bruteForceError);

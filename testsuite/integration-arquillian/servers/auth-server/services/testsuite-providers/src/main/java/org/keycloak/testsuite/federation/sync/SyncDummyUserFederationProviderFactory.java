@@ -26,7 +26,6 @@ import org.keycloak.models.UserModel;
 import org.keycloak.models.utils.KeycloakModelUtils;
 import org.keycloak.provider.ProviderConfigProperty;
 import org.keycloak.provider.ProviderConfigurationBuilder;
-import org.keycloak.storage.UserStoragePrivateUtil;
 import org.keycloak.storage.UserStorageProviderModel;
 import org.keycloak.storage.user.SynchronizationResult;
 import org.keycloak.testsuite.federation.DummyUserFederationProviderFactory;
@@ -91,13 +90,13 @@ public class SyncDummyUserFederationProviderFactory extends DummyUserFederationP
                 // KEYCLOAK-2412 : Just remove and add some users for testing purposes
                 for (int i = 0; i < 10; i++) {
                     String username = "dummyuser-" + i;
-                    UserModel user = UserStoragePrivateUtil.userLocalStorage(session).getUserByUsername(realm, username);
+                    UserModel user = session.userLocalStorage().getUserByUsername(realm, username);
 
                     if (user != null) {
-                        UserStoragePrivateUtil.userLocalStorage(session).removeUser(realm, user);
+                        session.userLocalStorage().removeUser(realm, user);
                     }
 
-                    user = UserStoragePrivateUtil.userLocalStorage(session).addUser(realm, username);
+                    user = session.userLocalStorage().addUser(realm, username);
                 }
 
                 logger.infof("Finished sync of changed users. Waiting now for %d seconds", waitTime);

@@ -27,6 +27,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import org.jboss.resteasy.annotations.cache.NoCache;
 import org.keycloak.representations.idm.authorization.PolicyRepresentation;
 import org.keycloak.representations.idm.authorization.ResourceRepresentation;
 import org.keycloak.representations.idm.authorization.ScopeRepresentation;
@@ -38,10 +39,12 @@ public interface PolicyResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @NoCache
     PolicyRepresentation toRepresentation();
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @NoCache
     PolicyRepresentation toRepresentation(@QueryParam("fields") String fields);
     
     @PUT
@@ -54,20 +57,24 @@ public interface PolicyResource {
     @Path("/associatedPolicies")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @NoCache
     List<PolicyRepresentation> associatedPolicies();
 
     @Path("/dependentPolicies")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @NoCache
     List<PolicyRepresentation> dependentPolicies();
 
     @Path("/scopes")
     @GET
     @Produces("application/json")
+    @NoCache
     List<ScopeRepresentation> scopes();
 
     @Path("/resources")
     @GET
     @Produces("application/json")
+    @NoCache
     List<ResourceRepresentation> resources();
 }

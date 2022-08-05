@@ -26,6 +26,7 @@ import org.keycloak.jose.JOSEHeader;
 import org.keycloak.jose.JOSE;
 import org.keycloak.jose.jwe.JWE;
 import org.keycloak.jose.jwe.JWEHeader;
+import org.keycloak.jose.jws.Algorithm;
 import org.keycloak.jose.jws.JWSInput;
 import org.keycloak.models.ClientModel;
 import org.keycloak.models.KeycloakSession;
@@ -100,10 +101,10 @@ public class AuthzEndpointRequestObjectParser extends AuthzEndpointRequestParser
                     throw new RuntimeException("Request object signed algorithm not specified");
                 }
 
-                String requestedSignatureAlgorithm = OIDCAdvancedConfigWrapper.fromClientModel(clientModel)
+                Algorithm requestedSignatureAlgorithm = OIDCAdvancedConfigWrapper.fromClientModel(clientModel)
                         .getRequestObjectSignatureAlg();
 
-                if (requestedSignatureAlgorithm != null && !requestedSignatureAlgorithm.equals(headerAlgorithm)) {
+                if (requestedSignatureAlgorithm != null && !requestedSignatureAlgorithm.name().equals(headerAlgorithm)) {
                     throw new RuntimeException(
                             "Request object signed with different algorithm than client requested algorithm");
                 }
@@ -132,4 +133,9 @@ public class AuthzEndpointRequestObjectParser extends AuthzEndpointRequestParser
         };
     }
 
+    @Override
+    protected <T> T replaceIfNotNull(T previousVal, T newVal) {
+        // force parameters values from request object as per spec any parameter set directly should be ignored
+        return newVal;
+    }
 }

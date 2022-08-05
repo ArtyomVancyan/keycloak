@@ -24,6 +24,7 @@
         <artifact name="${org.keycloak:keycloak-common}"/>
     </resources>
     <dependencies>
+        <module name="org.bouncycastle" />
         <module name="javax.api"/>
         <module name="javax.activation.api"/>
         <module name="org.jboss.logging"/>

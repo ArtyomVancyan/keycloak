@@ -36,8 +36,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static org.keycloak.utils.LockObjectsForModification.lockUserSessionsForModification;
-
 /**
  * @author <a href="mailto:mposolda@redhat.com">Marek Posolda</a>
  */
@@ -100,7 +98,7 @@ public class AuthenticationSessionManager {
             AuthSessionId authSessionId = decodeAuthSessionId(oldEncodedId);
             String sessionId = authSessionId.getDecodedId();
 
-            UserSessionModel userSession = lockUserSessionsForModification(session, () -> session.sessions().getUserSession(realm, sessionId));
+            UserSessionModel userSession = session.sessions().getUserSession(realm, sessionId);
 
             if (userSession != null) {
                 reencodeAuthSessionCookie(oldEncodedId, authSessionId, realm);
@@ -217,7 +215,7 @@ public class AuthenticationSessionManager {
 
     // Check to see if we already have authenticationSession with same ID
     public UserSessionModel getUserSession(AuthenticationSessionModel authSession) {
-        return lockUserSessionsForModification(session, () -> session.sessions().getUserSession(authSession.getRealm(), authSession.getParentSession().getId()));
+        return session.sessions().getUserSession(authSession.getRealm(), authSession.getParentSession().getId());
     }
 
 

@@ -32,18 +32,13 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.keycloak.common.util.CertificateUtils;
 import org.keycloak.common.util.PemUtils;
 import org.keycloak.protocol.docker.installation.DockerComposeYamlInstallationProvider;
-import org.keycloak.rule.CryptoInitRule;
 
 public class DockerComposeYamlInstallationProviderTest {
-
-    @ClassRule
-    public static CryptoInitRule cryptoInitRule = new CryptoInitRule();
 
     DockerComposeYamlInstallationProvider installationProvider;
     static Certificate certificate;

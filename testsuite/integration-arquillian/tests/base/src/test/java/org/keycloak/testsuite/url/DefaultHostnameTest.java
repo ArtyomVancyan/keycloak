@@ -40,14 +40,13 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer.QUARKUS;
 import static org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer.REMOTE;
 import static org.keycloak.testsuite.util.OAuthClient.AUTH_SERVER_ROOT;
 import static org.keycloak.testsuite.util.ServerURLs.getAuthServerContextRoot;
 
 import javax.ws.rs.core.UriBuilder;
 
-@AuthServerContainerExclude({REMOTE, QUARKUS})
+@AuthServerContainerExclude({REMOTE})
 public class DefaultHostnameTest extends AbstractHostnameTest {
 
     @ArquillianResource
@@ -278,10 +277,10 @@ public class DefaultHostnameTest extends AbstractHostnameTest {
             SimpleHttp.Response response = get.asResponse();
             String indexPage = response.asString();
 
-            assertTrue(indexPage.contains("\"authServerUrl\": \"" + expectedFrontendUrl +"\""));
-            assertTrue(indexPage.contains("\"authUrl\": \"" + expectedAdminUrl +"\""));
-            assertTrue(indexPage.contains("\"consoleBaseUrl\": \"" + new URI(expectedAdminUrl).getPath() +"/admin/" + realm + "/console/\""));
-            assertTrue(indexPage.contains("\"resourceUrl\": \"" + new URI(expectedAdminUrl).getPath() +"/resources/"));
+            assertTrue(indexPage.contains("authServerUrl = '" + expectedFrontendUrl +"'"));
+            assertTrue(indexPage.contains("authUrl = '" + expectedAdminUrl +"'"));
+            assertTrue(indexPage.contains("consoleBaseUrl = '" + new URI(expectedAdminUrl).getPath() +"/admin/" + realm + "/console/'"));
+            assertTrue(indexPage.contains("resourceUrl = '" + new URI(expectedAdminUrl).getPath() +"/resources/"));
 
             String cspHeader = response.getFirstHeader(BrowserSecurityHeaders.CONTENT_SECURITY_POLICY.getHeaderName());
 

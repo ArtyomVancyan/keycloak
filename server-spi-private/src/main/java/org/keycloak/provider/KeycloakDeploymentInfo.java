@@ -37,10 +37,6 @@ public class KeycloakDeploymentInfo {
         return name;
     }
 
-    /**
-     * Enables discovery of services via {@link java.util.ServiceLoader}.
-     * @return
-     */
     public KeycloakDeploymentInfo services() {
         this.services = true;
         return this;
@@ -50,10 +46,6 @@ public class KeycloakDeploymentInfo {
         return themes;
     }
 
-    /**
-     * Enables discovery embedded themes.
-     * @return
-     */
     public KeycloakDeploymentInfo themes() {
         this.themes = true;
         return this;
@@ -63,10 +55,6 @@ public class KeycloakDeploymentInfo {
         return themeResources;
     }
 
-    /**
-     * Enables discovery of embedded theme-resources.
-     * @return
-     */
     public KeycloakDeploymentInfo themeResources() {
         themeResources = true;
         return this;

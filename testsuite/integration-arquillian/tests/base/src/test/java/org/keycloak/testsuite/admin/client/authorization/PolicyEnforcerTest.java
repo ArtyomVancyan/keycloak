@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.keycloak.common.Profile.Feature.AUTHORIZATION;
+import static org.keycloak.common.Profile.Feature.UPLOAD_SCRIPTS;
 
 import javax.security.cert.X509Certificate;
 import javax.ws.rs.HttpMethod;
@@ -97,6 +98,7 @@ import org.keycloak.testsuite.util.UserBuilder;
  * @author <a href="mailto:psilva@redhat.com">Pedro Igor</a>
  */
 @AuthServerContainerExclude(AuthServer.REMOTE)
+@EnableFeature(value = UPLOAD_SCRIPTS, skipRestart = true)
 public class PolicyEnforcerTest extends AbstractKeycloakTest {
 
     private static final String RESOURCE_SERVER_CLIENT_ID = "resource-server-test";
@@ -698,7 +700,12 @@ public class PolicyEnforcerTest extends AbstractKeycloakTest {
             JSPolicyRepresentation jsPolicy = new JSPolicyRepresentation();
 
             jsPolicy.setName("Always Grant Policy");
-            jsPolicy.setType("script-scripts/default-policy.js");
+
+            StringBuilder code = new StringBuilder();
+
+            code.append("$evaluation.grant();");
+
+            jsPolicy.setCode(code.toString());
 
             clientResource.authorization().policies().js().create(jsPolicy).close();
 
@@ -724,7 +731,12 @@ public class PolicyEnforcerTest extends AbstractKeycloakTest {
             JSPolicyRepresentation policy = new JSPolicyRepresentation();
 
             policy.setName("Always Deny Policy");
-            policy.setType("script-scripts/always-deny-policy.js");
+
+            StringBuilder code = new StringBuilder();
+
+            code.append("$evaluation.deny();");
+
+            policy.setCode(code.toString());
 
             clientResource.authorization().policies().js().create(policy).close();
 

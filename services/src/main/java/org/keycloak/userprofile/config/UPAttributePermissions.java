@@ -18,7 +18,6 @@ package org.keycloak.userprofile.config;
 
 import java.util.Collections;
 import java.util.Set;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * Configuration of permissions for the attribute
@@ -52,8 +51,4 @@ public class UPAttributePermissions {
         return "UPAttributePermissions [view=" + view + ", edit=" + edit + "]";
     }
 
-    @JsonIgnore
-    public boolean isEmpty() {
-        return getEdit().isEmpty() && getView().isEmpty();
-    }
 }

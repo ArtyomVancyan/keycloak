@@ -110,13 +110,7 @@ public class ClassLoaderTheme implements Theme {
         if (rootResourceURL == null) {
             return null;
         }
-        String rootPath = rootResourceURL.getPath();
-
-        if (rootPath.endsWith("//")) {
-            // needed for asset loading in quarkus IDELauncher - see gh issue #9942
-            rootPath = rootPath.substring(0, rootPath.length() -1);
-        }
-
+        final String rootPath = rootResourceURL.getPath();
         final URL resourceURL = classLoader.getResource(resourceRoot + path);
         if(resourceURL == null || !resourceURL.getPath().startsWith(rootPath)) {
             return null;

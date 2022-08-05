@@ -171,9 +171,8 @@ public class GroupAdapter implements GroupModel.Streams {
     public boolean hasRole(RoleModel role) {
         if (isUpdated()) return updated.hasRole(role);
         if (cached.getRoleMappings(modelSupplier).contains(role.getId())) return true;
-        if (getRoleMappingsStream().anyMatch(r -> r.hasRole(role))) return true;
-        GroupModel parent = getParent();
-        return parent != null && parent.hasRole(role);
+
+        return getRoleMappingsStream().anyMatch(r -> r.hasRole(role));
     }
 
     @Override

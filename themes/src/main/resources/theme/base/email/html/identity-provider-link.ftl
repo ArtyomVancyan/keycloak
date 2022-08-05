@@ -1,4 +1,5 @@
-<#import "template.ftl" as layout>
-<@layout.emailLayout>
+<html>
+<body>
 ${kcSanitize(msg("identityProviderLinkBodyHtml", identityProviderAlias, realmName, identityProviderContext.username, link, linkExpiration, linkExpirationFormatter(linkExpiration)))?no_esc}
-</@layout.emailLayout>
+</body>
+</html>

@@ -17,19 +17,13 @@
 package org.keycloak.models.map.realm;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import static java.util.Objects.nonNull;
-
-import java.util.Optional;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import org.jboss.logging.Logger;
 import org.keycloak.Config;
 import org.keycloak.common.enums.SslRequired;
 import org.keycloak.component.ComponentFactory;
@@ -46,17 +40,15 @@ import org.keycloak.models.GroupModel;
 import org.keycloak.models.IdentityProviderMapperModel;
 import org.keycloak.models.IdentityProviderModel;
 import org.keycloak.models.KeycloakSession;
-import org.keycloak.models.ModelDuplicateException;
 import org.keycloak.models.OAuth2DeviceConfig;
 import org.keycloak.models.OTPPolicy;
-import org.keycloak.models.ParConfig;
 import org.keycloak.models.PasswordPolicy;
+import org.keycloak.models.ParConfig;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.RequiredActionProviderModel;
 import org.keycloak.models.RequiredCredentialModel;
 import org.keycloak.models.RoleModel;
 import org.keycloak.models.WebAuthnPolicy;
-import org.keycloak.models.map.common.TimeAdapter;
 import org.keycloak.models.map.realm.entity.MapAuthenticationExecutionEntity;
 import org.keycloak.models.map.realm.entity.MapAuthenticationFlowEntity;
 import org.keycloak.models.map.realm.entity.MapAuthenticatorConfigEntity;
@@ -72,7 +64,6 @@ import org.keycloak.models.utils.ComponentUtil;
 
 public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implements RealmModel {
 
-    private static final Logger LOG = Logger.getLogger(MapRealmAdapter.class);
     private static final String ACTION_TOKEN_GENERATED_BY_USER_LIFESPAN = "actionTokenGeneratedByUserLifespan";
     private static final String DEFAULT_SIGNATURE_ALGORITHM = "defaultSignatureAlgorithm";
     private static final String BRUTE_FORCE_PROTECTED = "bruteForceProtected";
@@ -127,8 +118,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public boolean isEnabled() {
-        Boolean enabled = entity.isEnabled();
-        return enabled == null ? false : enabled;
+        return entity.isEnabled();
     }
 
     @Override
@@ -138,8 +128,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public SslRequired getSslRequired() {
-        String sslRequired = entity.getSslRequired();
-        return sslRequired == null ? null : SslRequired.valueOf(sslRequired);
+        return entity.getSslRequired() == null ? null : SslRequired.valueOf(entity.getSslRequired());
     }
 
     @Override
@@ -149,8 +138,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public boolean isRegistrationAllowed() {
-        Boolean is = entity.isRegistrationAllowed();
-        return is == null ? false : is;
+        return entity.isRegistrationAllowed();
     }
 
     @Override
@@ -160,8 +148,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public boolean isRegistrationEmailAsUsername() {
-        Boolean is = entity.isRegistrationEmailAsUsername();
-        return is == null ? false : is;
+        return entity.isRegistrationEmailAsUsername();
     }
 
     @Override
@@ -171,8 +158,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public boolean isRememberMe() {
-        Boolean is = entity.isRememberMe();
-        return is == null ? false : is;
+        return entity.isRememberMe();
     }
 
     @Override
@@ -182,8 +168,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public boolean isEditUsernameAllowed() {
-        Boolean is = entity.isEditUsernameAllowed();
-        return is == null ? false : is;
+        return entity.isEditUsernameAllowed();
     }
 
     @Override
@@ -193,8 +178,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public boolean isUserManagedAccessAllowed() {
-        Boolean is = entity.isAllowUserManagedAccess();
-        return is == null ? false : is;
+        return entity.isAllowUserManagedAccess();
     }
 
     @Override
@@ -215,35 +199,23 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
     @Override
     public String getAttribute(String name) {
         List<String> attribute = entity.getAttribute(name);
-        if (attribute == null || attribute.isEmpty()) return null;
+        if (attribute.isEmpty()) return null;
         return attribute.get(0);
     }
 
     @Override
     public Map<String, String> getAttributes() {
-        Map<String, List<String>> attrs = entity.getAttributes();
-
-        return attrs == null || attrs.isEmpty() ? Collections.emptyMap() : attrs.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey,
-                    entry -> {
-                        if (entry.getValue().isEmpty()) {
-                            return null;
-                        } else if (entry.getValue().size() > 1) {
-                            // This could be caused by an inconsistency in the storage, a programming error,
-                            // or a downgrade from a future version of Keycloak that already supports multi-valued attributes.
-                            // The caller will not see the other values, and when this entity is later updated, the additional values be will lost.
-                            LOG.warnf("Realm '%s' has attribute '%s' with %d values, retrieving only the first", getId(), entry.getKey(),
-                                    entry.getValue().size());
-                        }
-                        return entry.getValue().get(0);
-                    })
+        return entity.getAttributes().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, 
+            entry -> {
+                if (entry.getValue().isEmpty()) return null;
+                return entry.getValue().get(0);
+            })
         );
     }
 
     @Override
     public boolean isVerifyEmail() {
-        Boolean is = entity.isVerifyEmail();
-        return is == null ? false : is;
+        return entity.isVerifyEmail();
     }
 
     @Override
@@ -253,8 +225,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public boolean isLoginWithEmailAllowed() {
-        Boolean is = entity.isLoginWithEmailAllowed();
-        return is == null ? false : is;
+        return entity.isLoginWithEmailAllowed();
     }
 
     @Override
@@ -264,8 +235,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public boolean isDuplicateEmailsAllowed() {
-        Boolean is = entity.isDuplicateEmailsAllowed();
-        return is == null ? false : is;
+        return entity.isDuplicateEmailsAllowed();
     }
 
     @Override
@@ -275,8 +245,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public boolean isResetPasswordAllowed() {
-        Boolean is = entity.isResetPasswordAllowed();
-        return is == null ? false : is;
+        return entity.isResetPasswordAllowed();
     }
 
     @Override
@@ -286,8 +255,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public boolean isRevokeRefreshToken() {
-        Boolean is = entity.isRevokeRefreshToken();
-        return is == null ? false : is;
+        return entity.isRevokeRefreshToken();
     }
 
     @Override
@@ -297,8 +265,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public int getRefreshTokenMaxReuse() {
-        Integer i = entity.getRefreshTokenMaxReuse();
-        return i == null ? 0 : i;
+        return entity.getRefreshTokenMaxReuse();
     }
 
     @Override
@@ -308,8 +275,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public int getSsoSessionIdleTimeout() {
-        Integer i = entity.getSsoSessionIdleTimeout();
-        return i == null ? 0 : i;
+        return entity.getSsoSessionIdleTimeout();
     }
 
     @Override
@@ -319,8 +285,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public int getSsoSessionMaxLifespan() {
-        Integer i = entity.getSsoSessionMaxLifespan();
-        return i == null ? 0 : i;
+        return entity.getSsoSessionMaxLifespan();
     }
 
     @Override
@@ -330,8 +295,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public int getSsoSessionIdleTimeoutRememberMe() {
-        Integer i = entity.getSsoSessionIdleTimeoutRememberMe();
-        return i == null ? 0 : i;
+        return entity.getSsoSessionIdleTimeoutRememberMe();
     }
 
     @Override
@@ -341,8 +305,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public int getSsoSessionMaxLifespanRememberMe() {
-        Integer i = entity.getSsoSessionMaxLifespanRememberMe();
-        return i == null ? 0 : i;
+        return entity.getSsoSessionMaxLifespanRememberMe();
     }
 
     @Override
@@ -352,8 +315,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public int getOfflineSessionIdleTimeout() {
-        Integer i = entity.getOfflineSessionIdleTimeout();
-        return i == null ? 0 : i;
+        return entity.getOfflineSessionIdleTimeout();
     }
 
     @Override
@@ -363,14 +325,12 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public int getAccessTokenLifespan() {
-        Integer i = entity.getAccessTokenLifespan();
-        return i == null ? 0 : i;
+        return entity.getAccessTokenLifespan();
     }
 
     @Override
     public int getClientSessionIdleTimeout() {
-        Integer i = entity.getClientSessionIdleTimeout();
-        return i == null ? 0 : i;
+        return entity.getClientSessionIdleTimeout();
     }
 
     @Override
@@ -380,8 +340,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public int getClientSessionMaxLifespan() {
-        Integer i = entity.getClientSessionMaxLifespan();
-        return i == null ? 0 : i;
+        return entity.getClientSessionMaxLifespan();
     }
 
     @Override
@@ -391,8 +350,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public int getClientOfflineSessionIdleTimeout() {
-        Integer i = entity.getClientOfflineSessionIdleTimeout();
-        return i == null ? 0 : i;
+        return entity.getClientOfflineSessionIdleTimeout();
     }
 
     @Override
@@ -402,8 +360,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public int getClientOfflineSessionMaxLifespan() {
-        Integer i = entity.getClientOfflineSessionMaxLifespan();
-        return i == null ? 0 : i;
+        return entity.getClientOfflineSessionMaxLifespan();
     }
 
     @Override
@@ -418,8 +375,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public int getAccessTokenLifespanForImplicitFlow() {
-        Integer i = entity.getAccessTokenLifespanForImplicitFlow();
-        return i == null ? 0 : i;
+        return entity.getAccessTokenLifespanForImplicitFlow();
     }
 
     @Override
@@ -429,8 +385,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public int getAccessCodeLifespan() {
-        Integer i = entity.getAccessCodeLifespan();
-        return i == null ? 0 : i;
+        return entity.getAccessCodeLifespan();
     }
 
     @Override
@@ -440,8 +395,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public int getAccessCodeLifespanUserAction() {
-        Integer i = entity.getAccessCodeLifespanUserAction();
-        return i == null ? 0 : i;
+        return entity.getAccessCodeLifespanUserAction();
     }
 
     @Override
@@ -451,8 +405,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public int getAccessCodeLifespanLogin() {
-        Integer i = entity.getAccessCodeLifespanLogin();
-        return i == null ? 0 : i;
+        return entity.getAccessCodeLifespanLogin();
     }
 
     @Override
@@ -462,8 +415,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public int getActionTokenGeneratedByAdminLifespan() {
-        Integer i = entity.getActionTokenGeneratedByAdminLifespan();
-        return i == null ? 0 : i;
+        return entity.getActionTokenGeneratedByAdminLifespan();
     }
 
     @Override
@@ -483,9 +435,6 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public int getActionTokenGeneratedByUserLifespan(String actionTokenType) {
-        if (actionTokenType == null || getAttribute(ACTION_TOKEN_GENERATED_BY_USER_LIFESPAN + "." + actionTokenType) == null) {
-            return getActionTokenGeneratedByUserLifespan();
-        }
         return getAttribute(ACTION_TOKEN_GENERATED_BY_USER_LIFESPAN + "." + actionTokenType, getAccessCodeLifespanUserAction());
     }
 
@@ -498,10 +447,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public Map<String, Integer> getUserActionTokenLifespans() {
-        Map<String, List<String>> attrs = entity.getAttributes();
-        if (attrs == null || attrs.isEmpty()) return Collections.emptyMap();
-
-        Map<String, Integer> tokenLifespans = attrs.entrySet().stream()
+        Map<String, Integer> tokenLifespans = entity.getAttributes().entrySet().stream()
                 .filter(Objects::nonNull)
                 .filter(entry -> nonNull(entry.getValue()) && ! entry.getValue().isEmpty())
                 .filter(entry -> entry.getKey().startsWith(ACTION_TOKEN_GENERATED_BY_USER_LIFESPAN + "."))
@@ -514,8 +460,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public Stream<RequiredCredentialModel> getRequiredCredentialsStream() {
-        Set<MapRequiredCredentialEntity> rCEs = entity.getRequiredCredentials();
-        return rCEs == null ? Stream.empty() : rCEs.stream().map(MapRequiredCredentialEntity::toModel);
+        return entity.getRequiredCredentials().map(MapRequiredCredentialEntity::toModel);
     }
 
     @Override
@@ -524,38 +469,20 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
         if (model == null) {
             throw new RuntimeException("Unknown credential type " + cred);
         }
-        if (getRequiredCredentialsStream().anyMatch(credential -> Objects.equals(model.getType(), credential.getType()))) { 
-            throw new ModelDuplicateException("A Required Credential with given type already exists.");
-        }
         entity.addRequiredCredential(MapRequiredCredentialEntity.fromModel(model));
     }
 
     @Override
     public void updateRequiredCredentials(Set<String> credentials) {
-        Set<MapRequiredCredentialEntity> requiredCredentialEntities = entity.getRequiredCredentials();
-        Consumer<MapRequiredCredentialEntity> updateCredentialFnc = e -> {
-            Optional<MapRequiredCredentialEntity> existingEntity = requiredCredentialEntities.stream()
-                    .filter(existing -> Objects.equals(e.getType(), existing.getType()))
-                    .findFirst();
-
-            if (existingEntity.isPresent()) {
-                updateRequiredCredential(existingEntity.get(), e);
-            } else {
-                entity.addRequiredCredential(e);
-            }
-        };
-
         credentials.stream()
                 .map(RequiredCredentialModel.BUILT_IN::get)
                 .peek(c -> { if (c == null) throw new RuntimeException("Unknown credential type " + c.getType()); })
                 .map(MapRequiredCredentialEntity::fromModel)
-                .forEach(updateCredentialFnc);
+                .forEach(this::updateRequiredCredential);
     }
 
-    private void updateRequiredCredential(MapRequiredCredentialEntity existing, MapRequiredCredentialEntity newValue) {
-        existing.setFormLabel(newValue.getFormLabel());
-        existing.setInput(newValue.isInput());
-        existing.setSecret(newValue.isSecret());
+    private void updateRequiredCredential(MapRequiredCredentialEntity requiredCredential) {
+        entity.updateRequiredCredential(requiredCredential);
     }
 
     @Override
@@ -574,8 +501,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public OTPPolicy getOTPPolicy() {
-        MapOTPPolicyEntity policy = entity.getOTPPolicy();
-        return policy == null ? OTPPolicy.DEFAULT_POLICY : MapOTPPolicyEntity.toModel(policy);
+        return MapOTPPolicyEntity.toModel(entity.getOTPPolicy());
     }
 
     @Override
@@ -590,18 +516,17 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public Stream<GroupModel> getDefaultGroupsStream() {
-        Set<String> gIds = entity.getDefaultGroupIds();
-        return gIds == null ? Stream.empty() : gIds.stream().map(this::getGroupById);
+        return entity.getDefaultGroupIds().map(this::getGroupById);
     }
 
     @Override
     public void addDefaultGroup(GroupModel group) {
-        entity.addDefaultGroupId(group.getId());
+        entity.addDefaultGroup(group.getId());
     }
 
     @Override
     public void removeDefaultGroup(GroupModel group) {
-        entity.removeDefaultGroupId(group.getId());
+        entity.removeDefaultGroup(group.getId());
     }
 
     @Override
@@ -661,8 +586,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public Map<String, String> getSmtpConfig() {
-        Map<String, String> sC = entity.getSmtpConfig();
-        return sC == null ? Collections.emptyMap() : Collections.unmodifiableMap(sC);
+        return Collections.unmodifiableMap(entity.getSmtpConfig());
     }
 
     @Override
@@ -732,14 +656,12 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public Stream<AuthenticationFlowModel> getAuthenticationFlowsStream() {
-        Set<MapAuthenticationFlowEntity> afs = entity.getAuthenticationFlows();
-        return afs == null ? Stream.empty() : afs.stream().map(MapAuthenticationFlowEntity::toModel);
+        return entity.getAuthenticationFlows().map(MapAuthenticationFlowEntity::toModel);
     }
 
     @Override
     public AuthenticationFlowModel getFlowByAlias(String alias) {
-        Set<MapAuthenticationFlowEntity> afs = entity.getAuthenticationFlows();
-        return afs == null ? null : afs.stream()
+        return entity.getAuthenticationFlows()
                 .filter(flow -> Objects.equals(flow.getAlias(), alias))
                 .findFirst()
                 .map(MapAuthenticationFlowEntity::toModel)
@@ -748,20 +670,16 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public AuthenticationFlowModel addAuthenticationFlow(AuthenticationFlowModel model) {
-        if (entity.getAuthenticationFlow(model.getId()).isPresent()) {
-            throw new ModelDuplicateException("An AuthenticationFlow with given id already exists");
-        }
-
         MapAuthenticationFlowEntity authenticationFlowEntity = MapAuthenticationFlowEntity.fromModel(model);
         entity.addAuthenticationFlow(authenticationFlowEntity);
-
-        return MapAuthenticationFlowEntity.toModel(authenticationFlowEntity);
+        model.setId(authenticationFlowEntity.getId());
+        return model;
     }
 
     @Override
     public AuthenticationFlowModel getAuthenticationFlowById(String flowId) {
         if (flowId == null) return null;
-        return entity.getAuthenticationFlow(flowId).map(MapAuthenticationFlowEntity::toModel).orElse(null);
+        return MapAuthenticationFlowEntity.toModel(entity.getAuthenticationFlow(flowId));
     }
 
     @Override
@@ -771,20 +689,12 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public void updateAuthenticationFlow(AuthenticationFlowModel model) {
-        entity.getAuthenticationFlow(model.getId())
-                .ifPresent(existing -> {
-                    existing.setAlias(model.getAlias());
-                    existing.setDescription(model.getDescription());
-                    existing.setProviderId(model.getProviderId());
-                    existing.setBuiltIn(model.isBuiltIn());
-                    existing.setTopLevel(model.isTopLevel());
-                });
+        entity.updateAuthenticationFlow(MapAuthenticationFlowEntity.fromModel(model));
     }
 
     @Override
     public Stream<AuthenticationExecutionModel> getAuthenticationExecutionsStream(String flowId) {
-        Set<MapAuthenticationExecutionEntity> aee = entity.getAuthenticationExecutions();
-        return aee == null ? Stream.empty() : aee.stream()
+        return entity.getAuthenticationExecutions()
                 .filter(execution -> Objects.equals(flowId, execution.getParentFlowId()))
                 .map(MapAuthenticationExecutionEntity::toModel)
                 .sorted(AuthenticationExecutionModel.ExecutionComparator.SINGLETON);
@@ -793,13 +703,12 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
     @Override
     public AuthenticationExecutionModel getAuthenticationExecutionById(String id) {
         if (id == null) return null;
-        return entity.getAuthenticationExecution(id).map(MapAuthenticationExecutionEntity::toModel).orElse(null);
+        return MapAuthenticationExecutionEntity.toModel(entity.getAuthenticationExecution(id));
     }
 
     @Override
     public AuthenticationExecutionModel getAuthenticationExecutionByFlowId(String flowId) {
-        Set<MapAuthenticationExecutionEntity> aee = entity.getAuthenticationExecutions();
-        return aee == null ? null : aee.stream()
+        return entity.getAuthenticationExecutions()
                 .filter(execution -> Objects.equals(flowId, execution.getFlowId()))
                 .findAny()
                 .map(MapAuthenticationExecutionEntity::toModel)
@@ -808,44 +717,29 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public AuthenticationExecutionModel addAuthenticatorExecution(AuthenticationExecutionModel model) {
-        if (entity.getAuthenticationExecution(model.getId()).isPresent()) {
-            throw new ModelDuplicateException("An RequiredActionProvider with given id already exists");
-        }
         MapAuthenticationExecutionEntity executionEntity = MapAuthenticationExecutionEntity.fromModel(model);
-        entity.addAuthenticationExecution(executionEntity);
-        return MapAuthenticationExecutionEntity.toModel(executionEntity);
+        entity.addAuthenticatonExecution(executionEntity);
+        model.setId(executionEntity.getId());
+        return model;
     }
 
     @Override
     public void updateAuthenticatorExecution(AuthenticationExecutionModel model) {
-        entity.getAuthenticationExecution(model.getId())
-                .ifPresent(existing -> {
-                    existing.setAuthenticator(model.getAuthenticator());
-                    existing.setAuthenticatorConfig(model.getAuthenticatorConfig());
-                    existing.setFlowId(model.getFlowId());
-                    existing.setParentFlowId(model.getParentFlow());
-                    existing.setRequirement(model.getRequirement());
-                    existing.setAutheticatorFlow(model.isAuthenticatorFlow());
-                    existing.setPriority(model.getPriority());
-                });
+        entity.updateAuthenticatonExecution(MapAuthenticationExecutionEntity.fromModel(model));
     }
 
     @Override
     public void removeAuthenticatorExecution(AuthenticationExecutionModel model) {
-        entity.removeAuthenticationExecution(model.getId());
+        entity.removeAuthenticatonExecution(model.getId());
     }
 
     @Override
     public Stream<AuthenticatorConfigModel> getAuthenticatorConfigsStream() {
-        Set<MapAuthenticatorConfigEntity> acs = entity.getAuthenticatorConfigs();
-        return acs == null ? Stream.empty() : acs.stream().map(MapAuthenticatorConfigEntity::toModel);
+        return entity.getAuthenticatorConfigs().map(MapAuthenticatorConfigEntity::toModel);
     }
 
     @Override
     public AuthenticatorConfigModel addAuthenticatorConfig(AuthenticatorConfigModel model) {
-        if (entity.getAuthenticatorConfig(model.getId()).isPresent()) {
-            throw new ModelDuplicateException("An Authenticator Config with given id already exists.");
-        }
         MapAuthenticatorConfigEntity authenticatorConfig = MapAuthenticatorConfigEntity.fromModel(model);
         entity.addAuthenticatorConfig(authenticatorConfig);
         model.setId(authenticatorConfig.getId());
@@ -854,11 +748,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public void updateAuthenticatorConfig(AuthenticatorConfigModel model) {
-        entity.getAuthenticatorConfig(model.getId())
-                        .ifPresent(oldAC -> {
-                            oldAC.setAlias(model.getAlias());
-                            oldAC.setConfig(model.getConfig());
-                        });
+        entity.updateAuthenticatorConfig(MapAuthenticatorConfigEntity.fromModel(model));
     }
 
     @Override
@@ -869,13 +759,12 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
     @Override
     public AuthenticatorConfigModel getAuthenticatorConfigById(String id) {
         if (id == null) return null;
-        return entity.getAuthenticatorConfig(id).map(MapAuthenticatorConfigEntity::toModel).orElse(null);
+        return MapAuthenticatorConfigEntity.toModel(entity.getAuthenticatorConfig(id));
     }
 
     @Override
     public AuthenticatorConfigModel getAuthenticatorConfigByAlias(String alias) {
-        Set<MapAuthenticatorConfigEntity> acs = entity.getAuthenticatorConfigs();
-        return acs == null ? null : acs.stream()
+        return entity.getAuthenticatorConfigs()
                 .filter(config -> Objects.equals(config.getAlias(), alias))
                 .findFirst()
                 .map(MapAuthenticatorConfigEntity::toModel)
@@ -884,38 +773,22 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public Stream<RequiredActionProviderModel> getRequiredActionProvidersStream() {
-        Set<MapRequiredActionProviderEntity> raps = entity.getRequiredActionProviders();
-        return raps == null ? Stream.empty() : raps.stream()
+        return entity.getRequiredActionProviders()
                 .map(MapRequiredActionProviderEntity::toModel)
                 .sorted(RequiredActionProviderModel.RequiredActionComparator.SINGLETON);
     }
 
     @Override
     public RequiredActionProviderModel addRequiredActionProvider(RequiredActionProviderModel model) {
-        if (entity.getRequiredActionProvider(model.getId()).isPresent()) {
-            throw new ModelDuplicateException("A Required Action Provider with given id already exists.");
-        }
-        if (getRequiredActionProviderByAlias(model.getAlias()) != null) {
-            throw new ModelDuplicateException("A Required Action Provider with given alias already exists.");
-        }
         MapRequiredActionProviderEntity requiredActionProvider = MapRequiredActionProviderEntity.fromModel(model);
         entity.addRequiredActionProvider(requiredActionProvider);
-
-        return MapRequiredActionProviderEntity.toModel(requiredActionProvider);
+        model.setId(requiredActionProvider.getId());
+        return model;
     }
 
     @Override
     public void updateRequiredActionProvider(RequiredActionProviderModel model) {
-        entity.getRequiredActionProvider(model.getId())
-                        .ifPresent(oldRAP -> {
-                            oldRAP.setAlias(model.getAlias());
-                            oldRAP.setName(model.getName());
-                            oldRAP.setProviderId(model.getProviderId());
-                            oldRAP.setPriority(model.getPriority());
-                            oldRAP.setEnabled(model.isEnabled());
-                            oldRAP.setDefaultAction(model.isDefaultAction());
-                            oldRAP.setConfig(model.getConfig());
-                        });
+        entity.updateRequiredActionProvider(MapRequiredActionProviderEntity.fromModel(model));
     }
 
     @Override
@@ -926,14 +799,12 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
     @Override
     public RequiredActionProviderModel getRequiredActionProviderById(String id) {
         if (id == null) return null;
-
-        return entity.getRequiredActionProvider(id).map(MapRequiredActionProviderEntity::toModel).orElse(null);
+        return MapRequiredActionProviderEntity.toModel(entity.getRequiredActionProvider(id));
     }
 
     @Override
     public RequiredActionProviderModel getRequiredActionProviderByAlias(String alias) {
-        Set<MapRequiredActionProviderEntity> raps = entity.getRequiredActionProviders();
-        return raps == null ? null : raps.stream()
+        return entity.getRequiredActionProviders()
                 .filter(actionProvider -> Objects.equals(actionProvider.getAlias(), alias))
                 .findFirst()
                 .map(MapRequiredActionProviderEntity::toModel)
@@ -942,14 +813,12 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public Stream<IdentityProviderModel> getIdentityProvidersStream() {
-        Set<MapIdentityProviderEntity> ips = entity.getIdentityProviders();
-        return ips == null ? Stream.empty() : ips.stream().map(MapIdentityProviderEntity::toModel);
+        return entity.getIdentityProviders().map(MapIdentityProviderEntity::toModel);
     }
 
     @Override
     public IdentityProviderModel getIdentityProviderByAlias(String alias) {
-        Set<MapIdentityProviderEntity> ips = entity.getIdentityProviders();
-        return ips == null ? null : ips.stream()
+        return entity.getIdentityProviders()
                 .filter(identityProvider -> Objects.equals(identityProvider.getAlias(), alias))
                 .findFirst()
                 .map(MapIdentityProviderEntity::toModel)
@@ -958,9 +827,6 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public void addIdentityProvider(IdentityProviderModel model) {
-        if (getIdentityProviderByAlias(model.getAlias()) != null) {
-            throw new ModelDuplicateException("An Identity Provider with given alias already exists.");
-        }
         entity.addIdentityProvider(MapIdentityProviderEntity.fromModel(model));
     }
 
@@ -992,58 +858,37 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public void updateIdentityProvider(IdentityProviderModel identityProvider) {
-        Set<MapIdentityProviderEntity> ips = entity.getIdentityProviders();
-        if (ips != null) {
-            ips.stream()
-                    .filter(ip -> Objects.equals(ip.getId(), identityProvider.getInternalId()))
-                    .findFirst()
-                    .ifPresent(oldPS -> {
-                        oldPS.setAlias(identityProvider.getAlias());
-                        oldPS.setDisplayName(identityProvider.getDisplayName());
-                        oldPS.setProviderId(identityProvider.getProviderId());
-                        oldPS.setFirstBrokerLoginFlowId(identityProvider.getFirstBrokerLoginFlowId());
-                        oldPS.setPostBrokerLoginFlowId(identityProvider.getPostBrokerLoginFlowId());
-                        oldPS.setEnabled(identityProvider.isEnabled());
-                        oldPS.setTrustEmail(identityProvider.isTrustEmail());
-                        oldPS.setStoreToken(identityProvider.isStoreToken());
-                        oldPS.setLinkOnly(identityProvider.isLinkOnly());
-                        oldPS.setAddReadTokenRoleOnCreate(identityProvider.isAddReadTokenRoleOnCreate());
-                        oldPS.setAuthenticateByDefault(identityProvider.isAuthenticateByDefault());
-                        oldPS.setConfig(identityProvider.getConfig() == null ? null : new HashMap<>(identityProvider.getConfig()));
-                    });
+        entity.updateIdentityProvider(MapIdentityProviderEntity.fromModel(identityProvider));
 
-            // TODO: Sending an event should be extracted to store layer
-            session.getKeycloakSessionFactory().publish(new RealmModel.IdentityProviderUpdatedEvent() {
+        // TODO: Sending an event should be extracted to store layer
+        session.getKeycloakSessionFactory().publish(new RealmModel.IdentityProviderUpdatedEvent() {
 
-                @Override
-                public RealmModel getRealm() {
-                    return MapRealmAdapter.this;
-                }
+            @Override
+            public RealmModel getRealm() {
+                return MapRealmAdapter.this;
+            }
 
-                @Override
-                public IdentityProviderModel getUpdatedIdentityProvider() {
-                    return identityProvider;
-                }
+            @Override
+            public IdentityProviderModel getUpdatedIdentityProvider() {
+                return identityProvider;
+            }
 
-                @Override
-                public KeycloakSession getKeycloakSession() {
-                    return session;
-                }
-            });
-            // TODO: ^^^^^^^ Up to here
-        }
+            @Override
+            public KeycloakSession getKeycloakSession() {
+                return session;
+            }
+        });
+        // TODO: ^^^^^^^ Up to here
     }
 
     @Override
     public Stream<IdentityProviderMapperModel> getIdentityProviderMappersStream() {
-        Set<MapIdentityProviderMapperEntity> ipms = entity.getIdentityProviderMappers();
-        return ipms == null ? Stream.empty() : ipms.stream().map(MapIdentityProviderMapperEntity::toModel);
+        return entity.getIdentityProviderMappers().map(MapIdentityProviderMapperEntity::toModel);
     }
 
     @Override
     public Stream<IdentityProviderMapperModel> getIdentityProviderMappersByAliasStream(String brokerAlias) {
-        Set<MapIdentityProviderMapperEntity> ipms = entity.getIdentityProviderMappers();
-        return ipms == null ? Stream.empty() : ipms.stream()
+        return entity.getIdentityProviderMappers()
                 .filter(mapper -> Objects.equals(mapper.getIdentityProviderAlias(), brokerAlias))
                 .map(MapIdentityProviderMapperEntity::toModel);
     }
@@ -1051,14 +896,9 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
     @Override
     public IdentityProviderMapperModel addIdentityProviderMapper(IdentityProviderMapperModel model) {
         MapIdentityProviderMapperEntity identityProviderMapper = MapIdentityProviderMapperEntity.fromModel(model);
-
-        if (entity.getIdentityProviderMapper(model.getId()).isPresent()) {
-            throw new ModelDuplicateException("An IdentityProviderMapper with given id already exists");
-        }
-
         entity.addIdentityProviderMapper(identityProviderMapper);
-
-        return MapIdentityProviderMapperEntity.toModel(identityProviderMapper);
+        model.setId(identityProviderMapper.getId());
+        return model;
     }
 
     @Override
@@ -1068,26 +908,19 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public void updateIdentityProviderMapper(IdentityProviderMapperModel model) {
-        entity.getIdentityProviderMapper(model.getId())
-                        .ifPresent(oldIPM -> {
-                            oldIPM.setName(model.getName());
-                            oldIPM.setIdentityProviderAlias(model.getIdentityProviderAlias());
-                            oldIPM.setIdentityProviderMapper(model.getIdentityProviderMapper());
-                            oldIPM.setConfig(model.getConfig());
-                        });
+        entity.updateIdentityProviderMapper(MapIdentityProviderMapperEntity.fromModel(model));
     }
 
     @Override
     public IdentityProviderMapperModel getIdentityProviderMapperById(String id) {
         if (id == null) return null;
-        return entity.getIdentityProviderMapper(id).map(MapIdentityProviderMapperEntity::toModel).orElse(null);
+        return MapIdentityProviderMapperEntity.toModel(entity.getIdentityProviderMapper(id));
     }
 
     @Override
     public IdentityProviderMapperModel getIdentityProviderMapperByName(String brokerAlias, String name) {
-        Set<MapIdentityProviderMapperEntity> ipms = entity.getIdentityProviderMappers();
-        return ipms == null ? null : ipms.stream()
-                .filter(identityProviderMapper -> Objects.equals(identityProviderMapper.getIdentityProviderAlias(), brokerAlias)
+        return entity.getIdentityProviderMappers()
+                .filter(identityProviderMapper -> Objects.equals(identityProviderMapper.getIdentityProviderAlias(), brokerAlias) 
                         && Objects.equals(identityProviderMapper.getName(), name))
                 .findFirst()
                 .map(MapIdentityProviderMapperEntity::toModel)
@@ -1120,42 +953,30 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
             }
         }
 
-        if (entity.getComponent(model.getId()).isPresent()) {
-            throw new ModelDuplicateException("A Component with given id already exists");
-        }
-
         MapComponentEntity component = MapComponentEntity.fromModel(model);
         if (model.getParentId() == null) {
             component.setParentId(getId());
+            model.setParentId(getId());
         }
         entity.addComponent(component);
-
-        return MapComponentEntity.toModel(component);
+        model.setId(component.getId());
+        return model;
     }
 
     @Override
     public void updateComponent(ComponentModel component) {
         ComponentUtil.getComponentFactory(session, component).validateConfiguration(session, this, component);
-        entity.getComponent(component.getId())
-                        .ifPresent(existing -> {
-                            ComponentModel oldModel = MapComponentEntity.toModel(existing);
-                            updateComponent(existing, component);
-                            ComponentUtil.notifyUpdated(session, this, oldModel, component);
-                        });
-    }
 
-    private static void updateComponent(MapComponentEntity oldValue, ComponentModel newValue) {
-        oldValue.setName(newValue.getName());
-        oldValue.setProviderId(newValue.getProviderId());
-        oldValue.setProviderType(newValue.getProviderType());
-        oldValue.setSubType(newValue.getSubType());
-        oldValue.setParentId(newValue.getParentId());
-        oldValue.setConfig(newValue.getConfig());
+        MapComponentEntity old = entity.getComponent(component.getId());
+        if (old == null) return;
+
+        entity.updateComponent(MapComponentEntity.fromModel(component));
+        ComponentUtil.notifyUpdated(session, this, MapComponentEntity.toModel(old), component);
     }
 
     @Override
     public void removeComponent(ComponentModel component) {
-        if (!entity.getComponent(component.getId()).isPresent()) return;
+        if (entity.getComponent(component.getId()) == null) return;
 
         session.users().preRemove(this, component);
         ComponentUtil.notifyPreRemove(session, this, component);
@@ -1165,9 +986,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public void removeComponents(String parentId) {
-        Set<MapComponentEntity> components = entity.getComponents();
-        if (components == null || components.isEmpty()) return;
-        components.stream()
+        entity.getComponents()
             .filter(c -> Objects.equals(parentId, c.getParentId()))
             .map(MapComponentEntity::toModel)
             .collect(Collectors.toSet())  // This is necessary to read out all the components before removing them
@@ -1180,22 +999,19 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public Stream<ComponentModel> getComponentsStream() {
-        Set<MapComponentEntity> components = entity.getComponents();
-        return components == null ? Stream.empty() : components.stream().map(MapComponentEntity::toModel);
+        return entity.getComponents().map(MapComponentEntity::toModel);
     }
 
     @Override
     public Stream<ComponentModel> getComponentsStream(String parentId) {
-        Set<MapComponentEntity> components = entity.getComponents();
-        return components == null ? Stream.empty() : components.stream()
-                .filter(c -> Objects.equals(parentId, c.getParentId()))
-                .map(MapComponentEntity::toModel);
+        return entity.getComponents()
+            .filter(c -> Objects.equals(parentId, c.getParentId()))
+            .map(MapComponentEntity::toModel);
     }
 
     @Override
     public Stream<ComponentModel> getComponentsStream(String parentId, String providerType) {
-        Set<MapComponentEntity> components = entity.getComponents();
-        return components == null ? Stream.empty() : components.stream()
+        return entity.getComponents()
                 .filter(c -> Objects.equals(parentId, c.getParentId()))
                 .filter(c -> Objects.equals(providerType, c.getProviderType()))
                 .map(MapComponentEntity::toModel);
@@ -1203,7 +1019,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public ComponentModel getComponent(String id) {
-        return entity.getComponent(id).map(MapComponentEntity::toModel).orElse(null);
+        return MapComponentEntity.toModel(entity.getComponent(id));
     }
 
     @Override
@@ -1248,19 +1064,17 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public int getNotBefore() {
-        Long notBefore = entity.getNotBefore();
-        return notBefore == null ? 0 : TimeAdapter.fromLongWithTimeInSecondsToIntegerWithTimeInSeconds(notBefore);
+        return entity.getNotBefore();
     }
 
     @Override
     public void setNotBefore(int notBefore) {
-        entity.setNotBefore(TimeAdapter.fromIntegerWithTimeInSecondsToLongWithTimeAsInSeconds(notBefore));
+        entity.setNotBefore(notBefore);
     }
 
     @Override
     public boolean isEventsEnabled() {
-        Boolean is = entity.isEventsEnabled();
-        return is == null ? false : is;
+        return entity.isEventsEnabled();
     }
 
     @Override
@@ -1270,8 +1084,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public long getEventsExpiration() {
-        Long i = entity.getEventsExpiration();
-        return i == null ? 0 : i;
+        return entity.getEventsExpiration();
     }
 
     @Override
@@ -1281,8 +1094,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public Stream<String> getEventsListenersStream() {
-        Set<String> eLs = entity.getEventsListeners();
-        return eLs == null ? Stream.empty() : eLs.stream();
+        return entity.getEventsListeners().stream();
     }
 
     @Override
@@ -1292,8 +1104,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public Stream<String> getEnabledEventTypesStream() {
-        Set<String> eETs = entity.getEnabledEventTypes();
-        return eETs == null ? Stream.empty() : eETs.stream();
+        return entity.getEnabledEventTypes().stream();
     }
 
     @Override
@@ -1303,8 +1114,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public boolean isAdminEventsEnabled() {
-        Boolean is = entity.isAdminEventsEnabled();
-        return is == null ? false : is;
+        return entity.isAdminEventsEnabled();
     }
 
     @Override
@@ -1314,8 +1124,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public boolean isAdminEventsDetailsEnabled() {
-        Boolean is = entity.isAdminEventsDetailsEnabled();
-        return is == null ? false : is;
+        return entity.isAdminEventsDetailsEnabled();
     }
 
     @Override
@@ -1331,7 +1140,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
         }
         RealmModel masterRealm = getName().equals(Config.getAdminRealm())
           ? this
-          : session.realms().getRealmByName(Config.getAdminRealm());
+          : session.realms().getRealm(Config.getAdminRealm());
         return session.clients().getClientById(masterRealm, masterAdminClientId);
     }
 
@@ -1353,14 +1162,12 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public boolean isIdentityFederationEnabled() {
-        Set<MapIdentityProviderEntity> ips = entity.getIdentityProviders();
-        return ips != null && ips.stream().findAny().isPresent();
+        return entity.getIdentityProviders().findFirst().isPresent();
     }
 
     @Override
     public boolean isInternationalizationEnabled() {
-        Boolean is = entity.isInternationalizationEnabled();
-        return is == null ? false : is;
+        return entity.isInternationalizationEnabled();
     }
 
     @Override
@@ -1370,8 +1177,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public Stream<String> getSupportedLocalesStream() {
-        Set<String> sLs = entity.getSupportedLocales();
-        return sLs == null ? Stream.empty() : sLs.stream();
+        return entity.getSupportedLocales().stream();
     }
 
     @Override
@@ -1467,55 +1273,53 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
     @Override
     public void addDefaultClientScope(ClientScopeModel clientScope, boolean defaultScope) {
         if (defaultScope) {
-            entity.addDefaultClientScopeId(clientScope.getId());
+            entity.addDefaultClientScope(clientScope.getId());
         } else {
-            entity.addOptionalClientScopeId(clientScope.getId());
+            entity.addOptionalClientScope(clientScope.getId());
         }
     }
 
     @Override
     public void removeDefaultClientScope(ClientScopeModel clientScope) {
-        Boolean removedDefault = entity.removeDefaultClientScopeId(clientScope.getId());
-        if (removedDefault == null || !removedDefault) {
-            entity.removeOptionalClientScopeId(clientScope.getId());
-        }
+        entity.removeDefaultOrOptionalClientScope(clientScope.getId());
     }
 
     @Override
     public Stream<ClientScopeModel> getDefaultClientScopesStream(boolean defaultScope) {
-        Set<String> csIds = defaultScope ? entity.getDefaultClientScopeIds() : entity.getOptionalClientScopeIds();
-        return csIds == null ? Stream.empty() : csIds.stream().map(this::getClientScopeById);
+        if (defaultScope) {
+            return entity.getDefaultClientScopeIds().map(this::getClientScopeById);
+        } else {
+            return entity.getOptionalClientScopeIds().map(this::getClientScopeById);
+        }
     }
 
     @Override
     public void createOrUpdateRealmLocalizationTexts(String locale, Map<String, String> localizationTexts) {
         Map<String, Map<String, String>> realmLocalizationTexts = entity.getLocalizationTexts();
 
-        if (realmLocalizationTexts != null && realmLocalizationTexts.containsKey(locale)) {
-            Map<String, String> currentTexts = new HashMap<>(realmLocalizationTexts.get(locale));
+        if (realmLocalizationTexts.containsKey(locale)) {
+            Map<String, String> currentTexts = realmLocalizationTexts.get(locale);
             currentTexts.putAll(localizationTexts);
-            entity.setLocalizationText(locale, currentTexts);
+            entity.updateLocalizationTexts(locale, currentTexts);
         } else {
-            entity.setLocalizationText(locale, localizationTexts);
+            entity.addLocalizationTexts(locale, localizationTexts);
         }
     }
 
     @Override
     public boolean removeRealmLocalizationTexts(String locale) {
         if (locale == null) return false;
-        return entity.removeLocalizationText(locale);
+        return entity.removeLocalizationTexts(locale);
     }
 
     @Override
     public Map<String, Map<String, String>> getRealmLocalizationTexts() {
-        Map<String, Map<String, String>> localizationTexts = entity.getLocalizationTexts();
-        return localizationTexts == null ? Collections.emptyMap() : localizationTexts;
+        return entity.getLocalizationTexts();
     }
 
     @Override
     public Map<String, String> getRealmLocalizationTextsByLocale(String locale) {
-        Map<String, String> lT = entity.getLocalizationText(locale);
-        return lT == null ? Collections.emptyMap() : lT;
+        return entity.getLocalizationText(locale);
     }
 
     @Override
@@ -1677,8 +1481,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public boolean isOfflineSessionMaxLifespanEnabled() {
-        Boolean is = entity.isOfflineSessionMaxLifespanEnabled();
-        return is == null ? false : is;
+        return entity.isOfflineSessionMaxLifespanEnabled();
     }
 
     @Override
@@ -1688,8 +1491,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public int getOfflineSessionMaxLifespan() {
-        Integer i = entity.getOfflineSessionMaxLifespan();
-        return i == null ? 0 : i;
+        return entity.getOfflineSessionMaxLifespan();
     }
 
     @Override
@@ -1699,9 +1501,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public WebAuthnPolicy getWebAuthnPolicy() {
-        MapWebAuthnPolicyEntity policy = entity.getWebAuthnPolicy();
-        if (policy == null) policy = MapWebAuthnPolicyEntity.defaultWebAuthnPolicy();
-        return MapWebAuthnPolicyEntity.toModel(policy);
+        return MapWebAuthnPolicyEntity.toModel(entity.getWebAuthnPolicy());
     }
 
     @Override
@@ -1711,9 +1511,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public WebAuthnPolicy getWebAuthnPolicyPasswordless() {
-        MapWebAuthnPolicyEntity policy = entity.getWebAuthnPolicyPasswordless();
-        if (policy == null) policy = MapWebAuthnPolicyEntity.defaultWebAuthnPolicy();
-        return MapWebAuthnPolicyEntity.toModel(policy);
+        return MapWebAuthnPolicyEntity.toModel(entity.getWebAuthnPolicyPasswordless());
     }
 
     @Override
@@ -1723,8 +1521,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public Map<String, String> getBrowserSecurityHeaders() {
-        Map<String, String> bSH = entity.getBrowserSecurityHeaders();
-        return bSH == null ? Collections.emptyMap() : Collections.unmodifiableMap(bSH);
+        return Collections.unmodifiableMap(entity.getBrowserSecurityHeaders());
     }
 
     @Override
@@ -1741,7 +1538,7 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public ClientInitialAccessModel getClientInitialAccessModel(String id) {
-        return entity.getClientInitialAccess(id).map(MapClientInitialAccessEntity::toModel).orElse(null);
+        return MapClientInitialAccessEntity.toModel(entity.getClientInitialAccess(id));
     }
 
     @Override
@@ -1751,14 +1548,14 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
 
     @Override
     public Stream<ClientInitialAccessModel> getClientInitialAccesses() {
-        Set<MapClientInitialAccessEntity> cias = entity.getClientInitialAccesses();
-        return cias == null ? Stream.empty() : cias.stream().map(MapClientInitialAccessEntity::toModel);
+        return entity.getClientInitialAccesses().stream().map(MapClientInitialAccessEntity::toModel);
     }
 
     @Override
     public void decreaseRemainingCount(ClientInitialAccessModel model) {
-        entity.getClientInitialAccess(model.getId())
-                        .ifPresent(cia -> cia.setRemainingCount(model.getRemainingCount() - 1));
+        MapClientInitialAccessEntity clientInitialAccess = entity.getClientInitialAccess(model.getId());
+        clientInitialAccess.setRemainingCount(model.getRemainingCount() - 1);
+        entity.updateClientInitialAccess(clientInitialAccess);
     }
 
     @Override
@@ -1771,12 +1568,10 @@ public class MapRealmAdapter extends AbstractRealmModel<MapRealmEntity> implemen
         return String.format("%s@%08x", getId(), hashCode());
     }
 
-    @Override
     public CibaConfig getCibaPolicy() {
         return new CibaConfig(this);
     }
 
-    @Override
     public ParConfig getParPolicy() {
         return new ParConfig(this);
     }

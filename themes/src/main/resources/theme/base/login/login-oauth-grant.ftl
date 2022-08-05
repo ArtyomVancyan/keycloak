@@ -18,12 +18,7 @@
                 <#if oauth.clientScopesRequested??>
                     <#list oauth.clientScopesRequested as clientScope>
                         <li>
-                            <span><#if !clientScope.dynamicScopeParameter??>
-                                        ${advancedMsg(clientScope.consentScreenText)}
-                                    <#else>
-                                        ${advancedMsg(clientScope.consentScreenText)}: <b>${clientScope.dynamicScopeParameter}</b>
-                                </#if>
-                            </span>
+                            <span>${advancedMsg(clientScope.consentScreenText)}</span>
                         </li>
                     </#list>
                 </#if>

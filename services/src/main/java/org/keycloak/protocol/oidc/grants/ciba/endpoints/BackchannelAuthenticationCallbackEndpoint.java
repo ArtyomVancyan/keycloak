@@ -29,10 +29,9 @@ import org.keycloak.models.CibaConfig;
 import org.keycloak.models.ClientModel;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.OAuth2DeviceCodeModel;
+import org.keycloak.models.OAuth2DeviceTokenStoreProvider;
 import org.keycloak.protocol.oidc.grants.ciba.channel.AuthenticationChannelResponse;
 import org.keycloak.protocol.oidc.grants.ciba.channel.AuthenticationChannelResponse.Status;
-import org.keycloak.protocol.oidc.grants.device.DeviceGrantType;
-import org.keycloak.protocol.oidc.grants.device.endpoints.DeviceEndpoint;
 import org.keycloak.representations.AccessToken;
 import org.keycloak.services.ErrorResponseException;
 import org.keycloak.services.Urls;
@@ -124,7 +123,8 @@ public class BackchannelAuthenticationCallbackEndpoint extends AbstractCibaEndpo
             throw new ErrorResponseException(OAuthErrorException.INVALID_TOKEN, "Invalid token", Response.Status.FORBIDDEN);
         }
 
-        OAuth2DeviceCodeModel deviceCode = DeviceEndpoint.getDeviceByUserCode(session, realm, bearerToken.getId());
+        OAuth2DeviceTokenStoreProvider store = session.getProvider(OAuth2DeviceTokenStoreProvider.class);
+        OAuth2DeviceCodeModel deviceCode = store.getByUserCode(realm, bearerToken.getId());
 
         if (deviceCode == null) {
             throw new ErrorResponseException(OAuthErrorException.INVALID_TOKEN, "Invalid token", Response.Status.FORBIDDEN);
@@ -154,13 +154,15 @@ public class BackchannelAuthenticationCallbackEndpoint extends AbstractCibaEndpo
     }
 
     private void cancelRequest(String authResultId) {
-        OAuth2DeviceCodeModel userCode = DeviceEndpoint.getDeviceByUserCode(session, realm, authResultId);
-        DeviceGrantType.removeDeviceByDeviceCode(session, userCode.getDeviceCode());
-        DeviceGrantType.removeDeviceByUserCode(session, realm, authResultId);
+        OAuth2DeviceTokenStoreProvider store = session.getProvider(OAuth2DeviceTokenStoreProvider.class);
+        OAuth2DeviceCodeModel userCode = store.getByUserCode(realm, authResultId);
+        store.removeDeviceCode(realm, userCode.getDeviceCode());
+        store.removeUserCode(realm, authResultId);
     }
 
     private void approveRequest(AccessToken authReqId, Map<String, String> additionalParams) {
-        DeviceGrantType.approveUserCode(session, realm, authReqId.getId(), "fake", additionalParams);
+        OAuth2DeviceTokenStoreProvider store = session.getProvider(OAuth2DeviceTokenStoreProvider.class);
+        store.approve(realm, authReqId.getId(), "fake", additionalParams);
     }
 
     private void denyRequest(AccessToken authReqId, Status status) {
@@ -170,7 +172,9 @@ public class BackchannelAuthenticationCallbackEndpoint extends AbstractCibaEndpo
             event.error(Errors.CONSENT_DENIED);
         }
 
-        DeviceGrantType.denyUserCode(session, realm, authReqId.getId());
+        OAuth2DeviceTokenStoreProvider store = session.getProvider(OAuth2DeviceTokenStoreProvider.class);
+
+        store.deny(realm, authReqId.getId());
     }
 
     protected void sendClientNotificationRequest(ClientModel client, CibaConfig cibaConfig, OAuth2DeviceCodeModel deviceModel) {

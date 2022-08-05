@@ -22,17 +22,11 @@ import org.keycloak.common.util.Time;
 import org.keycloak.models.ClientModel;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
-import org.keycloak.models.map.common.TimeAdapter;
-import org.keycloak.models.utils.SessionExpiration;
 import org.keycloak.sessions.AuthenticationSessionModel;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
-
-import static org.keycloak.models.utils.SessionExpiration.getAuthSessionLifespan;
 
 /**
  * @author <a href="mailto:mkanis@redhat.com">Martin Kanis</a>
@@ -55,19 +49,20 @@ public class MapRootAuthenticationSessionAdapter extends AbstractRootAuthenticat
 
     @Override
     public int getTimestamp() {
-        return TimeAdapter.fromLongWithTimeInSecondsToIntegerWithTimeInSeconds(TimeAdapter.fromMilliSecondsToSeconds(entity.getTimestamp()));
+        return entity.getTimestamp();
     }
 
     @Override
     public void setTimestamp(int timestamp) {
-        entity.setTimestamp(TimeAdapter.fromSecondsToMilliseconds(timestamp));
-        entity.setExpiration(TimeAdapter.fromSecondsToMilliseconds(SessionExpiration.getAuthSessionExpiration(realm, timestamp)));
+        entity.setTimestamp(timestamp);
     }
 
     @Override
     public Map<String, AuthenticationSessionModel> getAuthenticationSessions() {
-        return Optional.ofNullable(entity.getAuthenticationSessions()).orElseGet(Collections::emptySet).stream()
-                .collect(Collectors.toMap(MapAuthenticationSessionEntity::getTabId, this::toAdapter));
+        return entity.getAuthenticationSessions().entrySet()
+                .stream()
+                .collect(Collectors.toMap(Map.Entry::getKey,
+                        entry -> new MapAuthenticationSessionAdapter(session, this, entry.getKey(), entry.getValue())));
     }
 
     @Override
@@ -76,66 +71,58 @@ public class MapRootAuthenticationSessionAdapter extends AbstractRootAuthenticat
             return null;
         }
 
-        return entity.getAuthenticationSession(tabId).map(this::toAdapter).map(this::setAuthContext).orElse(null);
+        AuthenticationSessionModel authSession = getAuthenticationSessions().get(tabId);
+        if (authSession != null && client.equals(authSession.getClient())) {
+            session.getContext().setAuthenticationSession(authSession);
+            return authSession;
+        } else {
+            return null;
+        }
     }
 
     @Override
     public AuthenticationSessionModel createAuthenticationSession(ClientModel client) {
         Objects.requireNonNull(client, "The provided client can't be null!");
 
-        MapAuthenticationSessionEntity authSessionEntity = new MapAuthenticationSessionEntityImpl();
+        MapAuthenticationSessionEntity authSessionEntity = new MapAuthenticationSessionEntity();
         authSessionEntity.setClientUUID(client.getId());
 
-        long timestamp = Time.currentTimeMillis();
+        int timestamp = Time.currentTime();
         authSessionEntity.setTimestamp(timestamp);
-        String tabId = generateTabId();
-        authSessionEntity.setTabId(tabId);
 
-        entity.addAuthenticationSession(authSessionEntity);
+        String tabId =  generateTabId();
+        entity.getAuthenticationSessions().put(tabId, authSessionEntity);
 
         // Update our timestamp when adding new authenticationSession
         entity.setTimestamp(timestamp);
 
-        int authSessionLifespanSeconds = getAuthSessionLifespan(realm);
-        entity.setExpiration(timestamp + TimeAdapter.fromSecondsToMilliseconds(authSessionLifespanSeconds));
-
-        return entity.getAuthenticationSession(tabId).map(this::toAdapter).map(this::setAuthContext).orElse(null);
+        MapAuthenticationSessionAdapter authSession = new MapAuthenticationSessionAdapter(session, this, tabId, authSessionEntity);
+        session.getContext().setAuthenticationSession(authSession);
+        return authSession;
     }
 
     @Override
     public void removeAuthenticationSessionByTabId(String tabId) {
-        Boolean result = entity.removeAuthenticationSession(tabId);
-        if (result == null || result) {
+        if (entity.removeAuthenticationSession(tabId) != null) {
             if (entity.getAuthenticationSessions().isEmpty()) {
                 session.authenticationSessions().removeRootAuthenticationSession(realm, this);
             } else {
-                long timestamp = Time.currentTimeMillis();
-                entity.setTimestamp(timestamp);
-                int authSessionLifespanSeconds = getAuthSessionLifespan(realm);
-                entity.setExpiration(timestamp + TimeAdapter.fromSecondsToMilliseconds(authSessionLifespanSeconds));
+                entity.setTimestamp(Time.currentTime());
             }
         }
     }
 
     @Override
     public void restartSession(RealmModel realm) {
-        entity.setAuthenticationSessions(null);
-        long timestamp = Time.currentTimeMillis();
-        entity.setTimestamp(timestamp);
-        int authSessionLifespanSeconds = getAuthSessionLifespan(realm);
-        entity.setExpiration(timestamp + TimeAdapter.fromSecondsToMilliseconds(authSessionLifespanSeconds));
+        entity.clearAuthenticationSessions();
+        entity.setTimestamp(Time.currentTime());
+    }
+
+    public void setUpdated(boolean updated) {
+        entity.signalUpdated(updated);
     }
 
     private String generateTabId() {
         return Base64Url.encode(SecretGenerator.getInstance().randomBytes(8));
-    }
-
-    private MapAuthenticationSessionAdapter toAdapter(MapAuthenticationSessionEntity entity) {
-        return new MapAuthenticationSessionAdapter(session, this, entity.getTabId(), entity);
-    }
-
-    private MapAuthenticationSessionAdapter setAuthContext(MapAuthenticationSessionAdapter adapter) {
-        session.getContext().setAuthenticationSession(adapter);
-        return adapter;
     }
 }

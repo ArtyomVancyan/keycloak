@@ -26,9 +26,11 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import org.jboss.resteasy.annotations.cache.NoCache;
 import org.keycloak.representations.idm.authorization.GroupPolicyRepresentation;
 import org.keycloak.representations.idm.authorization.PolicyRepresentation;
 import org.keycloak.representations.idm.authorization.ResourceRepresentation;
+import org.keycloak.representations.idm.authorization.RolePolicyRepresentation;
 
 /**
  * @author <a href="mailto:psilva@redhat.com">Pedro Igor</a>
@@ -37,6 +39,7 @@ public interface GroupPolicyResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @NoCache
     GroupPolicyRepresentation toRepresentation();
 
     @PUT
@@ -49,16 +52,19 @@ public interface GroupPolicyResource {
     @Path("/associatedPolicies")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @NoCache
     List<PolicyRepresentation> associatedPolicies();
 
     @Path("/dependentPolicies")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @NoCache
     List<PolicyRepresentation> dependentPolicies();
 
     @Path("/resources")
     @GET
     @Produces("application/json")
+    @NoCache
     List<ResourceRepresentation> resources();
 
 }

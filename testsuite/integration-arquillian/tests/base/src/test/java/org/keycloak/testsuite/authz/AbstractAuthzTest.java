@@ -14,6 +14,7 @@ import static org.keycloak.common.Profile.Feature.AUTHORIZATION;
 /**
  * @author mhajas
  */
+@EnableFeature(value = Profile.Feature.UPLOAD_SCRIPTS, skipRestart = true)
 public abstract class AbstractAuthzTest extends AbstractKeycloakTest {
 
     @BeforeClass

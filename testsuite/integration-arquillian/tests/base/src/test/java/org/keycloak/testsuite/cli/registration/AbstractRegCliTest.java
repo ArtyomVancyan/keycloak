@@ -352,9 +352,7 @@ public abstract class AbstractRegCliTest extends AbstractCliTest {
 
     private ComponentRepresentation findPolicyByProviderAndAuth(String realm, String providerId, String authType) {
         // Change the policy to avoid checking hosts
-        RealmResource realmResource = adminClient.realm(realm);
-        List<ComponentRepresentation> reps = realmResource.components().query(
-                realmResource.toRepresentation().getId(), ClientRegistrationPolicy.class.getName());
+        List<ComponentRepresentation> reps = adminClient.realm(realm).components().query(realm, ClientRegistrationPolicy.class.getName());
         for (ComponentRepresentation rep : reps) {
             if (rep.getSubType().equals(authType) && rep.getProviderId().equals(providerId)) {
                 return rep;

@@ -40,8 +40,7 @@ public enum DistributionType {
         return new RawKeycloakDistribution(
                 config.debug(),
                 config.keepAlive(),
-                !DistributionTest.ReInstall.NEVER.equals(config.reInstall()),
-                config.removeBuildOptionsAfterBuild());
+                !DistributionTest.ReInstall.NEVER.equals(config.reInstall()));
     }
 
     private final Function<DistributionTest, KeycloakDistribution> factory;

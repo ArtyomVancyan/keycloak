@@ -1,4 +1,5 @@
-<#import "template.ftl" as layout>
-<@layout.emailLayout>
+<html>
+<body>
 ${kcSanitize(msg("emailVerificationBodyCodeHtml",code))?no_esc}
-</@layout.emailLayout>
+</body>
+</html>

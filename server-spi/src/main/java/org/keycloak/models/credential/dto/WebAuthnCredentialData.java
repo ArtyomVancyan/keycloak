@@ -21,10 +21,6 @@ package org.keycloak.models.credential.dto;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Set;
-
 /**
  * @author <a href="mailto:mposolda@redhat.com">Marek Posolda</a>
  */
@@ -36,7 +32,6 @@ public class WebAuthnCredentialData {
     private String attestationStatement;
     private String credentialPublicKey;
     private String attestationStatementFormat;
-    private Set<String> transports;
 
     @JsonCreator
     public WebAuthnCredentialData(@JsonProperty("aaguid") String aaguid,
@@ -44,15 +39,13 @@ public class WebAuthnCredentialData {
                                   @JsonProperty("counter") long counter,
                                   @JsonProperty("attestationStatement") String attestationStatement,
                                   @JsonProperty("credentialPublicKey") String credentialPublicKey,
-                                  @JsonProperty("attestationStatementFormat") String attestationStatementFormat,
-                                  @JsonProperty("transports") Set<String> transports) {
+                                  @JsonProperty("attestationStatementFormat") String attestationStatementFormat) {
         this.aaguid = aaguid;
         this.credentialId = credentialId;
         this.counter = counter;
         this.attestationStatement = attestationStatement;
         this.credentialPublicKey = credentialPublicKey;
         this.attestationStatementFormat = attestationStatementFormat;
-        this.transports = transports;
     }
 
     public String getAaguid() {
@@ -87,14 +80,6 @@ public class WebAuthnCredentialData {
         this.attestationStatementFormat = attestationStatementFormat;
     }
 
-    public Set<String> getTransports() {
-        return transports != null ? transports : Collections.emptySet();
-    }
-
-    public void setTransports(Set<String> transports) {
-        this.transports = transports;
-    }
-
     @Override
     public String toString() {
         return "WebAuthnCredentialData { " +
@@ -105,7 +90,6 @@ public class WebAuthnCredentialData {
                 ", attestationStatement='" + attestationStatement + '\'' +
                 ", credentialPublicKey='" + credentialPublicKey + '\'' +
                 ", attestationStatementFormat='" + attestationStatementFormat + '\'' +
-                ", transports=" + Arrays.toString(getTransports().toArray()) +
                 " }";
     }
 }

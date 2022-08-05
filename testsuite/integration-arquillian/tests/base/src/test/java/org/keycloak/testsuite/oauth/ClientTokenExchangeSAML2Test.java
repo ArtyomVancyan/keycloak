@@ -203,7 +203,7 @@ public class ClientTokenExchangeSAML2Test extends AbstractKeycloakTest {
         assertNotNull(samlUnsignedAndUnencryptedTarget);
 
         ResourceServer server = management.realmResourceServer();
-        Policy clientPolicy = management.authz().getStoreFactory().getPolicyStore().create(server, clientRep);
+        Policy clientPolicy = management.authz().getStoreFactory().getPolicyStore().create(clientRep, server);
         management.clients().exchangeToPermission(samlSignedTarget).addAssociatedPolicy(clientPolicy);
         management.clients().exchangeToPermission(samlEncryptedTarget).addAssociatedPolicy(clientPolicy);
         management.clients().exchangeToPermission(samlSignedAndEncryptedTarget).addAssociatedPolicy(clientPolicy);
@@ -217,20 +217,20 @@ public class ClientTokenExchangeSAML2Test extends AbstractKeycloakTest {
         clientImpersonateRep.addClient(directPublic.getId());
         clientImpersonateRep.addClient(directNoSecret.getId());
         server = management.realmResourceServer();
-        Policy clientImpersonatePolicy = management.authz().getStoreFactory().getPolicyStore().create(server, clientImpersonateRep);
+        Policy clientImpersonatePolicy = management.authz().getStoreFactory().getPolicyStore().create(clientImpersonateRep, server);
         management.users().setPermissionsEnabled(true);
         management.users().adminImpersonatingPermission().addAssociatedPolicy(clientImpersonatePolicy);
         management.users().adminImpersonatingPermission().setDecisionStrategy(DecisionStrategy.AFFIRMATIVE);
 
         UserModel user = session.users().addUser(realm, "user");
         user.setEnabled(true);
-        user.credentialManager().updateCredential(UserCredentialModel.password("password"));
+        session.userCredentialManager().updateCredential(realm, user, UserCredentialModel.password("password"));
         user.grantRole(exampleRole);
         user.grantRole(impersonateRole);
 
         UserModel bad = session.users().addUser(realm, "bad-impersonator");
         bad.setEnabled(true);
-        bad.credentialManager().updateCredential(UserCredentialModel.password("password"));
+        session.userCredentialManager().updateCredential(realm, bad, UserCredentialModel.password("password"));
     }
 
     @Override
@@ -697,14 +697,14 @@ public class ClientTokenExchangeSAML2Test extends AbstractKeycloakTest {
         clientImpersonateRep.addClient(directExchanger.getId());
 
         ResourceServer server = management.realmResourceServer();
-        Policy clientImpersonatePolicy = management.authz().getStoreFactory().getPolicyStore().create(server, clientImpersonateRep);
+        Policy clientImpersonatePolicy = management.authz().getStoreFactory().getPolicyStore().create(clientImpersonateRep, server);
         management.users().setPermissionsEnabled(true);
         management.users().adminImpersonatingPermission().addAssociatedPolicy(clientImpersonatePolicy);
         management.users().adminImpersonatingPermission().setDecisionStrategy(DecisionStrategy.AFFIRMATIVE);
 
         UserModel impersonatedUser = session.users().addUser(realm, "impersonated-user");
         impersonatedUser.setEnabled(true);
-        impersonatedUser.credentialManager().updateCredential(UserCredentialModel.password("password"));
+        session.userCredentialManager().updateCredential(realm, impersonatedUser, UserCredentialModel.password("password"));
         impersonatedUser.grantRole(exampleRole);
     }
 

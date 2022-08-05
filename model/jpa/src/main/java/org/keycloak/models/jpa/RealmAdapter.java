@@ -43,7 +43,7 @@ import static org.keycloak.utils.StreamsUtil.closing;
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
  * @version $Revision: 1 $
  */
-public class RealmAdapter implements LegacyRealmModel, JpaModel<RealmEntity> {
+public class RealmAdapter implements RealmModel, JpaModel<RealmEntity> {
     protected static final Logger logger = Logger.getLogger(RealmAdapter.class);
     protected RealmEntity realm;
     protected EntityManager em;
@@ -1165,7 +1165,7 @@ public class RealmAdapter implements LegacyRealmModel, JpaModel<RealmEntity> {
         }
         RealmModel masterRealm = getName().equals(Config.getAdminRealm())
           ? this
-          : session.realms().getRealmByName(Config.getAdminRealm());
+          : session.realms().getRealm(Config.getAdminRealm());
         return session.clients().getClientById(masterRealm, masterAdminClientId);
     }
 
@@ -1797,9 +1797,6 @@ public class RealmAdapter implements LegacyRealmModel, JpaModel<RealmEntity> {
 
     @Override
     public RequiredActionProviderModel addRequiredActionProvider(RequiredActionProviderModel model) {
-        if (getRequiredActionProviderByAlias(model.getAlias()) != null) {
-            throw new ModelDuplicateException("A Required Action Provider with given alias already exists.");
-        }
         RequiredActionProviderEntity auth = new RequiredActionProviderEntity();
         String id = (model.getId() == null) ? KeycloakModelUtils.generateId(): model.getId();
         auth.setId(id);

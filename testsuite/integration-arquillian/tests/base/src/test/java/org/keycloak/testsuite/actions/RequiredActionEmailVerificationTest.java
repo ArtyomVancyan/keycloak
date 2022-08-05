@@ -41,7 +41,6 @@ import org.keycloak.testsuite.AbstractTestRealmKeycloakTest;
 import org.keycloak.testsuite.admin.ApiUtil;
 import org.keycloak.testsuite.arquillian.AuthServerTestEnricher;
 import org.keycloak.testsuite.arquillian.annotation.DisableFeature;
-import org.keycloak.testsuite.auth.page.AuthRealm;
 import org.keycloak.testsuite.cluster.AuthenticationSessionFailoverClusterTest;
 import org.keycloak.testsuite.pages.AppPage;
 import org.keycloak.testsuite.pages.AppPage.RequestType;
@@ -53,7 +52,6 @@ import org.keycloak.testsuite.pages.RegisterPage;
 import org.keycloak.testsuite.pages.VerifyEmailPage;
 import org.keycloak.testsuite.updaters.UserAttributeUpdater;
 import org.keycloak.testsuite.util.GreenMailRule;
-import org.keycloak.testsuite.util.InfinispanTestTimeServiceRule;
 import org.keycloak.testsuite.util.MailUtils;
 import org.keycloak.testsuite.util.SecondBrowser;
 import org.keycloak.testsuite.util.UserActionTokenBuilder;
@@ -92,9 +90,6 @@ public class RequiredActionEmailVerificationTest extends AbstractTestRealmKeyclo
 
     @Rule
     public GreenMailRule greenMail = new GreenMailRule();
-
-    @Rule
-    public InfinispanTestTimeServiceRule ispnTestTimeService = new InfinispanTestTimeServiceRule(this);
 
     @Page
     protected AppPage appPage;
@@ -359,9 +354,7 @@ public class RequiredActionEmailVerificationTest extends AbstractTestRealmKeyclo
         driver.navigate().to(verificationUrl1.trim());
 
         appPage.assertCurrent();
-        accountPage.setAuthRealm(AuthRealm.TEST);
-        accountPage.navigateTo();
-        accountPage.logOut();
+        appPage.logout();
 
         MimeMessage message2 = greenMail.getReceivedMessages()[1];
 
@@ -461,7 +454,7 @@ public class RequiredActionEmailVerificationTest extends AbstractTestRealmKeyclo
         events.poll();
 
         try {
-            setTimeOffset(360);
+            setTimeOffset(3600);
 
             driver.navigate().to(verificationUrl.trim());
 
@@ -771,7 +764,7 @@ public class RequiredActionEmailVerificationTest extends AbstractTestRealmKeyclo
 
             accountPage.assertCurrent();
 
-            accountPage.logOut();
+            driver.navigate().to(oauth.getLogoutUrl().redirectUri(accountPage.buildUri().toString()).build());
             loginPage.assertCurrent();
 
             verifyEmailDuringAuthFlow();
@@ -812,7 +805,7 @@ public class RequiredActionEmailVerificationTest extends AbstractTestRealmKeyclo
                 assertThat(driver2.getCurrentUrl(), Matchers.startsWith(accountPage.buildUri().toString()));
 
                 // Browser 1: Logout
-                accountPage.logOut();
+                driver.navigate().to(oauth.getLogoutUrl().redirectUri(accountPage.buildUri().toString()).build());
 
                 // Browser 1: Go to account page
                 accountPage.navigateTo();
@@ -997,7 +990,7 @@ public class RequiredActionEmailVerificationTest extends AbstractTestRealmKeyclo
         String verificationUrl = getPasswordResetEmailLink(message);
 
         try {
-            setTimeOffset(360);
+            setTimeOffset(3600);
 
             driver.navigate().to(verificationUrl.trim());
 

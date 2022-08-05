@@ -16,8 +16,6 @@
  */
 package org.keycloak.models.map.common.delegate;
 
-import org.keycloak.models.map.common.EntityField;
-
 /**
  * Interface for a provider of a delegate of type {@code T}, optionally
  * providing the flag on the object been updated.
@@ -27,12 +25,10 @@ public interface DelegateProvider<T> {
     /**
      * Returns a delegate for and entity for an operation on a field.
      * @param isRead {@code true} when the delegate requested for a read operation, false otherwise
-     * @param field Identification of the field this delegates operates on. While this parameter
-     *              can be any object including {@code null}, if it is a known field, then it is guaranteed to be
-     *              one of the {@code EntityField}s enumerated in one of the {@code Map*EntityFields} enum.
+     * @param field Identification of the field this delegates operates on.
      * @return
      */
-    T getDelegate(boolean isRead, Enum<? extends EntityField<T>> field, Object... parameters);
+    T getDelegate(boolean isRead, Object field, Object... parameters);
 
     default boolean isUpdated() { return false; }
 }

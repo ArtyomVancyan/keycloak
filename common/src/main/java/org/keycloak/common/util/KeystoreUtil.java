@@ -32,6 +32,9 @@ import java.security.PublicKey;
  * @version $Revision: 1 $
  */
 public class KeystoreUtil {
+    static {
+        BouncyIntegration.init();
+    }
 
     public enum KeystoreFormat {
         JKS,
@@ -69,7 +72,7 @@ public class KeystoreUtil {
             if (format == KeystoreFormat.JKS) {
                 keyStore = KeyStore.getInstance(format.toString());
             } else {
-                keyStore = KeyStore.getInstance(format.toString(), BouncyIntegration.PROVIDER);
+                keyStore = KeyStore.getInstance(format.toString(), "BC");
             }
 
             keyStore.load(stream, storePassword.toCharArray());

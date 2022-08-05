@@ -16,6 +16,7 @@
  */
 package org.keycloak.admin.client.resource;
 
+import org.jboss.resteasy.annotations.cache.NoCache;
 import org.keycloak.representations.idm.authorization.PolicyEvaluationRequest;
 import org.keycloak.representations.idm.authorization.PolicyEvaluationResponse;
 import org.keycloak.representations.idm.authorization.PolicyProviderRepresentation;
@@ -48,14 +49,17 @@ public interface PoliciesResource {
     @Path("/search")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @NoCache
     PolicyRepresentation findByName(@QueryParam("name") String name);
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @NoCache
     List<PolicyRepresentation> policies();
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @NoCache
     List<PolicyRepresentation> policies(@QueryParam("policyId") String id,
             @QueryParam("name") String name,
             @QueryParam("type") String type,
@@ -70,6 +74,7 @@ public interface PoliciesResource {
     @Path("providers")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @NoCache
     List<PolicyProviderRepresentation> policyProviders();
 
     @POST

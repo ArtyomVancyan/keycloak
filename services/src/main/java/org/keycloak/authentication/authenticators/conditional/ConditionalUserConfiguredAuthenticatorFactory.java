@@ -38,6 +38,11 @@ public class ConditionalUserConfiguredAuthenticatorFactory implements Conditiona
     }
 
     @Override
+    public String getReferenceCategory() {
+        return "condition";
+    }
+
+    @Override
     public boolean isConfigurable() {
         return false;
     }

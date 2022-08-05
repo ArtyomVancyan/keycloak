@@ -36,14 +36,14 @@ public class KeyPairVerifier {
         try {
             privateKey = PemUtils.decodePrivateKey(privateKeyPem);
         } catch (Exception e) {
-            throw new VerificationException("Failed to decode private key", e);
+            throw new VerificationException("Failed to decode private key");
         }
 
         PublicKey publicKey;
         try {
             publicKey = PemUtils.decodePublicKey(publicKeyPem);
         } catch (Exception e) {
-            throw new VerificationException("Failed to decode public key", e);
+            throw new VerificationException("Failed to decode public key");
         }
 
         try {

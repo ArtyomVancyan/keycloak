@@ -28,7 +28,6 @@ import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
-import org.keycloak.common.util.Retry;
 import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.testsuite.AbstractKeycloakTest;
 import org.keycloak.testsuite.arquillian.annotation.RestartContainer;
@@ -38,7 +37,6 @@ import org.keycloak.testsuite.util.ContainerAssume;
 import org.keycloak.testsuite.util.DroneUtils;
 import org.keycloak.testsuite.util.PhantomJSBrowser;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.logging.LogEntry;
 
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -157,10 +155,10 @@ public class WelcomePageTest extends AbstractKeycloakTest {
 
     @Test
     public void test_5_AccessCreatedAdminAccount() throws Exception {
-        welcomePage.navigateTo();
         welcomePage.navigateToAdminConsole();
-        // TODO PhantomJS is not loading the new admin console for some reason, so is not redirecting to the login page. It works with Chrome though.
-        Assert.assertEquals("Keycloak Administration Console", phantomJS.getTitle());
+        loginPage.form().login("admin", "admin");
+        Assert.assertFalse("Login with 'admin:admin' failed", 
+                driver.getPageSource().contains("Invalid username or password."));
     }
 
     @Test

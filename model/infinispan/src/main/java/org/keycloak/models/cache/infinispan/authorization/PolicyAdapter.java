@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,7 +21,6 @@ import org.keycloak.authorization.model.Policy;
 import org.keycloak.authorization.model.Resource;
 import org.keycloak.authorization.model.ResourceServer;
 import org.keycloak.authorization.model.Scope;
-import org.keycloak.authorization.store.PermissionTicketStore;
 import org.keycloak.authorization.store.PolicyStore;
 import org.keycloak.authorization.store.ResourceStore;
 import org.keycloak.authorization.store.ScopeStore;
@@ -86,7 +85,7 @@ public class PolicyAdapter implements Policy, CachedModel<Policy> {
     protected boolean isUpdated() {
         if (updated != null) return true;
         if (!invalidated) return false;
-        updated = cacheSession.getPolicyStoreDelegate().findById(InfinispanCacheStoreFactoryProviderFactory.NULL_REALM, cacheSession.getResourceServerStore().findById(InfinispanCacheStoreFactoryProviderFactory.NULL_REALM, cached.getResourceServerId()), cached.getId());
+        updated = cacheSession.getPolicyStoreDelegate().findById(cached.getId(), cached.getResourceServerId());
         if (updated == null) throw new IllegalStateException("Not found in database");
         return true;
     }
@@ -113,7 +112,7 @@ public class PolicyAdapter implements Policy, CachedModel<Policy> {
 
     @Override
     public ResourceServer getResourceServer() {
-        return cacheSession.getResourceServerStore().findById(InfinispanCacheStoreFactoryProviderFactory.NULL_REALM, cached.getResourceServerId());
+        return cacheSession.getResourceServerStore().findById(cached.getResourceServerId());
     }
 
     @Override
@@ -209,7 +208,7 @@ public class PolicyAdapter implements Policy, CachedModel<Policy> {
         PolicyStore policyStore = cacheSession.getPolicyStore();
         String resourceServerId = cached.getResourceServerId();
         for (String id : cached.getAssociatedPoliciesIds(modelSupplier)) {
-            Policy policy = policyStore.findById(InfinispanCacheStoreFactoryProviderFactory.NULL_REALM, cacheSession.getResourceServerStore().findById(InfinispanCacheStoreFactoryProviderFactory.NULL_REALM, resourceServerId), id);
+            Policy policy = policyStore.findById(id, resourceServerId);
             cacheSession.cachePolicy(policy);
             associatedPolicies.add(policy);
         }
@@ -224,9 +223,9 @@ public class PolicyAdapter implements Policy, CachedModel<Policy> {
         if (resources != null) return resources;
         resources = new HashSet<>();
         ResourceStore resourceStore = cacheSession.getResourceStore();
-        ResourceServer resourceServer = getResourceServer();
         for (String resourceId : cached.getResourcesIds(modelSupplier)) {
-            Resource resource = resourceStore.findById(InfinispanCacheStoreFactoryProviderFactory.NULL_REALM, resourceServer, resourceId);
+            String resourceServerId = cached.getResourceServerId();
+            Resource resource = resourceStore.findById(resourceId, resourceServerId);
             cacheSession.cacheResource(resource);
             resources.add(resource);
         }
@@ -288,10 +287,10 @@ public class PolicyAdapter implements Policy, CachedModel<Policy> {
         if (isUpdated()) return updated.getScopes();
         if (scopes != null) return scopes;
         scopes = new HashSet<>();
-        ResourceServer resourceServer = getResourceServer();
         ScopeStore scopeStore = cacheSession.getScopeStore();
+        String resourceServerId = cached.getResourceServerId();
         for (String scopeId : cached.getScopesIds(modelSupplier)) {
-            Scope scope = scopeStore.findById(InfinispanCacheStoreFactoryProviderFactory.NULL_REALM, resourceServer, scopeId);
+            Scope scope = scopeStore.findById(scopeId, resourceServerId);
             cacheSession.cacheScope(scope);
             scopes.add(scope);
         }
@@ -326,6 +325,6 @@ public class PolicyAdapter implements Policy, CachedModel<Policy> {
     }
 
     private Policy getPolicyModel() {
-        return cacheSession.getPolicyStoreDelegate().findById(InfinispanCacheStoreFactoryProviderFactory.NULL_REALM, cacheSession.getResourceServerStore().findById(InfinispanCacheStoreFactoryProviderFactory.NULL_REALM, cached.getResourceServerId()), cached.getId());
+        return cacheSession.getPolicyStoreDelegate().findById(cached.getId(), cached.getResourceServerId());
     }
 }

@@ -137,15 +137,22 @@
                 "policies": [
                     {
                         "name": "Default Policy",
-                        "type": "script-scripts/default-policy.js",
+                        "type": "js",
                         "logic": "POSITIVE",
-                        "decisionStrategy": "AFFIRMATIVE"
+                        "decisionStrategy": "AFFIRMATIVE",
+                        "config": {
+                            "code": "// by default, grants any permission associated with this policy\n$evaluation.grant();\n",
+                            "applyPolicies": "[]"
+                        }
                     },
                     {
                         "name": "Deny Policy",
-                        "type": "script-scripts/default-policy.js",
+                        "type": "js",
                         "logic": "NEGATIVE",
-                        "decisionStrategy": "UNANIMOUS"
+                        "decisionStrategy": "UNANIMOUS",
+                        "config": {
+                            "code": "$evaluation.grant();"
+                        }
                     },
                     {
                         "name": "Pattern 3 Permission",

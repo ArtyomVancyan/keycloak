@@ -17,7 +17,6 @@
 
 package org.keycloak.connections.jpa.updater.liquibase.lock;
 
-import liquibase.Scope;
 import liquibase.database.core.DerbyDatabase;
 import liquibase.exception.DatabaseException;
 import liquibase.exception.UnexpectedLiquibaseException;
@@ -32,7 +31,6 @@ import liquibase.statement.core.RawSqlStatement;
 import org.jboss.logging.Logger;
 import org.keycloak.common.util.Time;
 import org.keycloak.common.util.reflections.Reflections;
-import org.keycloak.connections.jpa.updater.liquibase.LiquibaseConstants;
 import org.keycloak.models.dblock.DBLockProvider;
 
 import java.lang.reflect.Field;
@@ -54,7 +52,7 @@ public class CustomLockService extends StandardLockService {
 
     @Override
     public void init() throws DatabaseException {
-        Executor executor = Scope.getCurrentScope().getSingleton(ExecutorService.class).getExecutor(LiquibaseConstants.JDBC_EXECUTOR, database);
+        Executor executor = ExecutorService.getInstance().getExecutor(database);
 
         if (!hasDatabaseChangeLogLockTable()) {
 
@@ -121,7 +119,7 @@ public class CustomLockService extends StandardLockService {
 
     private Set<Integer> currentIdsInDatabaseChangeLogLockTable() throws DatabaseException {
         try {
-            Executor executor = Scope.getCurrentScope().getSingleton(ExecutorService.class).getExecutor(LiquibaseConstants.JDBC_EXECUTOR, database);
+            Executor executor = ExecutorService.getInstance().getExecutor(database);
             String idColumnName = database.escapeColumnName(database.getLiquibaseCatalogName(),
                     database.getLiquibaseSchemaName(),
                     database.getDatabaseChangeLogLockTableName(),
@@ -137,6 +135,20 @@ public class CustomLockService extends StandardLockService {
         } catch (UnexpectedLiquibaseException ulie) {
             // It can happen with MariaDB Galera 10.1 that UnexpectedLiquibaseException is rethrown due the DB lock.
             // It is sufficient to just rollback transaction and retry in that case.
+            if (ulie.getCause() != null && ulie.getCause() instanceof DatabaseException) {
+                throw (DatabaseException) ulie.getCause();
+            } else {
+                throw ulie;
+            }
+        }
+    }
+
+    @Override
+    public boolean isDatabaseChangeLogLockTableInitialized(boolean tableJustCreated) throws DatabaseException {
+        try {
+            return super.isDatabaseChangeLogLockTableInitialized(tableJustCreated);
+        } catch (UnexpectedLiquibaseException ulie) {
+            // It can happen with MariaDB Galera 10.1 that UnexpectedLiquibaseException is rethrown due the DB lock. It is sufficient to just rollback transaction and retry in that case.
             if (ulie.getCause() != null && ulie.getCause() instanceof DatabaseException) {
                 throw (DatabaseException) ulie.getCause();
             } else {
@@ -191,7 +203,7 @@ public class CustomLockService extends StandardLockService {
             return true;
         }
 
-        Executor executor = Scope.getCurrentScope().getSingleton(ExecutorService.class).getExecutor(LiquibaseConstants.JDBC_EXECUTOR, database);
+        Executor executor = ExecutorService.getInstance().getExecutor(database);
 
         try {
             database.rollback();
@@ -237,7 +249,8 @@ public class CustomLockService extends StandardLockService {
                 hasChangeLogLock = false;
                 database.setCanCacheLiquibaseTableInfo(false);
                 database.rollback();
-            } catch (DatabaseException ignored) {
+            } catch (DatabaseException e) {
+                ;
             }
         }
     }

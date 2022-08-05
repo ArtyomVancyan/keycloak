@@ -23,7 +23,6 @@ import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.Response;
 
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.FixMethodOrder;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -194,9 +193,6 @@ public class LDAPProvidersIntegrationNoImportTest extends LDAPProvidersIntegrati
 
     @Test
     public void testFullNameMapperWriteOnly() {
-        Assume.assumeTrue("User cache disabled. UserModel behaves differently when it's cached adapter and when not. See https://github.com/keycloak/keycloak/discussions/10004", 
-                isUserCacheEnabled());
-
         ComponentRepresentation firstNameMapperRep = testingClient.server().fetch(session -> {
             LDAPTestContext ctx = LDAPTestContext.init(session);
             RealmModel appRealm = ctx.getRealm();

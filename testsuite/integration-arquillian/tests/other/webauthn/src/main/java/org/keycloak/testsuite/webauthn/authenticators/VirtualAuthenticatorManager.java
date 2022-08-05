@@ -17,10 +17,14 @@
 
 package org.keycloak.testsuite.webauthn.authenticators;
 
+import org.apache.http.util.Args;
 import org.hamcrest.CoreMatchers;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.virtualauthenticator.HasVirtualAuthenticator;
 import org.openqa.selenium.virtualauthenticator.VirtualAuthenticatorOptions;
+
+import java.io.Closeable;
+import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -41,7 +45,6 @@ public class VirtualAuthenticatorManager {
     public KcVirtualAuthenticator useAuthenticator(VirtualAuthenticatorOptions options) {
         if (options == null) return null;
 
-        removeAuthenticator();
         this.currentAuthenticator = new KcVirtualAuthenticator(driver.addVirtualAuthenticator(options), options);
         return currentAuthenticator;
     }
@@ -52,7 +55,6 @@ public class VirtualAuthenticatorManager {
 
     public void removeAuthenticator() {
         if (currentAuthenticator != null) {
-            currentAuthenticator.getAuthenticator().removeAllCredentials();
             driver.removeVirtualAuthenticator(currentAuthenticator.getAuthenticator());
             this.currentAuthenticator = null;
         }

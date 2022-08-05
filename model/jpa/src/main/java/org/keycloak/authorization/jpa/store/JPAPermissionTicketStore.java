@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Red Hat, Inc. and/or its affiliates
+ * Copyright 2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,11 +37,8 @@ import org.keycloak.authorization.jpa.entities.PermissionTicketEntity;
 import org.keycloak.authorization.model.PermissionTicket;
 import org.keycloak.authorization.model.Resource;
 import org.keycloak.authorization.model.ResourceServer;
-import org.keycloak.authorization.model.Scope;
 import org.keycloak.authorization.store.PermissionTicketStore;
 import org.keycloak.authorization.store.ResourceStore;
-import org.keycloak.common.util.Time;
-import org.keycloak.models.RealmModel;
 import org.keycloak.models.utils.KeycloakModelUtils;
 import javax.persistence.LockModeType;
 
@@ -62,14 +59,14 @@ public class JPAPermissionTicketStore implements PermissionTicketStore {
     }
 
     @Override
-    public long count(ResourceServer resourceServer, Map<PermissionTicket.FilterOption, String> attributes) {
+    public long count(Map<PermissionTicket.FilterOption, String> attributes, String resourceServerId) {
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<Long> querybuilder = builder.createQuery(Long.class);
         Root<PermissionTicketEntity> root = querybuilder.from(PermissionTicketEntity.class);
 
         querybuilder.select(root.get("id"));
 
-        List<Predicate> predicates = getPredicates(builder, root, resourceServer, attributes);
+        List<Predicate> predicates = getPredicates(builder, root, resourceServerId, attributes);
 
         querybuilder.where(predicates.toArray(new Predicate[predicates.size()])).orderBy(builder.asc(root.get("id")));
 
@@ -80,12 +77,12 @@ public class JPAPermissionTicketStore implements PermissionTicketStore {
 
     private List<Predicate> getPredicates(CriteriaBuilder builder,
                                           Root<PermissionTicketEntity> root,
-                                          ResourceServer resourceServer,
+                                          String resourceServerId,
                                           Map<PermissionTicket.FilterOption, String> attributes) {
         List<Predicate> predicates = new ArrayList<>();
 
-        if (resourceServer != null) {
-            predicates.add(builder.equal(root.get("resourceServer").get("id"), resourceServer.getId()));
+        if (resourceServerId != null) {
+            predicates.add(builder.equal(root.get("resourceServer").get("id"), resourceServerId));
         }
 
         attributes.forEach((filterOption, value) -> {
@@ -130,16 +127,16 @@ public class JPAPermissionTicketStore implements PermissionTicketStore {
     }
 
     @Override
-    public PermissionTicket create(ResourceServer resourceServer, Resource resource, Scope scope, String requester) {
+    public PermissionTicket create(String resourceId, String scopeId, String requester, ResourceServer resourceServer) {
         PermissionTicketEntity entity = new PermissionTicketEntity();
 
         entity.setId(KeycloakModelUtils.generateId());
-        entity.setResource(ResourceAdapter.toEntity(entityManager, resource));
+        entity.setResource(ResourceAdapter.toEntity(entityManager, provider.getStoreFactory().getResourceStore().findById(resourceId, resourceServer.getId())));
         entity.setRequester(requester);
-        entity.setCreatedTimestamp(Time.currentTimeMillis());
+        entity.setCreatedTimestamp(System.currentTimeMillis());
 
-        if (scope != null) {
-            entity.setScope(ScopeAdapter.toEntity(entityManager, scope));
+        if (scopeId != null) {
+            entity.setScope(ScopeAdapter.toEntity(entityManager, provider.getStoreFactory().getScopeStore().findById(scopeId, resourceServer.getId())));
         }
 
         entity.setOwner(entity.getResource().getOwner());
@@ -152,7 +149,7 @@ public class JPAPermissionTicketStore implements PermissionTicketStore {
     }
 
     @Override
-    public void delete(RealmModel realm, String id) {
+    public void delete(String id) {
         PermissionTicketEntity policy = entityManager.find(PermissionTicketEntity.class, id, LockModeType.PESSIMISTIC_WRITE);
         if (policy != null) {
             this.entityManager.remove(policy);
@@ -161,7 +158,7 @@ public class JPAPermissionTicketStore implements PermissionTicketStore {
 
 
     @Override
-    public PermissionTicket findById(RealmModel realm, ResourceServer resourceServer, String id) {
+    public PermissionTicket findById(String id, String resourceServerId) {
         if (id == null) {
             return null;
         }
@@ -173,19 +170,17 @@ public class JPAPermissionTicketStore implements PermissionTicketStore {
     }
 
     @Override
-    public List<PermissionTicket> findByResource(ResourceServer resourceServer, final Resource resource) {
-        TypedQuery<String> query = entityManager.createNamedQuery("findPermissionIdByResource", String.class);
+    public List<PermissionTicket> findByResourceServer(final String resourceServerId) {
+        TypedQuery<String> query = entityManager.createNamedQuery("findPolicyIdByServerId", String.class);
 
-        query.setFlushMode(FlushModeType.COMMIT);
-        query.setParameter("resourceId", resource.getId());
-        query.setParameter("serverId", resourceServer == null ? null : resourceServer.getId());
+        query.setParameter("serverId", resourceServerId);
 
         List<String> result = query.getResultList();
         List<PermissionTicket> list = new LinkedList<>();
         PermissionTicketStore ticketStore = provider.getStoreFactory().getPermissionTicketStore();
 
         for (String id : result) {
-            PermissionTicket ticket = ticketStore.findById(JPAAuthorizationStoreFactory.NULL_REALM, resourceServer, id);
+            PermissionTicket ticket = ticketStore.findById(id, resourceServerId);
             if (Objects.nonNull(ticket)) {
                 list.add(ticket);
             }
@@ -195,8 +190,30 @@ public class JPAPermissionTicketStore implements PermissionTicketStore {
     }
 
     @Override
-    public List<PermissionTicket> findByScope(ResourceServer resourceServer, Scope scope) {
-        if (scope == null) {
+    public List<PermissionTicket> findByResource(final String resourceId, String resourceServerId) {
+        TypedQuery<String> query = entityManager.createNamedQuery("findPermissionIdByResource", String.class);
+
+        query.setFlushMode(FlushModeType.COMMIT);
+        query.setParameter("resourceId", resourceId);
+        query.setParameter("serverId", resourceServerId);
+
+        List<String> result = query.getResultList();
+        List<PermissionTicket> list = new LinkedList<>();
+        PermissionTicketStore ticketStore = provider.getStoreFactory().getPermissionTicketStore();
+
+        for (String id : result) {
+            PermissionTicket ticket = ticketStore.findById(id, resourceServerId);
+            if (Objects.nonNull(ticket)) {
+                list.add(ticket);
+            }
+        }
+
+        return list;
+    }
+
+    @Override
+    public List<PermissionTicket> findByScope(String scopeId, String resourceServerId) {
+        if (scopeId==null) {
             return Collections.emptyList();
         }
 
@@ -204,15 +221,15 @@ public class JPAPermissionTicketStore implements PermissionTicketStore {
         TypedQuery<String> query = entityManager.createNamedQuery("findPermissionIdByScope", String.class);
 
         query.setFlushMode(FlushModeType.COMMIT);
-        query.setParameter("scopeId", scope.getId());
-        query.setParameter("serverId", resourceServer == null ? null : resourceServer.getId());
+        query.setParameter("scopeId", scopeId);
+        query.setParameter("serverId", resourceServerId);
 
         List<String> result = query.getResultList();
         List<PermissionTicket> list = new LinkedList<>();
         PermissionTicketStore ticketStore = provider.getStoreFactory().getPermissionTicketStore();
 
         for (String id : result) {
-            PermissionTicket ticket = ticketStore.findById(JPAAuthorizationStoreFactory.NULL_REALM, resourceServer, id);
+            PermissionTicket ticket = ticketStore.findById(id, resourceServerId);
             if (Objects.nonNull(ticket)) {
                 list.add(ticket);
             }
@@ -222,14 +239,14 @@ public class JPAPermissionTicketStore implements PermissionTicketStore {
     }
 
     @Override
-    public List<PermissionTicket> find(RealmModel realm, ResourceServer resourceServer, Map<PermissionTicket.FilterOption, String> attributes, Integer firstResult, Integer maxResult) {
+    public List<PermissionTicket> find(Map<PermissionTicket.FilterOption, String> attributes, String resourceServerId, int firstResult, int maxResult) {
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<PermissionTicketEntity> querybuilder = builder.createQuery(PermissionTicketEntity.class);
         Root<PermissionTicketEntity> root = querybuilder.from(PermissionTicketEntity.class);
 
         querybuilder.select(root.get("id"));
 
-        List<Predicate> predicates = getPredicates(builder, root, resourceServer, attributes);
+        List<Predicate> predicates = getPredicates(builder, root, resourceServerId, attributes);
 
         querybuilder.where(predicates.toArray(new Predicate[predicates.size()])).orderBy(builder.asc(root.get("id")));
 
@@ -240,7 +257,7 @@ public class JPAPermissionTicketStore implements PermissionTicketStore {
         PermissionTicketStore ticketStore = provider.getStoreFactory().getPermissionTicketStore();
 
         for (String id : result) {
-            PermissionTicket ticket = ticketStore.findById(realm, resourceServer, id);
+            PermissionTicket ticket = ticketStore.findById(id, resourceServerId);
             if (Objects.nonNull(ticket)) {
                 list.add(ticket);
             }
@@ -250,28 +267,28 @@ public class JPAPermissionTicketStore implements PermissionTicketStore {
     }
 
     @Override
-    public List<PermissionTicket> findGranted(ResourceServer resourceServer, String userId) {
+    public List<PermissionTicket> findGranted(String userId, String resourceServerId) {
         Map<PermissionTicket.FilterOption, String> filters = new EnumMap<>(PermissionTicket.FilterOption.class);
 
         filters.put(PermissionTicket.FilterOption.GRANTED, Boolean.TRUE.toString());
         filters.put(PermissionTicket.FilterOption.REQUESTER, userId);
 
-        return find(JPAAuthorizationStoreFactory.NULL_REALM, resourceServer, filters, null, null);
+        return find(filters, resourceServerId, -1, -1);
     }
 
     @Override
-    public List<PermissionTicket> findGranted(ResourceServer resourceServer, String resourceName, String userId) {
+    public List<PermissionTicket> findGranted(String resourceName, String userId, String resourceServerId) {
         Map<PermissionTicket.FilterOption, String> filters = new EnumMap<>(PermissionTicket.FilterOption.class);
 
         filters.put(PermissionTicket.FilterOption.RESOURCE_NAME, resourceName);
         filters.put(PermissionTicket.FilterOption.GRANTED, Boolean.TRUE.toString());
         filters.put(PermissionTicket.FilterOption.REQUESTER, userId);
 
-        return find(JPAAuthorizationStoreFactory.NULL_REALM, resourceServer, filters, null, null);
+        return find(filters, resourceServerId, -1, -1);
     }
 
     @Override
-    public List<Resource> findGrantedResources(RealmModel realm, String requester, String name, Integer first, Integer max) {
+    public List<Resource> findGrantedResources(String requester, String name, int first, int max) {
         TypedQuery<String> query = name == null ? 
                 entityManager.createNamedQuery("findGrantedResources", String.class) :
                 entityManager.createNamedQuery("findGrantedResourcesByName", String.class);
@@ -288,7 +305,7 @@ public class JPAPermissionTicketStore implements PermissionTicketStore {
         ResourceStore resourceStore = provider.getStoreFactory().getResourceStore();
 
         for (String id : result) {
-            Resource resource = resourceStore.findById(realm, null, id);
+            Resource resource = resourceStore.findById(id, null);
 
             if (Objects.nonNull(resource)) {
                 list.add(resource);
@@ -299,18 +316,18 @@ public class JPAPermissionTicketStore implements PermissionTicketStore {
     }
 
     @Override
-    public List<Resource> findGrantedOwnerResources(RealmModel realm, String owner, Integer firstResult, Integer maxResults) {
+    public List<Resource> findGrantedOwnerResources(String owner, int first, int max) {
         TypedQuery<String> query = entityManager.createNamedQuery("findGrantedOwnerResources", String.class);
 
         query.setFlushMode(FlushModeType.COMMIT);
         query.setParameter("owner", owner);
 
-        List<String> result = paginateQuery(query, firstResult, maxResults).getResultList();
+        List<String> result = paginateQuery(query, first, max).getResultList();
         List<Resource> list = new LinkedList<>();
         ResourceStore resourceStore = provider.getStoreFactory().getResourceStore();
 
         for (String id : result) {
-            Resource resource = resourceStore.findById(realm, null, id);
+            Resource resource = resourceStore.findById(id, null);
 
             if (Objects.nonNull(resource)) {
                 list.add(resource);
@@ -320,4 +337,25 @@ public class JPAPermissionTicketStore implements PermissionTicketStore {
         return list;
     }
 
+    @Override
+    public List<PermissionTicket> findByOwner(String owner, String resourceServerId) {
+        TypedQuery<String> query = entityManager.createNamedQuery("findPolicyIdByType", String.class);
+
+        query.setFlushMode(FlushModeType.COMMIT);
+        query.setParameter("serverId", resourceServerId);
+        query.setParameter("owner", owner);
+
+        List<String> result = query.getResultList();
+        List<PermissionTicket> list = new LinkedList<>();
+        PermissionTicketStore ticketStore = provider.getStoreFactory().getPermissionTicketStore();
+
+        for (String id : result) {
+            PermissionTicket ticket = ticketStore.findById(id, resourceServerId);
+            if (Objects.nonNull(ticket)) {
+                list.add(ticket);
+            }
+        }
+
+        return list;
+    }
 }

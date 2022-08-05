@@ -38,7 +38,6 @@ import org.keycloak.models.sessions.infinispan.InfinispanUserSessionProviderFact
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -166,7 +165,7 @@ public class UserSessionInitializerTest extends KeycloakModelTest {
 
         Optional<HotRodServerRule> hotRodServer = getParameters(HotRodServerRule.class).findFirst();
 
-        inIndependentFactories(4, 60, () -> {
+        inIndependentFactories(4, 300, () -> {
             synchronized (lock) {
                 if (index.incrementAndGet() == 1) {
                     // create a user session in the first node

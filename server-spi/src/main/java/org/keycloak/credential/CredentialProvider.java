@@ -41,16 +41,10 @@ public interface CredentialProvider<T extends CredentialModel> extends Provider 
     T getCredentialFromModel(CredentialModel model);
 
     default T getDefaultCredential(KeycloakSession session, RealmModel realm, UserModel user) {
-        CredentialModel model = user.credentialManager().getStoredCredentialsByTypeStream(getType())
+        CredentialModel model = session.userCredentialManager().getStoredCredentialsByTypeStream(realm, user, getType())
                 .findFirst().orElse(null);
         return model != null ? getCredentialFromModel(model) : null;
     }
 
     CredentialTypeMetadata getCredentialTypeMetadata(CredentialTypeMetadataContext metadataContext);
-
-    default CredentialMetadata getCredentialMetadata(T credentialModel, CredentialTypeMetadata credentialTypeMetadata) {
-        CredentialMetadata credentialMetadata = new CredentialMetadata();
-        credentialMetadata.setCredentialModel(credentialModel);
-        return credentialMetadata;
-    }
 }

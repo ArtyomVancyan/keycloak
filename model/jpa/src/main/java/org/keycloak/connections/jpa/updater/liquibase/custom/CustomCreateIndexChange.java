@@ -18,9 +18,7 @@ package org.keycloak.connections.jpa.updater.liquibase.custom;
 
 import java.io.StringWriter;
 
-import liquibase.Scope;
 import org.jboss.logging.Logger;
-import org.keycloak.connections.jpa.updater.liquibase.LiquibaseConstants;
 import org.keycloak.connections.jpa.updater.liquibase.LiquibaseJpaUpdaterProvider;
 import org.keycloak.connections.jpa.updater.liquibase.conn.DefaultLiquibaseConnectionProvider;
 
@@ -59,7 +57,7 @@ public class CustomCreateIndexChange extends CreateIndexChange {
     @Override
     public SqlStatement[] generateStatements(Database database) {
         // This check is for manual migration
-        if (Scope.getCurrentScope().getSingleton(ExecutorService.class).getExecutor(LiquibaseConstants.JDBC_EXECUTOR, database) instanceof LoggingExecutor)
+        if (ExecutorService.getInstance().getExecutor(database) instanceof LoggingExecutor)
             return super.generateStatements(database);
 
         Object indexCreationThreshold = ((AbstractJdbcDatabase) database)
@@ -78,8 +76,8 @@ public class CustomCreateIndexChange extends CreateIndexChange {
                 .has(new Table().setName(getTableName()).setSchema(new Schema(getCatalogName(), getSchemaName())), database))
                 return super.generateStatements(database);
 
-            int result = Scope.getCurrentScope().getSingleton(ExecutorService.class).getExecutor(LiquibaseConstants.JDBC_EXECUTOR, database)
-                    .queryForInt(new RawSqlStatement("SELECT COUNT(*) FROM " + getTableNameForSqlSelects(database, getTableName())));
+            int result = ExecutorService.getInstance().getExecutor(database).queryForInt(
+                new RawSqlStatement("SELECT COUNT(*) FROM " + getTableNameForSqlSelects(database, getTableName())));
 
             if (result > this.indexCreationThreshold) {
                 String loggingString = createLoggingString(database);
@@ -102,10 +100,10 @@ public class CustomCreateIndexChange extends CreateIndexChange {
 
     private String createLoggingString(Database database) throws DatabaseException {
         StringWriter writer = new StringWriter();
-        LoggingExecutor loggingExecutor = new LoggingExecutor(Scope.getCurrentScope().getSingleton(ExecutorService.class)
-                .getExecutor(LiquibaseConstants.JDBC_EXECUTOR, database), writer, database);
+        LoggingExecutor loggingExecutor = new LoggingExecutor(ExecutorService.getInstance().getExecutor(database), writer,
+            database);
         SqlStatement sqlStatement = new CreateIndexStatement(getIndexName(), getCatalogName(), getSchemaName(), getTableName(),
-            this.isUnique(), getAssociatedWith(), getColumns().toArray(new AddColumnConfig[0]))
+            this.isUnique(), getAssociatedWith(), getColumns().toArray(new AddColumnConfig[getColumns().size()]))
                 .setTablespace(getTablespace()).setClustered(getClustered());
 
         loggingExecutor.execute(sqlStatement);
@@ -142,8 +140,8 @@ public class CustomCreateIndexChange extends CreateIndexChange {
             if (SqlGeneratorFactory.getInstance().supports(statement, database)) {
                 warnings.addAll(SqlGeneratorFactory.getInstance().warn(statement, database));
             } else if (statement.skipOnUnsupported()) {
-                warnings.addWarning(statement.getClass().getName() + " is not supported on " + database.getShortName() + ", but "
-                        + Scope.getCurrentScope().getSingleton(ChangeFactory.class).getChangeMetaData(this).getName() + " will still execute");
+                warnings.addWarning(statement.getClass().getName() + " is not supported on " + database.getShortName()
+                    + ", but " + ChangeFactory.getInstance().getChangeMetaData(this).getName() + " will still execute");
             }
         }
 
@@ -154,11 +152,10 @@ public class CustomCreateIndexChange extends CreateIndexChange {
     public ValidationErrors validate(Database database) {
         ValidationErrors changeValidationErrors = new ValidationErrors();
 
-        ChangeFactory changeFactory = Scope.getCurrentScope().getSingleton(ChangeFactory.class);
-        for (ChangeParameterMetaData param : changeFactory.getChangeMetaData(this).getParameters().values()) {
+        for (ChangeParameterMetaData param : ChangeFactory.getInstance().getChangeMetaData(this).getParameters().values()) {
             if (param.isRequiredFor(database) && param.getCurrentValue(this) == null) {
                 changeValidationErrors.addError(param.getParameterName() + " is required for "
-                    + changeFactory.getChangeMetaData(this).getName() + " on " + database.getShortName());
+                    + ChangeFactory.getInstance().getChangeMetaData(this).getName() + " on " + database.getShortName());
             }
         }
         if (changeValidationErrors.hasErrors()) {
@@ -166,7 +163,7 @@ public class CustomCreateIndexChange extends CreateIndexChange {
         }
 
         if (!generateStatementsVolatile(database)) {
-            String unsupportedWarning = changeFactory.getChangeMetaData(this).getName() + " is not supported on "
+            String unsupportedWarning = ChangeFactory.getInstance().getChangeMetaData(this).getName() + " is not supported on "
                 + database.getShortName();
             boolean sawUnsupportedError = false;
 

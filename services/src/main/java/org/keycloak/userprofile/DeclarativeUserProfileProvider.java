@@ -178,7 +178,7 @@ public class DeclarativeUserProfileProvider extends AbstractUserProfileProvider<
 
         if (!isBlank(upConfigJson)) {
             try {
-                UPConfig upc = parseConfig(upConfigJson);
+                UPConfig upc = readConfig(new ByteArrayInputStream(upConfigJson.getBytes("UTF-8")));
                 List<String> errors = UPConfigUtils.validate(session, upc);
 
                 if (!errors.isEmpty()) {
@@ -340,8 +340,7 @@ public class DeclarativeUserProfileProvider extends AbstractUserProfileProvider<
             AttributeGroupMetadata groupMetadata = toAttributeGroupMeta(groupsByName.get(attributeGroup));
 
             if (isUsernameOrEmailAttribute(attributeName)) {
-                // make sure username and email are writable if permissions are not set
-                if (permissions == null || permissions.isEmpty()) {
+                if (permissions == null) {
                     writeAllowed = AttributeMetadata.ALWAYS_TRUE;
                 }
 
@@ -408,7 +407,7 @@ public class DeclarativeUserProfileProvider extends AbstractUserProfileProvider<
 
         if (!isBlank(rawConfig)) {
             try {
-                UPConfig upc = parseConfig(rawConfig);
+                UPConfig upc = readConfig(new ByteArrayInputStream(rawConfig.getBytes("UTF-8")));
 
                 //validate configuration to catch things like changed/removed validators etc, and warn early and clearly about this problem
                 List<String> errors = UPConfigUtils.validate(session, upc);
@@ -423,10 +422,6 @@ public class DeclarativeUserProfileProvider extends AbstractUserProfileProvider<
         }
 
         return null;
-    }
-
-    private UPConfig parseConfig(String rawConfig) throws IOException {
-        return readConfig(new ByteArrayInputStream(rawConfig.getBytes("UTF-8")));
     }
 
     /**

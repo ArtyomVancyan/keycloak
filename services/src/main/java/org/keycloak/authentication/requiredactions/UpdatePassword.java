@@ -19,6 +19,7 @@ package org.keycloak.authentication.requiredactions;
 
 import org.jboss.logging.Logger;
 import org.keycloak.Config;
+import org.keycloak.OAuth2Constants;
 import org.keycloak.authentication.*;
 import org.keycloak.common.util.Time;
 import org.keycloak.credential.CredentialModel;
@@ -36,6 +37,7 @@ import org.keycloak.models.ModelException;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserCredentialModel;
 import org.keycloak.models.UserModel;
+import org.keycloak.models.UserSessionModel;
 import org.keycloak.models.utils.FormMessage;
 import org.keycloak.services.managers.AuthenticationManager;
 import org.keycloak.services.messages.Messages;
@@ -44,6 +46,7 @@ import org.keycloak.sessions.AuthenticationSessionModel;
 
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -52,7 +55,7 @@ import java.util.stream.Collectors;
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
  * @version $Revision: 1 $
  */
-public class UpdatePassword implements RequiredActionProvider, RequiredActionFactory {
+public class UpdatePassword implements RequiredActionProvider, RequiredActionFactory, DisplayTypeRequiredActionFactory {
     private static final Logger logger = Logger.getLogger(UpdatePassword.class);
     
     @Override
@@ -136,7 +139,7 @@ public class UpdatePassword implements RequiredActionProvider, RequiredActionFac
         }
 
         try {
-            user.credentialManager().updateCredential(UserCredentialModel.password(passwordNew, false));
+            session.userCredentialManager().updateCredential(realm, user, UserCredentialModel.password(passwordNew, false));
             context.success();
         } catch (ModelException me) {
             errorEvent.detail(Details.REASON, me.getMessage()).error(Errors.PASSWORD_REJECTED);
@@ -166,6 +169,15 @@ public class UpdatePassword implements RequiredActionProvider, RequiredActionFac
     public RequiredActionProvider create(KeycloakSession session) {
         return this;
     }
+
+
+    @Override
+    public RequiredActionProvider createDisplay(KeycloakSession session, String displayType) {
+        if (displayType == null) return this;
+        if (!OAuth2Constants.DISPLAY_CONSOLE.equalsIgnoreCase(displayType)) return null;
+        return ConsoleUpdatePassword.SINGLETON;
+    }
+
 
     @Override
     public void init(Config.Scope config) {

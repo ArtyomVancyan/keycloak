@@ -13,7 +13,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
-import java.util.List;
 
 import static org.keycloak.testsuite.admin.ApiUtil.findClientByClientId;
 import static org.keycloak.testsuite.admin.ApiUtil.findProtocolMapperByName;
@@ -160,12 +159,6 @@ public class ClientManager {
                     app.getRedirectUris().remove(redirectUri);
                 }
             }
-            clientResource.update(app);
-        }
-
-        public void setPostLogoutRedirectUri(List<String> postLogoutRedirectUris) {
-            ClientRepresentation app = clientResource.toRepresentation();
-            OIDCAdvancedConfigWrapper.fromClientRepresentation(app).setPostLogoutRedirectUris(postLogoutRedirectUris);
             clientResource.update(app);
         }
 

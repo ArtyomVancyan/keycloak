@@ -30,7 +30,6 @@ import org.keycloak.crypto.SignatureSignerContext;
 import org.keycloak.jose.JOSEParser;
 import org.keycloak.jose.JOSE;
 import org.keycloak.jose.jwe.JWE;
-import org.keycloak.jose.jwe.JWEConstants;
 import org.keycloak.jose.jwe.JWEException;
 import org.keycloak.jose.jwe.alg.JWEAlgorithmProvider;
 import org.keycloak.jose.jwe.enc.JWEEncryptionProvider;
@@ -54,9 +53,13 @@ import org.keycloak.util.TokenUtil;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.Key;
+import java.security.PrivateKey;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class DefaultTokenManager implements TokenManager {
@@ -276,8 +279,6 @@ public class DefaultTokenManager implements TokenManager {
                 return getCekManagementAlgorithm(OIDCConfigAttributes.ID_TOKEN_ENCRYPTED_RESPONSE_ALG);
             case AUTHORIZATION_RESPONSE:
                 return getCekManagementAlgorithm(OIDCConfigAttributes.AUTHORIZATION_ENCRYPTED_RESPONSE_ALG);
-            case USERINFO:
-                return getCekManagementAlgorithm(OIDCConfigAttributes.USER_INFO_ENCRYPTED_RESPONSE_ALG);
             default:
                 return null;
         }
@@ -297,29 +298,22 @@ public class DefaultTokenManager implements TokenManager {
         if (category == null) return null;
         switch (category) {
             case ID:
-                return getEncryptAlgorithm(OIDCConfigAttributes.ID_TOKEN_ENCRYPTED_RESPONSE_ENC, JWEConstants.A128CBC_HS256);
             case LOGOUT:
                 return getEncryptAlgorithm(OIDCConfigAttributes.ID_TOKEN_ENCRYPTED_RESPONSE_ENC);
             case AUTHORIZATION_RESPONSE:
                 return getEncryptAlgorithm(OIDCConfigAttributes.AUTHORIZATION_ENCRYPTED_RESPONSE_ENC);
-            case USERINFO:
-                return getEncryptAlgorithm(OIDCConfigAttributes.USER_INFO_ENCRYPTED_RESPONSE_ENC, JWEConstants.A128CBC_HS256);
             default:
                 return null;
         }
     }
 
     private String getEncryptAlgorithm(String clientAttribute) {
-        return getEncryptAlgorithm(clientAttribute, null);
-    }
-
-    private String getEncryptAlgorithm(String clientAttribute, String defaultValue) {
         ClientModel client = session.getContext().getClient();
         String algorithm = client != null && clientAttribute != null ? client.getAttribute(clientAttribute) : null;
         if (algorithm != null && !algorithm.equals("")) {
             return algorithm;
         }
-        return defaultValue;
+        return null;
     }
 
     public LogoutToken initLogoutToken(ClientModel client, UserModel user,

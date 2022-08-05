@@ -1,20 +1,3 @@
-/*
- * Copyright 2022 Red Hat, Inc. and/or its affiliates
- * and other contributors as indicated by the @author tags.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.keycloak.testsuite.authz;
 
 import org.junit.Assert;
@@ -26,7 +9,6 @@ import org.keycloak.forms.account.freemarker.model.AuthorizationBean;
 import org.keycloak.forms.account.freemarker.model.AuthorizationBean.ResourceBean;
 import org.keycloak.models.ClientModel;
 import org.keycloak.models.KeycloakSession;
-import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.keycloak.representations.idm.authorization.*;
@@ -34,7 +16,6 @@ import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
 import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
 
 import java.util.List;
-import org.keycloak.authorization.model.ResourceServer;
 
 @AuthServerContainerExclude(AuthServer.REMOTE)
 public class UmaRepresentationTest extends AbstractResourceServerTest {
@@ -152,17 +133,15 @@ public class UmaRepresentationTest extends AbstractResourceServerTest {
     }
 
     public static void testCanRepresentResourceBeanOfResourceOwnedByUser(KeycloakSession session) {
-        RealmModel realm = session.realms().getRealmByName("authz-test");
-        session.getContext().setRealm(realm);
+        session.getContext().setRealm(session.realms().getRealmByName("authz-test"));
         AuthorizationProvider authorization = session.getProvider(AuthorizationProvider.class);
 
-        AuthorizationBean authorizationBean  = new AuthorizationBean(session, realm, null, session.getContext().getUri());
+        AuthorizationBean authorizationBean  = new AuthorizationBean(session, null, session.getContext().getUri());
         ClientModel client = session.getContext().getRealm().getClientByClientId("resource-server-test");
-        UserModel user = session.users().getUserByUsername(session.getContext().getRealm(), "marta");
-        ResourceServer resourceServer = authorization.getStoreFactory().getResourceServerStore().findByClient(client);
+        UserModel user = session.userStorageManager().getUserByUsername(session.getContext().getRealm(), "marta");
         ResourceBean resourceBean = authorizationBean.new ResourceBean(
             authorization.getStoreFactory().getResourceStore().findByName(
-                    resourceServer, "Resource A", user.getId()
+                "Resource A", user.getId(), client.getId()
             )
         );
 
@@ -180,16 +159,14 @@ public class UmaRepresentationTest extends AbstractResourceServerTest {
     }
 
     public static void testCanRepresentResourceBeanOfResourceOwnedByClient(KeycloakSession session) {
-        RealmModel realm = session.realms().getRealmByName("authz-test");
-        session.getContext().setRealm(realm);
+        session.getContext().setRealm(session.realms().getRealmByName("authz-test"));
         AuthorizationProvider authorization = session.getProvider(AuthorizationProvider.class);
 
-        AuthorizationBean authorizationBean  = new AuthorizationBean(session, realm, null, session.getContext().getUri());
+        AuthorizationBean authorizationBean  = new AuthorizationBean(session, null, session.getContext().getUri());
         ClientModel client = session.getContext().getRealm().getClientByClientId("resource-server-test");
-        ResourceServer resourceServer = authorization.getStoreFactory().getResourceServerStore().findByClient(client);
         ResourceBean resourceBean = authorizationBean.new ResourceBean(
             authorization.getStoreFactory().getResourceStore().findByName(
-                    resourceServer, "Resource A", client.getId()
+                "Resource A", client.getId(), client.getId()
             )
         );
 

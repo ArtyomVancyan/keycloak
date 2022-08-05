@@ -100,9 +100,9 @@ public class BasicAuthAuthenticator extends AbstractUsernameFormAuthenticator im
     }
 
     protected String[] getChallenge(String authorizationHeader) {
-        String[] challenge = BasicAuthHelper.UrlEncoded.parseHeader(authorizationHeader);
+        String[] challenge = BasicAuthHelper.parseHeader(authorizationHeader);
 
-        if (challenge == null || challenge.length < 2) {
+        if (challenge.length < 2) {
             return null;
         }
 

@@ -20,14 +20,15 @@ import {
     EmptyStateVariant,
     Title,
     EmptyStateIcon,
+    TitleLevel,
     EmptyStateBody,
+    IconProps,
 } from '@patternfly/react-core'
 
 import { Msg } from './Msg';
-import {SVGIconProps} from '@patternfly/react-icons/dist/esm/createIcon';
 
 export interface EmptyMessageStateProps {
-    icon: React.ComponentType<SVGIconProps>;
+    icon: React.FunctionComponent<IconProps>;
     messageKey: string;
 }
 
@@ -40,7 +41,7 @@ export default class EmptyMessageState extends React.Component<EmptyMessageState
         return (
             <EmptyState variant={EmptyStateVariant.full}>
                 <EmptyStateIcon icon={this.props.icon} />
-                <Title headingLevel="h5" size="lg">
+                <Title headingLevel={TitleLevel.h5} size="lg">
                     <Msg msgKey={this.props.messageKey} />
                 </Title>
                 <EmptyStateBody>

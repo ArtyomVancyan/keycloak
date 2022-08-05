@@ -18,7 +18,7 @@
                     <div class="${properties.kcSelectAuthListItemClass!}" onclick="fillAndSubmit('${authenticationSelection.authExecId}')">
 
                         <div class="${properties.kcSelectAuthListItemIconClass!}">
-                            <i class="${properties['${authenticationSelection.iconCssClass}']!authenticationSelection.iconCssClass} ${properties.kcSelectAuthListItemIconPropertyClass!}"></i>
+                            <i class="${properties['${authenticationSelection.iconCssClass}']!authenticationSelection.iconCssClass} fa-2x"></i>
                         </div>
                         <div class="${properties.kcSelectAuthListItemBodyClass!}">
                             <div class="${properties.kcSelectAuthListItemHeadingClass!}">

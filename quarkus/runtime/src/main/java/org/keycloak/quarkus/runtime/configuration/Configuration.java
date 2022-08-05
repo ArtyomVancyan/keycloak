@@ -17,15 +17,17 @@
 
 package org.keycloak.quarkus.runtime.configuration;
 
-import static io.smallrye.config.common.utils.StringUtil.replaceNonAlphanumericByUnderscores;
 import static org.keycloak.quarkus.runtime.Environment.getProfileOrDefault;
-import static org.keycloak.quarkus.runtime.cli.Picocli.ARG_PREFIX;
+import static org.keycloak.quarkus.runtime.configuration.mappers.PropertyMappers.toCLIFormat;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
 import io.smallrye.config.ConfigValue;
 import io.smallrye.config.SmallRyeConfig;
+import io.smallrye.config.SmallRyeConfigProviderResolver;
 
 import org.eclipse.microprofile.config.spi.ConfigProviderResolver;
 import org.eclipse.microprofile.config.spi.ConfigSource;
@@ -37,9 +39,6 @@ import org.keycloak.quarkus.runtime.configuration.mappers.PropertyMappers;
  * The entry point for accessing the server configuration
  */
 public final class Configuration {
-
-    public static final char OPTION_PART_SEPARATOR_CHAR = '-';
-    public static final String OPTION_PART_SEPARATOR = String.valueOf(OPTION_PART_SEPARATOR_CHAR);
 
     private Configuration() {
 
@@ -99,14 +98,17 @@ public final class Configuration {
     }
 
     public static String getMappedPropertyName(String key) {
-        PropertyMapper mapper = PropertyMappers.getMapper(key);
+        for (PropertyMapper mapper : PropertyMappers.getMappers()) {
+            String mappedProperty = mapper.getFrom();
+            List<String> expectedFormats = Arrays.asList(mappedProperty, toCLIFormat(mappedProperty), mappedProperty.toUpperCase().replace('.', '_').replace('-', '_'));
 
-        if (mapper == null) {
-            return key;
+            if (expectedFormats.contains(key)) {
+                // we also need to make sure the target property is available when defined such as when defining alias for provider config (no spi-prefix).
+                return mapper.getTo() == null ? mappedProperty : mapper.getTo();
+            }
         }
 
-        // we also need to make sure the target property is available when defined such as when defining alias for provider config (no spi-prefix).
-        return mapper.getTo() == null ? mapper.getFrom() : mapper.getTo();
+        return key;
     }
 
     public static Optional<String> getRuntimeProperty(String name) {
@@ -129,38 +131,11 @@ public final class Configuration {
         return Optional.empty();
     }
 
-    public static String toEnvVarFormat(String key) {
-        return replaceNonAlphanumericByUnderscores(key).toUpperCase();
-    }
-
-    public static String toCliFormat(String key) {
-        return ARG_PREFIX + key;
-    }
-
-    public static String toDashCase(String key) {
-        StringBuilder sb = new StringBuilder(key.length());
-        boolean l = false;
-
-        for (int i = 0; i < key.length(); i++) {
-            char c = key.charAt(i);
-            if (l && Character.isUpperCase(c)) {
-                sb.append('-');
-                c = Character.toLowerCase(c);
-                l = false;
-            } else {
-                l = Character.isLowerCase(c);
-            }
-            sb.append(c);
-        }
-
-        return sb.toString();
-    }
-
     private static String getValue(ConfigSource configSource, String name) {
-        String value = configSource.getValue("%".concat(getProfileOrDefault("prod").concat(".").concat(name)));
+        String value = configSource.getValue(name);
 
         if (value == null) {
-            value = configSource.getValue(name);
+            value = configSource.getValue("%".concat(getProfileOrDefault("prod").concat(".").concat(name)));
         }
 
         return value;

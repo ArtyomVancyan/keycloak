@@ -110,8 +110,6 @@ public abstract class AbstractX509AuthenticationTest extends AbstractTestRealmKe
 
     protected String userId2;
 
-    protected String realmId;
-
     protected AuthenticationManagementResource authMgmtResource;
 
     protected AuthenticationExecutionInfoRepresentation browserExecution;
@@ -209,7 +207,6 @@ public abstract class AbstractX509AuthenticationTest extends AbstractTestRealmKe
     @Before
     public void configureFlows() {
         authMgmtResource = adminClient.realms().realm(REALM_NAME).flows();
-        this.realmId = adminClient.realm(REALM_NAME).toRepresentation().getId();
 
         AuthenticationFlowRepresentation browserFlow = copyBrowserFlow();
         Assert.assertNotNull(browserFlow);
@@ -323,7 +320,7 @@ public abstract class AbstractX509AuthenticationTest extends AbstractTestRealmKe
         finally {
             response.close();
         }
-        assertAdminEvents.assertEvent(realmId, OperationType.CREATE, AssertAdminEvents.isExpectedPrefixFollowedByUuid(AdminEventPaths.authFlowsPath()), flowRep, ResourceType.AUTH_FLOW);
+        assertAdminEvents.assertEvent(REALM_NAME, OperationType.CREATE, AssertAdminEvents.isExpectedPrefixFollowedByUuid(AdminEventPaths.authFlowsPath()), flowRep, ResourceType.AUTH_FLOW);
 
         for (AuthenticationFlowRepresentation flow : authMgmtResource.getFlows()) {
             if (flow.getAlias().equalsIgnoreCase(flowRep.getAlias())) {
@@ -338,7 +335,7 @@ public abstract class AbstractX509AuthenticationTest extends AbstractTestRealmKe
         HashMap<String, String> params = new HashMap<>();
         params.put("newName", newFlow);
         Response response = authMgmtResource.copy(existingFlow, params);
-        assertAdminEvents.assertEvent(realmId, OperationType.CREATE, Encode.decode(AdminEventPaths.authCopyFlowPath(existingFlow)), params, ResourceType.AUTH_FLOW);
+        assertAdminEvents.assertEvent(REALM_NAME, OperationType.CREATE, Encode.decode(AdminEventPaths.authCopyFlowPath(existingFlow)), params, ResourceType.AUTH_FLOW);
         try {
             Assert.assertEquals("Copy flow", 201, response.getStatus());
         } finally {

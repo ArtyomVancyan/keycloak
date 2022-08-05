@@ -130,15 +130,14 @@ public class RoleAdapter implements RoleModel {
 
         if (composites == null) {
             composites = new HashSet<>();
-            for (String id : cached.getComposites()) {
-                RoleModel role = realm.getRoleById(id);
-                if (role == null) {
-                    // chance that composite role was removed, so invalidate this entry and fallback to delegate
-                    getDelegateForUpdate();
-                    return updated.getCompositesStream();
-                }
-                composites.add(role);
-            }
+            composites = cached.getComposites().stream()
+                    .map(id -> {
+                        RoleModel role = realm.getRoleById(id);
+                        if (role == null) {
+                            throw new IllegalStateException("Could not find composite in role " + getName() + ": " + id);
+                        }
+                        return role;
+                    }).collect(Collectors.toSet());
         }
 
         return composites.stream();

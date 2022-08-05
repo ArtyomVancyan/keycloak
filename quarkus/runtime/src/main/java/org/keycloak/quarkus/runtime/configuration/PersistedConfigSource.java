@@ -44,7 +44,7 @@ public final class PersistedConfigSource extends PropertiesConfigSource {
     private static final PersistedConfigSource INSTANCE = new PersistedConfigSource();
 
     private PersistedConfigSource() {
-        super(readProperties(), "", 200);
+        super(readProperties(), "", 300);
     }
 
     public static PersistedConfigSource getInstance() {
@@ -64,11 +64,11 @@ public final class PersistedConfigSource extends PropertiesConfigSource {
             return value;
         }
 
-        return super.getValue(propertyName.replace(Configuration.OPTION_PART_SEPARATOR_CHAR, '.'));
+        return super.getValue(propertyName.replace('-', '.'));
     }
 
     private static Map<String, String> readProperties() {
-        if (Environment.isRuntimeMode()) {
+        if (!Environment.isRebuild()) {
             InputStream fileStream = loadPersistedConfig();
 
             if (fileStream == null) {

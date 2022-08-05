@@ -17,8 +17,6 @@
 
 package org.keycloak.models;
 
-import org.keycloak.rar.AuthorizationRequestContext;
-
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -84,7 +82,5 @@ public interface ClientSessionContext {
     void setAttribute(String name, Object value);
 
     <T> T getAttribute(String attribute, Class<T> clazz);
-
-    AuthorizationRequestContext getAuthorizationRequestContext();
 
 }

@@ -28,6 +28,6 @@ public class PageNotFound extends AbstractLoggedInPage {
 
     @Override
     public boolean isCurrent() {
-        return driver.getPageSource().contains("Page not found");
+        return driver.getPageSource().contains("Page Not Found");
     }
 }

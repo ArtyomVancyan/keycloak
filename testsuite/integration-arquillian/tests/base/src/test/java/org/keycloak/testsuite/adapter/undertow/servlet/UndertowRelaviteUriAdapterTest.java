@@ -116,8 +116,9 @@ public class UndertowRelaviteUriAdapterTest extends AbstractServletsAdapterTest 
         Assert.assertEquals(1, Integer.parseInt(productPortalStats.get("active")));
         
         // test logout
-        testRealmAccountPage.navigateTo();
-        testRealmAccountPage.logOut();
+        String logoutUri = OIDCLoginProtocolService.logoutUrl(authServerPage.createUriBuilder())
+                .queryParam(OAuth2Constants.REDIRECT_URI, customerPortal.toString()).build("demo").toString();
+        driver.navigate().to(logoutUri);
         assertCurrentUrlStartsWithLoginUrlOf(testRealmPage);
         productPortal.navigateTo();
         assertCurrentUrlStartsWithLoginUrlOf(testRealmPage);

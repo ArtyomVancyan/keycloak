@@ -22,7 +22,7 @@
     <parent>
         <artifactId>keycloak-examples-parent</artifactId>
         <groupId>org.keycloak</groupId>
-        <version>999-SNAPSHOT</version>
+        <version>17.0.0-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -30,6 +30,17 @@
     <artifactId>keycloak-examples-ldap</artifactId>
     <packaging>war</packaging>
     <name>LDAP Demo Application</name>
+
+    <repositories>
+        <repository>
+            <id>jboss</id>
+            <name>jboss repo</name>
+            <url>https://repository.jboss.org/nexus/content/groups/public/</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 
     <dependencies>
         <dependency>

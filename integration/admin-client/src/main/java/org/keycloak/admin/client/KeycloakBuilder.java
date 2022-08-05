@@ -17,14 +17,15 @@
 
 package org.keycloak.admin.client;
 
+import org.jboss.resteasy.client.jaxrs.ResteasyClient;
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
+
 import static org.keycloak.OAuth2Constants.CLIENT_CREDENTIALS;
 import static org.keycloak.OAuth2Constants.PASSWORD;
 
-import javax.ws.rs.client.Client;
-
 /**
  * Provides a {@link Keycloak} client builder with the ability to customize the underlying
- * {@link javax.ws.rs.client.Client RESTEasy client} used to communicate with the Keycloak server.
+ * {@link ResteasyClient RESTEasy client} used to communicate with the Keycloak server.
  * <p>
  * <p>Example usage with a connection pool size of 20:</p>
  * <pre>
@@ -50,7 +51,7 @@ import javax.ws.rs.client.Client;
  * </pre>
  *
  * @author Scott Rossillo
- * @see javax.ws.rs.client.Client
+ * @see ResteasyClientBuilder
  */
 public class KeycloakBuilder {
     private String serverUrl;
@@ -60,9 +61,8 @@ public class KeycloakBuilder {
     private String clientId;
     private String clientSecret;
     private String grantType;
-    private Client resteasyClient;
+    private ResteasyClient resteasyClient;
     private String authorization;
-    private String scope;
 
     public KeycloakBuilder serverUrl(String serverUrl) {
         this.serverUrl = serverUrl;
@@ -95,17 +95,12 @@ public class KeycloakBuilder {
         return this;
     }
 
-    public KeycloakBuilder scope(String scope) {
-        this.scope = scope;
-        return this;
-    }
-
     public KeycloakBuilder clientSecret(String clientSecret) {
         this.clientSecret = clientSecret;
         return this;
     }
 
-    public KeycloakBuilder resteasyClient(Client resteasyClient) {
+    public KeycloakBuilder resteasyClient(ResteasyClient resteasyClient) {
         this.resteasyClient = resteasyClient;
         return this;
     }
@@ -149,7 +144,7 @@ public class KeycloakBuilder {
             throw new IllegalStateException("clientId required");
         }
 
-        return new Keycloak(serverUrl, realm, username, password, clientId, clientSecret, grantType, resteasyClient, authorization, scope);
+        return new Keycloak(serverUrl, realm, username, password, clientId, clientSecret, grantType, resteasyClient, authorization);
     }
 
     private KeycloakBuilder() {

@@ -39,8 +39,6 @@ public class OAuth2DeviceCodeModel {
     private static final String USER_SESSION_ID_NOTE = "uid";
     private static final String DENIED_NOTE = "denied";
     private static final String ADDITIONAL_PARAM_PREFIX = "additional_param_";
-    private static final String CODE_CHALLENGE = "codeChallenge";
-    private static final String CODE_CHALLENGE_METHOD = "codeChallengeMethod";
 
     private final RealmModel realm;
     private final String clientId;
@@ -54,35 +52,33 @@ public class OAuth2DeviceCodeModel {
     private final String userSessionId;
     private final Boolean denied;
     private final Map<String, String> additionalParams;
-    private final String codeChallenge;
-    private final String codeChallengeMethod;
 
     public static OAuth2DeviceCodeModel create(RealmModel realm, ClientModel client,
                                                String deviceCode, String scope, String nonce, int expiresIn, int pollingInterval,
-                                               String clientNotificationToken, String authReqId, Map<String, String> additionalParams, String codeChallenge, String codeChallengeMethod) {
+                                               String clientNotificationToken, String authReqId, Map<String, String> additionalParams) {
         
         int expiration = Time.currentTime() + expiresIn;
-        return new OAuth2DeviceCodeModel(realm, client.getClientId(), deviceCode, scope, nonce, expiration, pollingInterval,  clientNotificationToken, authReqId, null, null, additionalParams, codeChallenge, codeChallengeMethod);
+        return new OAuth2DeviceCodeModel(realm, client.getClientId(), deviceCode, scope, nonce, expiration, pollingInterval,  clientNotificationToken, authReqId, null, null, additionalParams);
     }
 
     public OAuth2DeviceCodeModel approve(String userSessionId) {
-        return new OAuth2DeviceCodeModel(realm, clientId, deviceCode, scope, nonce, expiration,  pollingInterval, clientNotificationToken, authReqId, userSessionId, false, additionalParams, codeChallenge, codeChallengeMethod);
+        return new OAuth2DeviceCodeModel(realm, clientId, deviceCode, scope, nonce, expiration,  pollingInterval, clientNotificationToken, authReqId, userSessionId, false, additionalParams);
     }
 
     public OAuth2DeviceCodeModel approve(String userSessionId, Map<String, String> additionalParams) {
         if (additionalParams != null) {
             this.additionalParams.putAll(additionalParams);
         }
-        return new OAuth2DeviceCodeModel(realm, clientId, deviceCode, scope, nonce, expiration, pollingInterval, clientNotificationToken, authReqId, userSessionId, false, this.additionalParams, codeChallenge, codeChallengeMethod);
+        return new OAuth2DeviceCodeModel(realm, clientId, deviceCode, scope, nonce, expiration, pollingInterval, clientNotificationToken, authReqId, userSessionId, false, this.additionalParams);
     }
 
     public OAuth2DeviceCodeModel deny() {
-        return new OAuth2DeviceCodeModel(realm, clientId, deviceCode, scope, nonce, expiration, pollingInterval,  clientNotificationToken, authReqId, null, true, additionalParams, codeChallenge, codeChallengeMethod);
+        return new OAuth2DeviceCodeModel(realm, clientId, deviceCode, scope, nonce, expiration, pollingInterval,  clientNotificationToken, authReqId, null, true, additionalParams);
     }
 
     private OAuth2DeviceCodeModel(RealmModel realm, String clientId,
                                   String deviceCode, String scope, String nonce, int expiration, int pollingInterval, String clientNotificationToken,
-                                  String authReqId, String userSessionId, Boolean denied, Map<String, String> additionalParams, String codeChallenge, String codeChallengeMethod) {
+                                  String authReqId, String userSessionId, Boolean denied, Map<String, String> additionalParams) {
         this.realm = realm;
         this.clientId = clientId;
         this.deviceCode = deviceCode;
@@ -95,8 +91,6 @@ public class OAuth2DeviceCodeModel {
         this.userSessionId = userSessionId;
         this.denied = denied;
         this.additionalParams = additionalParams;
-        this.codeChallenge = codeChallenge;
-        this.codeChallengeMethod = codeChallengeMethod;
     }
 
     public static OAuth2DeviceCodeModel fromCache(RealmModel realm, String deviceCode, Map<String, String> data) {
@@ -112,7 +106,7 @@ public class OAuth2DeviceCodeModel {
     private OAuth2DeviceCodeModel(RealmModel realm, String deviceCode, Map<String, String> data) {
         this(realm, data.get(CLIENT_ID), deviceCode, data.get(SCOPE_NOTE), data.get(NONCE_NOTE),
             Integer.parseInt(data.get(EXPIRATION_NOTE)), Integer.parseInt(data.get(POLLING_INTERVAL_NOTE)), data.get(CLIENT_NOTIFICATION_TOKEN_NOTE),
-                data.get(AUTH_REQ_ID_NOTE), data.get(USER_SESSION_ID_NOTE), Boolean.parseBoolean(data.get(DENIED_NOTE)), extractAdditionalParams(data), data.get(CODE_CHALLENGE), data.get(CODE_CHALLENGE_METHOD));
+                data.get(AUTH_REQ_ID_NOTE), data.get(USER_SESSION_ID_NOTE), Boolean.parseBoolean(data.get(DENIED_NOTE)), extractAdditionalParams(data));
     }
 
     private static Map<String, String> extractAdditionalParams(Map<String, String> data) {
@@ -181,14 +175,6 @@ public class OAuth2DeviceCodeModel {
         return createKey(deviceCode) + ".polling";
     }
 
-    public String getCodeChallenge() {
-        return codeChallenge;
-    }
-
-    public String getCodeChallengeMethod() {
-        return codeChallengeMethod;
-    }
-
     public Map<String, String> toMap() {
         Map<String, String> result = new HashMap<>();
 
@@ -217,10 +203,6 @@ public class OAuth2DeviceCodeModel {
             result.put(NONCE_NOTE, nonce);
             result.put(USER_SESSION_ID_NOTE, userSessionId);
         }
-        if (codeChallenge != null)
-            result.put(CODE_CHALLENGE, codeChallenge);
-        if (codeChallengeMethod != null)
-            result.put(CODE_CHALLENGE_METHOD, codeChallengeMethod);
 
         additionalParams.forEach((key, value) -> result.put(ADDITIONAL_PARAM_PREFIX + key, value));
 

@@ -37,7 +37,6 @@ public interface Resource {
         public static final SearchableModelField<Resource> RESOURCE_SERVER_ID = new SearchableModelField<>("resourceServerId", String.class);
         public static final SearchableModelField<Resource> OWNER = new SearchableModelField<>("owner", String.class);
         public static final SearchableModelField<Resource> TYPE = new SearchableModelField<>("type", String.class);
-        public static final SearchableModelField<Resource> REALM_ID = new SearchableModelField<>("realmId", String.class);
 
         public static final SearchableModelField<Resource> URI = new SearchableModelField<>("uris", String.class);
         public static final SearchableModelField<Resource> SCOPE_ID = new SearchableModelField<>("scope", String.class);
@@ -134,7 +133,7 @@ public interface Resource {
     /**
      * Sets a string representing the type of this resource.
      *
-     * @param type the type of this resource or null if not defined
+     * @return the type of this resource or null if not defined
      */
     void setType(String type);
 
@@ -155,7 +154,7 @@ public interface Resource {
     /**
      * Sets an icon {@link java.net.URI} for this resource.
      *
-     * @param iconUri an uri for an icon
+     * @return a uri for an icon
      */
     void setIconUri(String iconUri);
 
@@ -164,7 +163,7 @@ public interface Resource {
      *
      * @return the resource server associated with this resource
      */
-     ResourceServer getResourceServer();
+     String getResourceServer();
 
     /**
      * Returns the resource's owner, which is usually an identifier that uniquely identifies the resource's owner.
@@ -204,7 +203,6 @@ public interface Resource {
     /**
      * Returns the first value of an attribute with the given <code>name</code>
      *
-     * @param name of the attribute
      * @return the first value of an attribute
      */
     String getSingleAttribute(String name);
@@ -212,7 +210,6 @@ public interface Resource {
     /**
      * Returns the values of an attribute with the given <code>name</code>
      *
-     * @param name of the attribute
      * @return the values of an attribute
      */
     List<String> getAttribute(String name);
@@ -221,7 +218,8 @@ public interface Resource {
      * Sets an attribute with the given <code>name</code> and <code>values</code>.
      *
      * @param name the attribute name
-     * @param values the attribute values
+     * @param value the attribute values
+     * @return a map holding the attributes associated with this resource
      */
     void setAttribute(String name, List<String> values);
 

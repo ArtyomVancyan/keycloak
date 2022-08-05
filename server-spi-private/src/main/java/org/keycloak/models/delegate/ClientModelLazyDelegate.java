@@ -19,7 +19,6 @@ package org.keycloak.models.delegate;
 import org.keycloak.models.ClientModel;
 import org.keycloak.models.ClientScopeModel;
 import org.keycloak.models.KeycloakSession;
-import org.keycloak.models.ModelIllegalStateException;
 import org.keycloak.models.ProtocolMapperModel;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.RoleModel;
@@ -84,7 +83,7 @@ public class ClientModelLazyDelegate implements ClientModel {
         }
         ClientModel ref = delegate.getReference();
         if (ref == null) {
-            throw new ModelIllegalStateException("Invalid delegate obtained");
+            throw new IllegalStateException("Invalid delegate obtained");
         }
         return ref;
     }
@@ -507,21 +506,6 @@ public class ClientModelLazyDelegate implements ClientModel {
     @Override
     public void setIncludeInTokenScope(boolean includeInTokenScope) {
         getDelegate().setIncludeInTokenScope(includeInTokenScope);
-    }
-
-    @Override
-    public boolean isDynamicScope() {
-        return getDelegate().isDynamicScope();
-    }
-
-    @Override
-    public void setIsDynamicScope(boolean isDynamicScope) {
-        getDelegate().setIsDynamicScope(isDynamicScope);
-    }
-
-    @Override
-    public String getDynamicScopeRegexp() {
-        return getDelegate().getDynamicScopeRegexp();
     }
 
     @Override

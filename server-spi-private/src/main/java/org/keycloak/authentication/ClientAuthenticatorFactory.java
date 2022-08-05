@@ -69,12 +69,4 @@ public interface ClientAuthenticatorFactory extends ProviderFactory<ClientAuthen
      */
     Set<String> getProtocolAuthenticatorMethods(String loginProtocol);
 
-    /**
-     * Is this authenticator supports client secret?
-     *
-     * @return if it supports secret
-     */
-    default boolean supportsSecret() {
-        return false;
-    }
 }

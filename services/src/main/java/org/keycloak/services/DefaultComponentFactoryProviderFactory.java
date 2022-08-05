@@ -23,7 +23,6 @@ import org.keycloak.common.util.StackUtil;
 import org.keycloak.component.ComponentFactoryProviderFactory;
 import org.keycloak.component.ComponentModel;
 import org.keycloak.component.ComponentModelScope;
-import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.KeycloakSessionFactory;
 import org.keycloak.models.utils.KeycloakModelUtils;
 import org.keycloak.provider.InvalidationHandler;
@@ -156,7 +155,7 @@ public class DefaultComponentFactoryProviderFactory implements ComponentFactoryP
     }
 
     @Override
-    public void invalidate(KeycloakSession session, InvalidableObjectType type, Object... ids) {
+    public void invalidate(InvalidableObjectType type, Object... ids) {
         if (LOG.isDebugEnabled()) {
             LOG.debugf("Invalidating %s: %s", type, Arrays.asList(ids));
         }
@@ -170,25 +169,25 @@ public class DefaultComponentFactoryProviderFactory implements ComponentFactoryP
             Stream.of(ids)
               .map(componentsMap.get()::remove).filter(Objects::nonNull)
               .forEach(ProviderFactory::close);
-            propagateInvalidation(session, componentsMap.get(), type, ids);
+            propagateInvalidation(componentsMap.get(), type, ids);
         } else if (type == ObjectType.REALM || type == ObjectType.PROVIDER_FACTORY) {
             Stream.of(ids)
               .map(dependentInvalidations::get).filter(Objects::nonNull).flatMap(Collection::stream)
               .map(componentsMap.get()::remove).filter(Objects::nonNull)
               .forEach(ProviderFactory::close);
             Stream.of(ids).forEach(dependentInvalidations::remove);
-            propagateInvalidation(session, componentsMap.get(), type, ids);
+            propagateInvalidation(componentsMap.get(), type, ids);
         } else {
-            propagateInvalidation(session, componentsMap.get(), type, ids);
+            propagateInvalidation(componentsMap.get(), type, ids);
         }
     }
 
-    private void propagateInvalidation(KeycloakSession session, ConcurrentMap<String, ProviderFactory> componentsMap, InvalidableObjectType type, Object[] ids) {
+    private void propagateInvalidation(ConcurrentMap<String, ProviderFactory> componentsMap, InvalidableObjectType type, Object[] ids) {
         componentsMap.values()
           .stream()
           .filter(InvalidationHandler.class::isInstance)
           .map(InvalidationHandler.class::cast)
-          .forEach(ih -> ih.invalidate(session, type, ids));
+          .forEach(ih -> ih.invalidate(type, ids));
     }
 
     @Override

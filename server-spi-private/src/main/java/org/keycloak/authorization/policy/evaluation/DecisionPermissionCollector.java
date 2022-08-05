@@ -170,7 +170,7 @@ public class DecisionPermissionCollector extends AbstractDecisionCollector {
             return true;
         }
         
-        return resource != null && !resource.getOwner().equals(resourceServer.getClientId());
+        return resource != null && !resource.getOwner().equals(resourceServer.getId());
     }
 
     public Collection<Permission> results() {
@@ -191,7 +191,7 @@ public class DecisionPermissionCollector extends AbstractDecisionCollector {
         } else if (!grantedScopes.isEmpty()) {
             ResourceStore resourceStore = authorizationProvider.getStoreFactory().getResourceStore();
 
-            resourceStore.findByScopes(resourceServer, new HashSet<>(grantedScopes), resource1 -> permissions.add(createPermission(resource, scopeNames, permission.getClaims(), request)));
+            resourceStore.findByScope(grantedScopes.stream().map(Scope::getId).collect(Collectors.toList()), resourceServer.getId(), resource1 -> permissions.add(createPermission(resource, scopeNames, permission.getClaims(), request)));
 
             permissions.add(createPermission(null, scopeNames, permission.getClaims(), request));
         }

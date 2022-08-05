@@ -28,7 +28,6 @@ import org.keycloak.models.UserCredentialModel;
 import org.keycloak.models.UserModel;
 import org.keycloak.models.credential.PasswordCredentialModel;
 import org.keycloak.models.utils.UserModelDelegate;
-import org.keycloak.storage.UserStoragePrivateUtil;
 import org.keycloak.storage.UserStorageProvider;
 import org.keycloak.storage.user.ImportedUserValidation;
 import org.keycloak.storage.user.UserLookupProvider;
@@ -182,12 +181,12 @@ public class FailableHardcodedStorageProvider implements UserStorageProvider, Us
     public UserModel getUserByUsername(RealmModel realm, String uname) {
         checkForceFail();
         if (!username.equals(uname)) return null;
-        UserModel local = UserStoragePrivateUtil.userLocalStorage(session).getUserByUsername(realm, uname);
+        UserModel local = session.userLocalStorage().getUserByUsername(realm, uname);
         if (local != null && !model.getId().equals(local.getFederationLink())) {
             throw new RuntimeException("local storage has wrong federation link");
         }
         if (local != null) return new Delegate(local);
-        local = UserStoragePrivateUtil.userLocalStorage(session).addUser(realm, uname);
+        local = session.userLocalStorage().addUser(realm, uname);
         local.setEnabled(true);
         local.setFirstName(first);
         local.setLastName(last);

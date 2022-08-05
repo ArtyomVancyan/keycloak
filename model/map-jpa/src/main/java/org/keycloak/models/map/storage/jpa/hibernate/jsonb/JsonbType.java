@@ -20,9 +20,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -38,7 +36,6 @@ import java.sql.Types;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -50,91 +47,38 @@ import org.hibernate.type.descriptor.java.MutableMutabilityPlan;
 import org.hibernate.type.descriptor.sql.BasicBinder;
 import org.hibernate.type.descriptor.sql.BasicExtractor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.usertype.DynamicParameterizedType;
+import org.keycloak.models.map.client.MapClientEntity;
 import org.keycloak.models.map.client.MapProtocolMapperEntity;
 import org.keycloak.models.map.client.MapProtocolMapperEntityImpl;
 import org.keycloak.models.map.common.DeepCloner;
-import org.keycloak.models.map.common.EntityWithAttributes;
 import org.keycloak.models.map.common.Serialization.IgnoreUpdatedMixIn;
 import org.keycloak.models.map.common.Serialization.IgnoredTypeMixIn;
 import org.keycloak.models.map.common.UpdatableEntity;
-import org.keycloak.models.map.realm.entity.MapAuthenticationExecutionEntity;
-import org.keycloak.models.map.realm.entity.MapAuthenticationExecutionEntityImpl;
-import org.keycloak.models.map.realm.entity.MapAuthenticationFlowEntity;
-import org.keycloak.models.map.realm.entity.MapAuthenticationFlowEntityImpl;
-import org.keycloak.models.map.realm.entity.MapAuthenticatorConfigEntity;
-import org.keycloak.models.map.realm.entity.MapAuthenticatorConfigEntityImpl;
-import org.keycloak.models.map.realm.entity.MapClientInitialAccessEntity;
-import org.keycloak.models.map.realm.entity.MapClientInitialAccessEntityImpl;
-import org.keycloak.models.map.realm.entity.MapIdentityProviderEntity;
-import org.keycloak.models.map.realm.entity.MapIdentityProviderEntityImpl;
-import org.keycloak.models.map.realm.entity.MapIdentityProviderMapperEntity;
-import org.keycloak.models.map.realm.entity.MapIdentityProviderMapperEntityImpl;
-import org.keycloak.models.map.realm.entity.MapOTPPolicyEntity;
-import org.keycloak.models.map.realm.entity.MapOTPPolicyEntityImpl;
-import org.keycloak.models.map.realm.entity.MapRequiredActionProviderEntity;
-import org.keycloak.models.map.realm.entity.MapRequiredActionProviderEntityImpl;
-import org.keycloak.models.map.realm.entity.MapRequiredCredentialEntity;
-import org.keycloak.models.map.realm.entity.MapRequiredCredentialEntityImpl;
-import org.keycloak.models.map.realm.entity.MapWebAuthnPolicyEntity;
-import org.keycloak.models.map.realm.entity.MapWebAuthnPolicyEntityImpl;
-import org.keycloak.models.map.user.MapUserCredentialEntity;
-import org.keycloak.models.map.user.MapUserCredentialEntityImpl;
-import org.keycloak.util.EnumWithStableIndex;
+import org.keycloak.models.map.storage.jpa.client.entity.JpaClientMetadata;
+import org.keycloak.models.map.storage.jpa.client.JpaClientMapStorage;
 
-public class JsonbType extends AbstractSingleColumnStandardBasicType<Object> implements DynamicParameterizedType {
+public class JsonbType extends AbstractSingleColumnStandardBasicType<Object> {
 
     public static final JsonbType INSTANCE = new JsonbType();
     public static final ObjectMapper MAPPER = new ObjectMapper()
             .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
             .enable(SerializationFeature.INDENT_OUTPUT)
-            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
             .setSerializationInclusion(JsonInclude.Include.NON_NULL)
             .setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.NONE)
             .setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY)
             .activateDefaultTyping(new LaissezFaireSubTypeValidator(), ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT, JsonTypeInfo.As.PROPERTY)
-            .registerModule(new SimpleModule().addAbstractTypeMapping(MapProtocolMapperEntity.class, MapProtocolMapperEntityImpl.class)
-                    // realm abstract type mappings
-                    .addAbstractTypeMapping(MapAuthenticationExecutionEntity.class, MapAuthenticationExecutionEntityImpl.class)
-                    .addAbstractTypeMapping(MapAuthenticationFlowEntity.class, MapAuthenticationFlowEntityImpl.class)
-                    .addAbstractTypeMapping(MapAuthenticatorConfigEntity.class, MapAuthenticatorConfigEntityImpl.class)
-                    .addAbstractTypeMapping(MapClientInitialAccessEntity.class, MapClientInitialAccessEntityImpl.class)
-                    .addAbstractTypeMapping(MapIdentityProviderEntity.class, MapIdentityProviderEntityImpl.class)
-                    .addAbstractTypeMapping(MapIdentityProviderMapperEntity.class, MapIdentityProviderMapperEntityImpl.class)
-                    .addAbstractTypeMapping(MapOTPPolicyEntity.class, MapOTPPolicyEntityImpl.class)
-                    .addAbstractTypeMapping(MapRequiredActionProviderEntity.class, MapRequiredActionProviderEntityImpl.class)
-                    .addAbstractTypeMapping(MapRequiredCredentialEntity.class, MapRequiredCredentialEntityImpl.class)
-                    .addAbstractTypeMapping(MapWebAuthnPolicyEntity.class, MapWebAuthnPolicyEntityImpl.class)
-                    // user abstract type mappings
-                    .addAbstractTypeMapping(MapUserCredentialEntity.class, MapUserCredentialEntityImpl.class))
+            .registerModule(new SimpleModule().addAbstractTypeMapping(MapProtocolMapperEntity.class, MapProtocolMapperEntityImpl.class))
             .addMixIn(UpdatableEntity.class, IgnoreUpdatedMixIn.class)
             .addMixIn(DeepCloner.class, IgnoredTypeMixIn.class)
-            .addMixIn(EntityWithAttributes.class, IgnoredMetadataFieldsMixIn.class)
-            .addMixIn(EnumWithStableIndex.class, EnumsMixIn.class)
-            ;
+            .addMixIn(MapClientEntity.class, IgnoredClientFieldsMixIn.class);
 
-    abstract class IgnoredMetadataFieldsMixIn {
+    abstract class IgnoredClientFieldsMixIn {
         @JsonIgnore public abstract String getId();
         @JsonIgnore public abstract Map<String, List<String>> getAttributes();
-
-        // roles: assumed it's true when getClient() != null, see AbstractRoleEntity.isClientRole()
-        @JsonIgnore public abstract Boolean isClientRole();
-    }
-
-    abstract static class EnumsMixIn implements EnumWithStableIndex {
-
-        // we convert enums to its index and vice versa
-        @Override
-        @JsonValue public abstract int getStableIndex();
     }
 
     public JsonbType() {
-        super(JsonbSqlTypeDescriptor.INSTANCE, new JsonbJavaTypeDescriptor());
-    }
-
-    @Override
-    public void setParameterValues(Properties parameters) {
-        ((JsonbJavaTypeDescriptor) getJavaTypeDescriptor()).setParameterValues(parameters);
+        super(JsonbSqlTypeDescriptor.INSTANCE, JsonbJavaTypeDescriptor.INSTANCE);
     }
 
     @Override
@@ -204,14 +148,9 @@ public class JsonbType extends AbstractSingleColumnStandardBasicType<Object> imp
         }
     }
 
-    private static class JsonbJavaTypeDescriptor extends AbstractTypeDescriptor<Object> implements DynamicParameterizedType {
+    private static class JsonbJavaTypeDescriptor extends AbstractTypeDescriptor<Object> {
 
-        private Class valueType;
-
-        @Override
-        public void setParameterValues(Properties parameters) {
-            valueType = ((ParameterType) parameters.get(PARAMETER_TYPE)).getReturnedClass();
-        }
+        private static final JsonbJavaTypeDescriptor INSTANCE = new JsonbJavaTypeDescriptor();
 
         public JsonbJavaTypeDescriptor() {
             super(Object.class, new MutableMutabilityPlan<Object>() {
@@ -227,29 +166,26 @@ public class JsonbType extends AbstractSingleColumnStandardBasicType<Object> imp
         }
 
         @Override
-        @SuppressWarnings("unchecked")
         public Object fromString(String json) {
             try {
                 ObjectNode tree = MAPPER.readValue(json, ObjectNode.class);
                 JsonNode ev = tree.get("entityVersion");
                 if (ev == null || ! ev.isInt()) throw new IllegalArgumentException("unable to read entity version from " + json);
 
-                Integer entityVersion = ev.asInt();
+                int entityVersion = ev.asInt();
 
-                tree = migrate(tree, entityVersion);
+                if (entityVersion > JpaClientMapStorage.SUPPORTED_VERSION + 1) throw new IllegalArgumentException("Incompatible entity version: " + entityVersion + ", supportedVersion: " + JpaClientMapStorage.SUPPORTED_VERSION);
 
-                return MAPPER.treeToValue(tree, valueType);
+                if (entityVersion < JpaClientMapStorage.SUPPORTED_VERSION) {
+                    tree = JpaClientMigration.migrateTreeTo(entityVersion, JpaClientMapStorage.SUPPORTED_VERSION, tree);
+                }
+                return MAPPER.treeToValue(tree, JpaClientMetadata.class);
             } catch (IOException e) {
                 throw new HibernateException("unable to read", e);
             }
         }
 
-        private ObjectNode migrate(ObjectNode tree, Integer entityVersion) {
-            return JpaEntityMigration.MIGRATIONS.getOrDefault(valueType, (node, version) -> node).apply(tree, entityVersion);
-        }
-
         @Override
-        @SuppressWarnings("unchecked")
         public <X> X unwrap(Object value, Class<X> type, WrapperOptions options) {
             if (value == null) return null;
 
@@ -273,14 +209,20 @@ public class JsonbType extends AbstractSingleColumnStandardBasicType<Object> imp
             try {
                 return MAPPER.writeValueAsString(value);
             } catch (IOException e) {
-                throw new HibernateException("unable to transform value: " + value + " as String.", e);
+                throw new HibernateException("unable to tranform value: " + value + " as String.", e);
             }
         }
 
         @Override
         public boolean areEqual(Object one, Object another) {
             if (one == another) return true;
-            return Objects.equals(one, another);
+            if (one == null || another == null) return Objects.equals(one, another);
+            try {
+                return MAPPER.readTree(toString(one)).equals(
+                       MAPPER.readTree(toString(another)));
+            } catch (IOException e) {
+                throw new HibernateException("unable to perform areEqual", e);
+            }
         }
     }
 }

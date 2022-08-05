@@ -1,12 +1,13 @@
 /*
- * Copyright 2022 Red Hat, Inc. and/or its affiliates
- * and other contributors as indicated by the @author tags.
+ * JBoss, Home of Professional Open Source.
+ * Copyright 2016 Red Hat, Inc., and individual contributors
+ * as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,10 +24,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import org.keycloak.authorization.model.Policy;
-import org.keycloak.authorization.model.Resource;
 import org.keycloak.authorization.model.ResourceServer;
-import org.keycloak.authorization.model.Scope;
-import org.keycloak.models.RealmModel;
 import org.keycloak.representations.idm.authorization.AbstractPolicyRepresentation;
 
 /**
@@ -40,158 +38,137 @@ public interface PolicyStore {
      * Creates a new {@link Policy} instance. The new instance is not necessarily persisted though, which may require
      * a call to the {#save} method to actually make it persistent.
      *
-     * @param resourceServer the resource server to which this policy belongs. Cannot be {@code null}.
      * @param representation the policy representation
+     * @param resourceServer the resource server to which this policy belongs
      * @return a new instance of {@link Policy}
      */
-    Policy create(ResourceServer resourceServer, AbstractPolicyRepresentation representation);
+    Policy create(AbstractPolicyRepresentation representation, ResourceServer resourceServer);
 
     /**
      * Deletes a policy from the underlying persistence mechanism.
      *
-     * @param realm the realm that the removed policy belongs to. Cannot be {@code null}
      * @param id the id of the policy to delete
      */
-    void delete(RealmModel realm, String id);
+    void delete(String id);
 
     /**
      * Returns a {@link Policy} with the given <code>id</code>
      *
-     *
-     * @param realm the realm. Cannot be {@code null}.
-     * @param resourceServer the resource server. Ignored if {@code null}.
      * @param id the identifier of the policy
+     * @param resourceServerId the resource server id
      * @return a policy with the given identifier.
      */
-    Policy findById(RealmModel realm, ResourceServer resourceServer, String id);
+    Policy findById(String id, String resourceServerId);
 
     /**
      * Returns a {@link Policy} with the given <code>name</code>
      *
-     * @param resourceServer the resource server. Cannot be {@code null}
-     * @param name the name of the policy
-     * @return a policy with the given name or {@code null} if no such policy exists.
+     * @param name             the name of the policy
+     * @param resourceServerId the resource server id
+     * @return a policy with the given name.
      */
-    Policy findByName(ResourceServer resourceServer, String name);
-
-    /**
-     * Returns a list of {@link Policy} associated with the {@link ResourceServer}
-     *
-     * @param resourceServer the resource server. Cannot be {@code null}.
-     * @return a list of policies that belong to the given resource server
-     */
-    List<Policy> findByResourceServer(ResourceServer resourceServer);
+    Policy findByName(String name, String resourceServerId);
 
     /**
      * Returns a list of {@link Policy} associated with a {@link ResourceServer} with the given <code>resourceServerId</code>.
      *
+     * @param resourceServerId the identifier of a resource server
+     * @return a list of policies that belong to the given resource server
+     */
+    List<Policy> findByResourceServer(String resourceServerId);
+
+    /**
+     * Returns a list of {@link Policy} associated with a {@link ResourceServer} with the given <code>resourceServerId</code>.
      *
-     * @param realm the realm. Cannot be {@code null}.
-     * @param resourceServer the identifier of a resource server. Ignored if {@code null}.
      * @param attributes a map holding the attributes that will be used as a filter; possible filter options are given by {@link Policy.FilterOption}
-     * @param firstResult first result to return. Ignored if negative or {@code null}.
-     * @param maxResults maximum number of results to return. Ignored if negative or {@code null}.
+     * @param resourceServerId the identifier of a resource server
      * @return a list of policies that belong to the given resource server
      *
      * @throws IllegalArgumentException when there is an unknown attribute in the {@code attributes} map
      */
-    List<Policy> find(RealmModel realm, ResourceServer resourceServer, Map<Policy.FilterOption, String[]> attributes, Integer firstResult, Integer maxResults);
+    List<Policy> findByResourceServer(Map<Policy.FilterOption, String[]> attributes, String resourceServerId, int firstResult, int maxResult);
 
     /**
-     * Returns a list of {@link Policy} associated with a {@link org.keycloak.authorization.model.Resource}
+     * Returns a list of {@link Policy} associated with a {@link org.keycloak.authorization.core.model.Resource} with the given <code>resourceId</code>.
      *
-     * @param resourceServer the resource server. Cannot be {@code null}.
-     * @param resource the resource. Cannot be {@code null}.
+     * @param resourceId the identifier of a resource
+     * @param resourceServerId the resource server id
      * @return a list of policies associated with the given resource
      */
-    default List<Policy> findByResource(ResourceServer resourceServer, Resource resource) {
+    default List<Policy> findByResource(String resourceId, String resourceServerId) {
         List<Policy> result = new LinkedList<>();
 
-        findByResource(resourceServer, resource, result::add);
+        findByResource(resourceId, resourceServerId, result::add);
 
         return result;
     }
 
-    /**
-     * Searches for all policies associated with the {@link org.keycloak.authorization.model.Resource} and passes the result to the {@code consumer}
-     *
-     * @param resourceServer the resourceServer. Cannot be {@code null}.
-     * @param resource the resource. Cannot be {@code null}.
-     * @param consumer consumer of policies resulted from the search
-     */
-    void findByResource(ResourceServer resourceServer, Resource resource, Consumer<Policy> consumer);
+    void findByResource(String resourceId, String resourceServerId, Consumer<Policy> consumer);
 
     /**
-     * Returns a list of {@link Policy} associated with a {@link org.keycloak.authorization.model.ResourceServer} with the given <code>type</code>.
+     * Returns a list of {@link Policy} associated with a {@link org.keycloak.authorization.core.model.Resource} with the given <code>type</code>.
      *
-     * @param resourceServer the resource server id. Cannot be {@code null}.
-     * @param resourceType the type of a resource
+     * @param resourceType     the type of a resource
+     * @param resourceServerId the resource server id
      * @return a list of policies associated with the given resource type
      */
-    default List<Policy> findByResourceType(ResourceServer resourceServer, String resourceType) {
+    default List<Policy> findByResourceType(String resourceType, String resourceServerId) {
         List<Policy> result = new LinkedList<>();
 
-        findByResourceType(resourceServer, resourceType, result::add);
+        findByResourceType(resourceType, resourceServerId, result::add);
 
         return result;
     }
 
     /**
-     * Searches for policies associated with a {@link org.keycloak.authorization.model.ResourceServer} and passes the result to the consumer
+     * Returns a list of {@link Policy} associated with a {@link org.keycloak.authorization.core.model.Scope} with the given <code>scopeIds</code>.
      *
-     * @param resourceServer the resourceServer. Cannot be {@code null}.
-     * @param type the type of a resource
-     * @param policyConsumer consumer of policies resulted from the search
-     */
-    void findByResourceType(ResourceServer resourceServer, String type, Consumer<Policy> policyConsumer);
-
-    /**
-     * Returns a list of {@link Policy} associated with a {@link org.keycloak.authorization.model.Scope} within the given <code>scope</code>.
-     *
-     * @param resourceServer the resource server. Cannot be {@code null}.
-     * @param scopes the scopes
+     * @param scopeIds the id of the scopes
+     * @param resourceServerId the resource server id
      * @return a list of policies associated with the given scopes
      */
-    List<Policy> findByScopes(ResourceServer resourceServer, List<Scope> scopes);
+    List<Policy> findByScopeIds(List<String> scopeIds, String resourceServerId);
 
     /**
-     * Returns a list of {@link Policy} associated with a {@link org.keycloak.authorization.model.Scope} with the given <code>resource</code> and <code>scopes</code>.
+     * Returns a list of {@link Policy} associated with a {@link org.keycloak.authorization.core.model.Scope} with the given <code>resourceId</code> and <code>scopeIds</code>.
      *
-     * @param resourceServer the resource server. Cannot be {@code null}.
-     * @param resource the resource. Ignored if {@code null}.
-     * @param scopes the scopes
+     * @param scopeIds the id of the scopes
+     * @param resourceId the id of the resource. Ignored if {@code null}.
+     * @param resourceServerId the resource server id
      * @return a list of policies associated with the given scopes
      */
-    default List<Policy> findByScopes(ResourceServer resourceServer, Resource resource, List<Scope> scopes) {
+    default List<Policy> findByScopeIds(List<String> scopeIds, String resourceId, String resourceServerId) {
         List<Policy> result = new LinkedList<>();
 
-        findByScopes(resourceServer, resource, scopes, result::add);
+        findByScopeIds(scopeIds, resourceId, resourceServerId, result::add);
 
         return result;
     }
 
     /**
-     * Effectively the same method as {@link #findByScopes(ResourceServer, Resource, List)}, however in the end
+     * Effectively the same method as {@link #findByScopeIds(List, String, String)}, however in the end
      * the {@code consumer} is fed with the result.
      *
      */
-    void findByScopes(ResourceServer resourceServer, Resource resource, List<Scope> scopes, Consumer<Policy> consumer);
+    void findByScopeIds(List<String> scopeIds, String resourceId, String resourceServerId, Consumer<Policy> consumer);
 
     /**
      * Returns a list of {@link Policy} with the given <code>type</code>.
      *
-     * @param resourceServer the resource server id. Cannot be {@code null}.
      * @param type the type of the policy
+     * @param resourceServerId the resource server id
      * @return a list of policies with the given type
      */
-    List<Policy> findByType(ResourceServer resourceServer, String type);
+    List<Policy> findByType(String type, String resourceServerId);
 
     /**
      * Returns a list of {@link Policy} that depends on another policy with the given <code>id</code>.
      *
-     * @param resourceServer the resource server
      * @param id the id of the policy to query its dependents
+     * @param resourceServerId the resource server id
      * @return a list of policies that depends on the a policy with the given identifier
      */
-    List<Policy> findDependentPolicies(ResourceServer resourceServer, String id);
+    List<Policy> findDependentPolicies(String id, String resourceServerId);
+
+    void findByResourceType(String type, String resourceServerId, Consumer<Policy> policyConsumer);
 }

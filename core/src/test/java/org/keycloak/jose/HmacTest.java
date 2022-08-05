@@ -18,12 +18,10 @@
 package org.keycloak.jose;
 
 import org.junit.Assert;
-import org.junit.ClassRule;
 import org.junit.Test;
 import org.keycloak.jose.jws.JWSBuilder;
 import org.keycloak.jose.jws.JWSInput;
 import org.keycloak.jose.jws.crypto.HMACProvider;
-import org.keycloak.rule.CryptoInitRule;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -33,10 +31,7 @@ import java.util.UUID;
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
  * @version $Revision: 1 $
  */
-public abstract class HmacTest {
-
-    @ClassRule
-    public static CryptoInitRule cryptoInitRule = new CryptoInitRule();
+public class HmacTest {
 
     @Test
     public void testHmacSignatures() throws Exception {
@@ -47,5 +42,6 @@ public abstract class HmacTest {
         JWSInput input = new JWSInput(encoded);
         Assert.assertTrue(HMACProvider.verify(input, secret));
     }
+
 
 }

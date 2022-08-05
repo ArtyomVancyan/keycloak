@@ -20,11 +20,9 @@ import org.keycloak.models.map.common.AbstractEntity;
 import org.keycloak.models.map.common.EntityWithAttributes;
 import org.keycloak.models.map.common.UpdatableEntity;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 import org.keycloak.models.map.annotations.GenerateEntityImplementations;
@@ -57,37 +55,11 @@ public interface MapClientEntity extends AbstractEntity, UpdatableEntity, Entity
         }
 
         @Override
-        public boolean isUpdated() {
-            return this.updated
-                    || Optional.ofNullable(getProtocolMappers()).orElseGet(Collections::emptySet).stream().anyMatch(MapProtocolMapperEntity::isUpdated);
-        }
-
-        @Override
-        public void clearUpdatedFlag() {
-            this.updated = false;
-            Optional.ofNullable(getProtocolMappers()).orElseGet(Collections::emptySet).forEach(UpdatableEntity::clearUpdatedFlag);
-        }
-
-        @Override
         public Stream<String> getClientScopes(boolean defaultScope) {
             final Map<String, Boolean> clientScopes = getClientScopes();
             return clientScopes == null ? Stream.empty() : clientScopes.entrySet().stream()
               .filter(me -> Objects.equals(me.getValue(), defaultScope))
               .map(Entry::getKey);
-        }
-
-        @Override
-        public Optional<MapProtocolMapperEntity> getProtocolMapper(String id) {
-            Set<MapProtocolMapperEntity> mappers = getProtocolMappers();
-            if (mappers == null || mappers.isEmpty()) return Optional.empty();
-
-            return mappers.stream().filter(mapper -> Objects.equals(mapper.getId(), id)).findFirst();
-        }
-
-        @Override
-        public void removeProtocolMapper(String id) {
-            Set<MapProtocolMapperEntity> mappers = getProtocolMappers();
-            this.updated |= mappers != null && mappers.removeIf(mapper -> Objects.equals(mapper.getId(), id));
         }
     }
 
@@ -96,9 +68,9 @@ public interface MapClientEntity extends AbstractEntity, UpdatableEntity, Entity
     void setClientScope(String id, Boolean defaultScope);
     void removeClientScope(String id);
 
-    Optional<MapProtocolMapperEntity> getProtocolMapper(String id);
-    Set<MapProtocolMapperEntity> getProtocolMappers();
-    void addProtocolMapper(MapProtocolMapperEntity mapping);
+    MapProtocolMapperEntity getProtocolMapper(String id);
+    Map<String, MapProtocolMapperEntity> getProtocolMappers();
+    void setProtocolMapper(String id, MapProtocolMapperEntity mapping);
     void removeProtocolMapper(String id);
 
     void addRedirectUri(String redirectUri);
@@ -134,7 +106,7 @@ public interface MapClientEntity extends AbstractEntity, UpdatableEntity, Entity
 
     Integer getNodeReRegistrationTimeout();
 
-    Long getNotBefore();
+    Integer getNotBefore();
 
     String getProtocol();
 
@@ -202,7 +174,7 @@ public interface MapClientEntity extends AbstractEntity, UpdatableEntity, Entity
 
     void setNodeReRegistrationTimeout(Integer nodeReRegistrationTimeout);
 
-    void setNotBefore(Long notBefore);
+    void setNotBefore(Integer notBefore);
 
     void setProtocol(String protocol);
 

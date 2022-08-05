@@ -16,8 +16,6 @@
  */
 package org.keycloak.models.map.common.delegate;
 
-import org.keycloak.models.map.common.AbstractEntity;
-import org.keycloak.models.map.common.EntityField;
 import org.keycloak.models.map.common.UpdatableEntity;
 import java.util.concurrent.atomic.AtomicMarkableReference;
 import java.util.function.Supplier;
@@ -26,28 +24,37 @@ import java.util.function.Supplier;
  *
  * @author hmlnarik
  */
-public class LazyDelegateProvider<T extends AbstractEntity> implements DelegateProvider<T> {
+public class LazyDelegateProvider<T extends UpdatableEntity> implements DelegateProvider {
 
-    protected final LazilyInitialized<T> delegateSupplier;
+    private final Supplier<T> delegateSupplier;
+
+    private final AtomicMarkableReference<T> delegate = new AtomicMarkableReference<>(null, false);
 
     public LazyDelegateProvider(Supplier<T> delegateSupplier) {
-        this.delegateSupplier = new LazilyInitialized<>(delegateSupplier);
+        this.delegateSupplier = delegateSupplier;
     }
 
     @Override
-    public T getDelegate(boolean isRead, Enum<? extends EntityField<T>> field, Object... parameters) {
-        T ref = delegateSupplier.get();
+    public T getDelegate(boolean isRead, Object field, Object... parameters) {
+        if (! isDelegateInitialized()) {
+            delegate.compareAndSet(null, delegateSupplier == null ? null : delegateSupplier.get(), false, true);
+        }
+        T ref = delegate.getReference();
         if (ref == null) {
             throw new IllegalStateException("Invalid delegate obtained");
         }
         return ref;
     }
 
+    protected boolean isDelegateInitialized() {
+        return delegate.isMarked();
+    }
+
     @Override
     public boolean isUpdated() {
-        if (delegateSupplier.isInitialized()) {
-            T d = delegateSupplier.get();
-            return d instanceof UpdatableEntity ? ((UpdatableEntity) d).isUpdated() : false;
+        if (isDelegateInitialized()) {
+            T d = getDelegate(true, this);
+            return d.isUpdated();
         }
         return false;
     }

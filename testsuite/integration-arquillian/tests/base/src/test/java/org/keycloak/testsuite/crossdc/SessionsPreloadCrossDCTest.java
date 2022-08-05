@@ -25,6 +25,7 @@ import org.junit.Test;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.common.util.Retry;
 import org.keycloak.connections.infinispan.InfinispanConnectionProvider;
+import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.testsuite.Assert;
 import org.keycloak.testsuite.admin.ApiUtil;
 import org.keycloak.testsuite.arquillian.CrossDCTestEnricher;

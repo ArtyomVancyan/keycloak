@@ -38,7 +38,6 @@ import org.keycloak.cluster.ClusterEvent;
 import org.keycloak.cluster.ClusterProvider;
 import org.keycloak.cluster.ManagedCacheManagerProvider;
 import org.keycloak.cluster.infinispan.KeycloakHotRodMarshallerFactory;
-import org.keycloak.common.Profile;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.KeycloakSessionFactory;
 import org.keycloak.models.cache.infinispan.ClearCacheEvent;
@@ -46,7 +45,6 @@ import org.keycloak.models.cache.infinispan.events.RealmRemovedEvent;
 import org.keycloak.models.cache.infinispan.events.RealmUpdatedEvent;
 import org.keycloak.models.utils.KeycloakModelUtils;
 import org.keycloak.models.utils.PostMigrationEvent;
-import org.keycloak.provider.EnvironmentDependentProviderFactory;
 import org.keycloak.provider.InvalidationHandler.ObjectType;
 import org.keycloak.provider.ProviderEvent;
 
@@ -54,17 +52,17 @@ import java.util.Iterator;
 import java.util.ServiceLoader;
 import java.util.concurrent.TimeUnit;
 
+import static org.keycloak.models.cache.infinispan.InfinispanCacheRealmProviderFactory.REALM_CLEAR_CACHE_EVENTS;
+import static org.keycloak.models.cache.infinispan.InfinispanCacheRealmProviderFactory.REALM_INVALIDATION_EVENTS;
 import static org.keycloak.connections.infinispan.InfinispanUtil.configureTransport;
 import static org.keycloak.connections.infinispan.InfinispanUtil.createCacheConfigurationBuilder;
 import static org.keycloak.connections.infinispan.InfinispanUtil.getActionTokenCacheConfig;
 import static org.keycloak.connections.infinispan.InfinispanUtil.setTimeServiceToKeycloakTime;
-import static org.keycloak.models.cache.infinispan.InfinispanCacheRealmProviderFactory.REALM_CLEAR_CACHE_EVENTS;
-import static org.keycloak.models.cache.infinispan.InfinispanCacheRealmProviderFactory.REALM_INVALIDATION_EVENTS;
 
 /**
  * @author <a href="mailto:sthorger@redhat.com">Stian Thorgersen</a>
  */
-public class DefaultInfinispanConnectionProviderFactory implements InfinispanConnectionProviderFactory, EnvironmentDependentProviderFactory {
+public class DefaultInfinispanConnectionProviderFactory implements InfinispanConnectionProviderFactory {
 
     protected static final Logger logger = Logger.getLogger(DefaultInfinispanConnectionProviderFactory.class);
 
@@ -87,21 +85,13 @@ public class DefaultInfinispanConnectionProviderFactory implements InfinispanCon
 
     @Override
     public void close() {
-        /*
-            workaround for Infinispan 12.1.7.Final to prevent a deadlock while
-            DefaultInfinispanConnectionProviderFactory is shutting down PersistenceManagerImpl
-            that acquires a writeLock and this removal that acquires a readLock.
-            https://issues.redhat.com/browse/ISPN-13664
-        */
-        synchronized (DefaultInfinispanConnectionProviderFactory.class) {
-            if (cacheManager != null && !containerManaged) {
-                cacheManager.stop();
-            }
-            if (remoteCacheProvider != null) {
-                remoteCacheProvider.stop();
-            }
-            cacheManager = null;
+        if (cacheManager != null && !containerManaged) {
+            cacheManager.stop();
         }
+        if (remoteCacheProvider != null) {
+            remoteCacheProvider.stop();
+        }
+        cacheManager = null;
     }
 
     @Override
@@ -394,10 +384,6 @@ public class DefaultInfinispanConnectionProviderFactory implements InfinispanCon
         String jdgServer = config.get("remoteStoreHost", "localhost");
         Integer jdgPort = config.getInt("remoteStorePort", 11222);
 
-        // After upgrade to Infinispan 12.1.7.Final it's required that both remote store and embedded cache use
-        // the same key media type to allow segmentation. Also, the number of segments in an embedded cache needs to match number of segments in the remote store.
-        boolean segmented = config.getBoolean("segmented", false);
-
         builder.persistence()
                 .passivation(false)
                 .addStore(RemoteStoreConfigurationBuilder.class)
@@ -407,7 +393,6 @@ public class DefaultInfinispanConnectionProviderFactory implements InfinispanCon
                 .preload(false)
                 .shared(true)
                 .remoteCacheName(cacheName)
-                .segmented(segmented)
                 .rawValues(true)
                 .forceReturnValues(false)
                 .marshaller(KeycloakHotRodMarshallerFactory.class.getName())
@@ -423,10 +408,6 @@ public class DefaultInfinispanConnectionProviderFactory implements InfinispanCon
         String jdgServer = config.get("remoteStoreHost", "localhost");
         Integer jdgPort = config.getInt("remoteStorePort", 11222);
 
-        // After upgrade to Infinispan 12.1.7.Final it's required that both remote store and embedded cache use
-        // the same key media type to allow segmentation. Also, the number of segments in an embedded cache needs to match number of segments in the remote store.
-        boolean segmented = config.getBoolean("segmented", false);
-
         builder.persistence()
                 .passivation(false)
                 .addStore(RemoteStoreConfigurationBuilder.class)
@@ -436,7 +417,6 @@ public class DefaultInfinispanConnectionProviderFactory implements InfinispanCon
                     .preload(true)
                     .shared(true)
                     .remoteCacheName(InfinispanConnectionProvider.ACTION_TOKEN_CACHE)
-                    .segmented(segmented)
                     .rawValues(true)
                     .forceReturnValues(false)
                     .marshaller(KeycloakHotRodMarshallerFactory.class.getName())
@@ -479,22 +459,17 @@ public class DefaultInfinispanConnectionProviderFactory implements InfinispanCon
         ClusterProvider cluster = session.getProvider(ClusterProvider.class);
         cluster.registerListener(REALM_CLEAR_CACHE_EVENTS, (ClusterEvent event) -> {
             if (event instanceof ClearCacheEvent) {
-                sessionFactory.invalidate(null, ObjectType._ALL_);
+                sessionFactory.invalidate(ObjectType._ALL_);
             }
         });
         cluster.registerListener(REALM_INVALIDATION_EVENTS, (ClusterEvent event) -> {
             if (event instanceof RealmUpdatedEvent) {
                 RealmUpdatedEvent rr = (RealmUpdatedEvent) event;
-                sessionFactory.invalidate(null, ObjectType.REALM, rr.getId());
+                sessionFactory.invalidate(ObjectType.REALM, rr.getId());
             } else if (event instanceof RealmRemovedEvent) {
                 RealmRemovedEvent rr = (RealmRemovedEvent) event;
-                sessionFactory.invalidate(null, ObjectType.REALM, rr.getId());
+                sessionFactory.invalidate(ObjectType.REALM, rr.getId());
             }
         });
-    }
-
-    @Override
-    public boolean isSupported() {
-        return !Profile.isFeatureEnabled(Profile.Feature.MAP_STORAGE);
     }
 }

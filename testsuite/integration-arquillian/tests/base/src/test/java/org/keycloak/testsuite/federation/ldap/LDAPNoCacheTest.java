@@ -37,7 +37,6 @@ import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
 import org.keycloak.models.UserProvider;
 import org.keycloak.representations.idm.UserRepresentation;
-import org.keycloak.storage.UserStoragePrivateUtil;
 import org.keycloak.storage.UserStorageProviderModel;
 import org.keycloak.storage.ldap.LDAPStorageProvider;
 import org.keycloak.storage.ldap.idm.model.LDAPObject;
@@ -225,7 +224,7 @@ public class LDAPNoCacheTest extends AbstractLDAPTest {
             ctx.getLdapModel().setImportEnabled(true);
             realm.updateComponent(ctx.getLdapModel());
 
-            UserProvider localStorage = UserStoragePrivateUtil.userLocalStorage(session);
+            UserProvider localStorage = session.userLocalStorage();
             LDAPStorageProvider ldapProvider = ctx.getLdapProvider();
 
             // assume no user imported

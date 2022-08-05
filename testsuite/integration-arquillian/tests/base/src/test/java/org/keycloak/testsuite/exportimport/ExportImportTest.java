@@ -24,7 +24,6 @@ import org.junit.After;
 import org.junit.Test;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.authentication.requiredactions.WebAuthnRegisterFactory;
-import org.keycloak.common.Profile.Feature;
 import org.keycloak.exportimport.ExportImportConfig;
 import org.keycloak.exportimport.Strategy;
 import org.keycloak.exportimport.dir.DirExportProvider;
@@ -39,7 +38,6 @@ import org.keycloak.representations.idm.RequiredActionProviderRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.keycloak.testsuite.AbstractKeycloakTest;
 import org.keycloak.testsuite.Assert;
-import org.keycloak.testsuite.ProfileAssume;
 import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
 import org.keycloak.testsuite.client.resources.TestingExportImportResource;
 import org.keycloak.testsuite.runonserver.RunHelpers;
@@ -63,7 +61,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.keycloak.testsuite.admin.AbstractAdminTest.loadJson;
 import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
-import org.junit.BeforeClass;
 
 /**
  *
@@ -73,12 +70,6 @@ import org.junit.BeforeClass;
  */
 @AuthServerContainerExclude(AuthServer.REMOTE)
 public class ExportImportTest extends AbstractKeycloakTest {
-
-    @BeforeClass
-    public static void checkNotMapStorage() {
-        // Disabled temporarily, re-enable once export/import functionality is implemented for map storage
-        ProfileAssume.assumeFeatureDisabled(Feature.MAP_STORAGE);
-    }
 
     @Override
     public void addTestRealms(List<RealmRepresentation> testRealms) {
@@ -248,12 +239,6 @@ public class ExportImportTest extends AbstractKeycloakTest {
     }
 
     @Test
-    public void testImportWithNullAuthenticatorConfigAndNoDefaultBrowserFlow() {
-        importRealmFromFile("/import/testrealm-authenticator-config-null.json");
-        Assert.assertTrue("Imported realm hasn't been found!", isRealmPresent("cez"));
-    }
-
-    @Test
     public void testImportIgnoreExistingMissingClientId() {
         TestingExportImportResource resource = testingClient.testing().exportImport();
 
@@ -298,8 +283,8 @@ public class ExportImportTest extends AbstractKeycloakTest {
         }
     }
 
-    private boolean isRealmPresent(String realmName) {
-        return adminClient.realms().findAll().stream().anyMatch(realm -> realmName.equals(realm.getRealm()));
+    private boolean isRealmPresent(String realmId) {
+        return adminClient.realms().findAll().stream().anyMatch(realm -> realmId.equals(realm.getId()));
     }
 
     /*

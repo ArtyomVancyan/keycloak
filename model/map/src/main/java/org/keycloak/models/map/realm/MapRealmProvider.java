@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 import org.jboss.logging.Logger;
+import static org.keycloak.common.util.StackUtil.getShortStackTrace;
 import org.keycloak.models.ClientModel;
 import org.keycloak.models.ClientScopeModel;
 import org.keycloak.models.GroupModel;
@@ -36,10 +37,6 @@ import org.keycloak.models.map.storage.MapStorage;
 import org.keycloak.models.map.storage.ModelCriteriaBuilder.Operator;
 import org.keycloak.models.map.storage.criteria.DefaultModelCriteria;
 import org.keycloak.models.utils.KeycloakModelUtils;
-
-import static org.keycloak.common.util.StackUtil.getShortStackTrace;
-import static org.keycloak.models.map.common.AbstractMapProviderFactory.MapProviderObjectType.REALM_AFTER_REMOVE;
-import static org.keycloak.models.map.common.AbstractMapProviderFactory.MapProviderObjectType.REALM_BEFORE_REMOVE;
 import static org.keycloak.models.map.storage.QueryParameters.Order.ASCENDING;
 import static org.keycloak.models.map.storage.QueryParameters.withCriteria;
 import static org.keycloak.models.map.storage.criteria.DefaultModelCriteria.criteria;
@@ -77,8 +74,7 @@ public class MapRealmProvider implements RealmProvider {
 
         LOG.tracef("createRealm(%s, %s)%s", id, name, getShortStackTrace());
 
-        MapRealmEntity entity = new MapRealmEntityImpl();
-        entity.setId(id);
+        MapRealmEntity entity = new MapRealmEntity(id);
         entity.setName(name);
 
         entity = tx.create(entity);
@@ -138,12 +134,27 @@ public class MapRealmProvider implements RealmProvider {
 
         if (realm == null) return false;
 
-        session.invalidate(REALM_BEFORE_REMOVE, realm);
+        session.users().preRemove(realm);
+        session.clients().removeClients(realm);
+        session.clientScopes().removeClientScopes(realm);
+        session.roles().removeRoles(realm);
+        realm.getTopLevelGroupsStream().forEach(realm::removeGroup);
+
+        // TODO: Sending an event should be extracted to store layer
+        session.getKeycloakSessionFactory().publish(new RealmModel.RealmRemovedEvent() {
+            @Override
+            public RealmModel getRealm() {
+                return realm;
+            }
+
+            @Override
+            public KeycloakSession getKeycloakSession() {
+                return session;
+            }
+        });
+        // TODO: ^^^^^^^ Up to here
 
         tx.delete(id);
-
-        session.invalidate(REALM_AFTER_REMOVE, realm);
-
         return true;
     }
 
@@ -159,10 +170,12 @@ public class MapRealmProvider implements RealmProvider {
     //TODO move the following method to adapter
     @Override
     public void saveLocalizationText(RealmModel realm, String locale, String key, String text) {
-        if (locale == null || key == null || text == null) return;
-        Map<String, String> texts = new HashMap<>();
-        texts.put(key, text);
-        realm.createOrUpdateRealmLocalizationTexts(locale, texts);
+        // implemented according to behaviour in JpaRealmProvider (as java-doc was not added)
+        if (! updateLocalizationText(realm, locale, key, text)) {
+            Map<String, String> texts = new HashMap<>();
+            texts.put(key, text);
+            realm.createOrUpdateRealmLocalizationTexts(locale, texts);
+        }
     }
 
     //TODO move the following method to adapter
@@ -176,7 +189,9 @@ public class MapRealmProvider implements RealmProvider {
     @Override
     public boolean updateLocalizationText(RealmModel realm, String locale, String key, String text) {
         if (locale == null || key == null || text == null || (! realm.getRealmLocalizationTextsByLocale(locale).containsKey(key))) return false;
-        saveLocalizationText(realm, locale, key, text);
+        Map<String, String> texts = new HashMap<>(realm.getRealmLocalizationTextsByLocale(locale));
+        texts.replace(key, text);
+        realm.createOrUpdateRealmLocalizationTexts(locale, texts);
         return true;
     }
 

@@ -26,7 +26,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -36,10 +35,10 @@ import java.util.stream.Stream;
  * <p/>
  * For example,
  * <p/>
- * for operator {@link ModelCriteriaBuilder.Operator#EQ} we concatenate left operand and right operand with equal sign:
+ * for operator {@link ModelCriteriaBuilder.Operator.EQ} we concatenate left operand and right operand with equal sign:
  * {@code fieldName = :parameterName}
  * <p/>
- * however, for operator {@link ModelCriteriaBuilder.Operator#EXISTS} we add following:
+ * however, for operator {@link ModelCriteriaBuilder.Operator.EXISTS} we add following:
  * <p/>
  * {@code fieldName IS NOT NULL AND fieldName IS NOT EMPTY"}.
  *
@@ -47,7 +46,7 @@ import java.util.stream.Stream;
  * corresponding value is then saved into {@code Map<String, Object>} that is passed to each {@link ExpressionCombinator}.
  */
 public class IckleQueryOperators {
-    private static final Pattern UNWANTED_CHARACTERS_REGEX = Pattern.compile("[^a-zA-Z\\d]");
+    private static final String UNWANTED_CHARACTERS_REGEX = "[^a-zA-Z\\d]";
     public static final String C = "c";
     private static final Map<ModelCriteriaBuilder.Operator, String> OPERATOR_TO_STRING = new HashMap<>();
     private static final Map<ModelCriteriaBuilder.Operator, ExpressionCombinator> OPERATOR_TO_EXPRESSION_COMBINATORS = new HashMap<>();
@@ -56,8 +55,6 @@ public class IckleQueryOperators {
         OPERATOR_TO_EXPRESSION_COMBINATORS.put(ModelCriteriaBuilder.Operator.IN, IckleQueryOperators::in);
         OPERATOR_TO_EXPRESSION_COMBINATORS.put(ModelCriteriaBuilder.Operator.EXISTS, IckleQueryOperators::exists);
         OPERATOR_TO_EXPRESSION_COMBINATORS.put(ModelCriteriaBuilder.Operator.NOT_EXISTS, IckleQueryOperators::notExists);
-        OPERATOR_TO_EXPRESSION_COMBINATORS.put(ModelCriteriaBuilder.Operator.ILIKE, IckleQueryOperators::iLike);
-        OPERATOR_TO_EXPRESSION_COMBINATORS.put(ModelCriteriaBuilder.Operator.LIKE, IckleQueryOperators::like);
 
         OPERATOR_TO_STRING.put(ModelCriteriaBuilder.Operator.EQ, "=");
         OPERATOR_TO_STRING.put(ModelCriteriaBuilder.Operator.NE, "!=");
@@ -84,29 +81,17 @@ public class IckleQueryOperators {
         String combine(String fieldName, Object[] values, Map<String, Object> parameters);
     }
 
-    private static String exists(String modelFieldName, Object[] values, Map<String, Object> parameters) {
-        String field = C + "." + modelFieldName;
+    private static String exists(String modelField, Object[] values, Map<String, Object> parameters) {
+        String field = C + "." + modelField;
         return field + " IS NOT NULL AND " + field + " IS NOT EMPTY";
     }
 
-    private static String notExists(String modelFieldName, Object[] values, Map<String, Object> parameters) {
-        String field = C + "." + modelFieldName;
+    private static String notExists(String modelField, Object[] values, Map<String, Object> parameters) {
+        String field = C + "." + modelField;
         return field + " IS NULL OR " + field + " IS EMPTY";
     }
 
-    private static String iLike(String modelFieldName, Object[] values, Map<String, Object> parameters) {
-        String sanitizedValue = (String) IckleQueryMapModelCriteriaBuilder.sanitizeNonAnalyzed(values[0]);
-        return singleValueOperator(ModelCriteriaBuilder.Operator.ILIKE)
-                .combine(modelFieldName + "Lowercase", new String[] {sanitizedValue.toLowerCase()}, parameters);
-    }
-
-    private static String like(String modelFieldName, Object[] values, Map<String, Object> parameters) {
-        String sanitizedValue = (String) IckleQueryMapModelCriteriaBuilder.sanitizeNonAnalyzed(values[0]);
-        return singleValueOperator(ModelCriteriaBuilder.Operator.LIKE)
-                .combine(modelFieldName, new String[] {sanitizedValue}, parameters);
-    }
-
-    private static String in(String modelFieldName, Object[] values, Map<String, Object> parameters) {
+    private static String in(String modelField, Object[] values, Map<String, Object> parameters) {
         if (values == null || values.length == 0) {
             return "false";
         }
@@ -127,9 +112,9 @@ public class IckleQueryOperators {
             operands = new HashSet<>(Arrays.asList(values));
         }
 
-        return operands.isEmpty() ? "false" : C + "." + modelFieldName + " IN (" + operands.stream()
+        return operands.isEmpty() ? "false" : C + "." + modelField + " IN (" + operands.stream()
                 .map(operand -> {
-                    String namedParam = findAvailableNamedParam(parameters.keySet(), modelFieldName);
+                    String namedParam = findAvailableNamedParam(parameters.keySet(), modelField);
                     parameters.put(namedParam, operand);
                     return ":" + namedParam;
                 })
@@ -138,18 +123,14 @@ public class IckleQueryOperators {
     }
 
     private static String removeForbiddenCharactersFromNamedParameter(String name) {
-        return UNWANTED_CHARACTERS_REGEX.matcher(name).replaceAll( "");
+        return name.replaceAll(UNWANTED_CHARACTERS_REGEX, "");
     }
 
     /**
      * Maps {@code namePrefix} to next available parameter name. For example, if {@code namePrefix == "id"}
      * and {@code existingNames} set already contains {@code id0} and {@code id1} it returns {@code id2}.
-     * Any character that is not an alphanumeric will be stripped, so that it works for prefixes like
-     * {@code "attributes.name"} as well.
      *
-     * This method is used for computing available names for name query parameters.
-     * Instead of creating generic named parameters that would be hard to debug and read by humans, it creates readable
-     * named parameters from the prefix.
+     * This method is used for computing available names for name query parameters
      *
      * @param existingNames set of parameter names that are already used in this Ickle query
      * @param namePrefix name of the parameter
@@ -191,13 +172,13 @@ public class IckleQueryOperators {
      * Provides a string containing where clause for given operator, field name and values
      *
      * @param op operator
-     * @param modelFieldName field name
+     * @param filedName field name
      * @param values values
      * @param parameters mapping between named parameters and their values
      * @return where clause
      */
-    public static String combineExpressions(ModelCriteriaBuilder.Operator op, String modelFieldName, Object[] values, Map<String, Object> parameters) {
-        return operatorToExpressionCombinator(op).combine(modelFieldName, values, parameters);
+    public static String combineExpressions(ModelCriteriaBuilder.Operator op, String filedName, Object[] values, Map<String, Object> parameters) {
+        return operatorToExpressionCombinator(op).combine(filedName, values, parameters);
     }
 
 }

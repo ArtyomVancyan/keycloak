@@ -18,8 +18,11 @@
 package org.keycloak.authentication.authenticators.browser;
 
 import org.keycloak.Config;
+import org.keycloak.OAuth2Constants;
 import org.keycloak.authentication.Authenticator;
 import org.keycloak.authentication.AuthenticatorFactory;
+import org.keycloak.authentication.DisplayTypeAuthenticatorFactory;
+import org.keycloak.authentication.authenticators.console.ConsolePasswordAuthenticator;
 import org.keycloak.models.AuthenticationExecutionModel;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.KeycloakSessionFactory;
@@ -32,7 +35,7 @@ import java.util.List;
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
  * @version $Revision: 1 $
  */
-public class PasswordFormFactory implements AuthenticatorFactory {
+public class PasswordFormFactory implements AuthenticatorFactory, DisplayTypeAuthenticatorFactory {
 
     public static final String PROVIDER_ID = "auth-password-form";
     public static final PasswordForm SINGLETON = new PasswordForm();
@@ -40,6 +43,13 @@ public class PasswordFormFactory implements AuthenticatorFactory {
     @Override
     public Authenticator create(KeycloakSession session) {
         return SINGLETON;
+    }
+
+    @Override
+    public Authenticator createDisplay(KeycloakSession session, String displayType) {
+        if (displayType == null) return SINGLETON;
+        if (!OAuth2Constants.DISPLAY_CONSOLE.equalsIgnoreCase(displayType)) return null;
+        return ConsolePasswordAuthenticator.SINGLETON;
     }
 
     @Override

@@ -55,7 +55,6 @@ public abstract class AbstractAuthenticationTest extends AbstractKeycloakTest {
 
     RealmResource realmResource;
     AuthenticationManagementResource authMgmtResource;
-    protected String testRealmId;
 
     @Rule
     public AssertAdminEvents assertAdminEvents = new AssertAdminEvents(this);
@@ -64,7 +63,6 @@ public abstract class AbstractAuthenticationTest extends AbstractKeycloakTest {
     public void before() {
         realmResource = adminClient.realms().realm(REALM_NAME);
         authMgmtResource = realmResource.flows();
-        testRealmId = realmResource.toRepresentation().getId();
     }
 
     @Override
@@ -201,6 +199,6 @@ public abstract class AbstractAuthenticationTest extends AbstractKeycloakTest {
         response.close();
         String flowId = ApiUtil.getCreatedId(response);
         getCleanup().addAuthenticationFlowId(flowId);
-        assertAdminEvents.assertEvent(testRealmId, OperationType.CREATE, AssertAdminEvents.isExpectedPrefixFollowedByUuid(AdminEventPaths.authFlowsPath()), flowRep, ResourceType.AUTH_FLOW);
+        assertAdminEvents.assertEvent(REALM_NAME, OperationType.CREATE, AssertAdminEvents.isExpectedPrefixFollowedByUuid(AdminEventPaths.authFlowsPath()), flowRep, ResourceType.AUTH_FLOW);
     }
 }

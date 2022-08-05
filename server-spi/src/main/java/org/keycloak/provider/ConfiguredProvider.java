@@ -27,14 +27,4 @@ public interface ConfiguredProvider {
     String getHelpText();
 
     List<ProviderConfigProperty> getConfigProperties();
-
-    /**
-     * Returns a default configuration for this provider.
-     *
-     * @param <C> the type of the configuration
-     * @return the default configuration
-     */
-    default <C> C getConfig() {
-        return null;
-    }
 }

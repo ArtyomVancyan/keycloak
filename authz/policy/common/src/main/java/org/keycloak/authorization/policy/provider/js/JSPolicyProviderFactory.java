@@ -57,19 +57,17 @@ public class JSPolicyProviderFactory implements PolicyProviderFactory<JSPolicyRe
 
     @Override
     public void onCreate(Policy policy, JSPolicyRepresentation representation, AuthorizationProvider authorization) {
-        throwCanNotUpdatePolicy(authorization);
+        updatePolicy(policy, representation.getCode(), authorization);
     }
 
     @Override
     public void onUpdate(Policy policy, JSPolicyRepresentation representation, AuthorizationProvider authorization) {
-        policy.setDecisionStrategy(representation.getDecisionStrategy());
-        policy.setDescription(policy.getDescription());
-        policy.setLogic(policy.getLogic());
+        updatePolicy(policy, representation.getCode(), authorization);
     }
 
     @Override
     public void onImport(Policy policy, PolicyRepresentation representation, AuthorizationProvider authorization) {
-        throwCanNotUpdatePolicy(authorization);
+        updatePolicy(policy, representation.getConfig().get("code"), authorization);
     }
 
     @Override
@@ -101,7 +99,7 @@ public class JSPolicyProviderFactory implements PolicyProviderFactory<JSPolicyRe
 
     @Override
     public boolean isInternal() {
-        return true;
+        return !Profile.isFeatureEnabled(Profile.Feature.UPLOAD_SCRIPTS);
     }
 
     private EvaluatableScriptAdapter getEvaluatableScript(final AuthorizationProvider authz, final Policy policy) {
@@ -121,13 +119,15 @@ public class JSPolicyProviderFactory implements PolicyProviderFactory<JSPolicyRe
         return scripting.createScript(realm.getId(), ScriptModel.TEXT_JAVASCRIPT, scriptName, scriptCode, scriptDescription);
     }
 
-    protected boolean isDeployed() {
-        return false;
-    }
-
-    private void throwCanNotUpdatePolicy(AuthorizationProvider authorization) {
-        if (!authorization.getKeycloakSession().getAttributeOrDefault("ALLOW_CREATE_POLICY", false) && !isDeployed()) {
+    private void updatePolicy(Policy policy, String code, AuthorizationProvider authorization) {
+        scriptCache.remove(policy.getId());
+        if (!Profile.isFeatureEnabled(Profile.Feature.UPLOAD_SCRIPTS) && !authorization.getKeycloakSession().getAttributeOrDefault("ALLOW_CREATE_POLICY", false) && !isDeployed()) {
             throw new RuntimeException("Script upload is disabled");
         }
+        policy.putConfig("code", code);
+    }
+
+    protected boolean isDeployed() {
+        return false;
     }
 }

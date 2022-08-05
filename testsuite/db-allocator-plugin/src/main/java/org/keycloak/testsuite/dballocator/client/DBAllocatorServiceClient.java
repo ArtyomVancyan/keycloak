@@ -37,7 +37,7 @@ public class DBAllocatorServiceClient {
 
         this.allocatorServletURI = URI.create(allocatorServletURI);
         this.retryPolicy = retryPolicy != null ? retryPolicy : new IncrementalBackoffRetryPolicy();
-        this.restClient = ((ResteasyClientBuilder) ResteasyClientBuilder.newBuilder()).httpEngine(createEngine()).build();
+        this.restClient = new ResteasyClientBuilder().httpEngine(createEngine()).build();
     }
 
     private final ApacheHttpClient43Engine createEngine() {

@@ -42,8 +42,4 @@ public class ClientPolicyExecutorConfigurationRepresentation {
     public void setConfigAsMap(String name, Object value) {
         this.configAsMap.put(name, value);
     }
-
-    public boolean validateConfig(){
-        return  true;
-    }
 }

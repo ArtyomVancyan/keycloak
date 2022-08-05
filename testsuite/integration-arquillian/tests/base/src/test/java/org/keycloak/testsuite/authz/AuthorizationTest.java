@@ -92,14 +92,14 @@ public class AuthorizationTest extends AbstractAuthzTest {
         JSPolicyRepresentation policy = new JSPolicyRepresentation();
 
         policy.setName("Grant Policy");
-        policy.setType("script-scripts/default-policy.js");
+        policy.setCode("$evaluation.grant();");
 
         authorization.policies().js().create(policy).close();
 
         policy = new JSPolicyRepresentation();
 
         policy.setName("Deny Policy");
-        policy.setType("script-scripts/always-deny-policy.js");
+        policy.setCode("$evaluation.deny();");
     }
 
     @After

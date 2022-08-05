@@ -61,11 +61,6 @@ public class SamlRepresentationAttributes {
         return getAttributes().get(SamlConfigAttributes.SAML_FORCE_NAME_ID_FORMAT_ATTRIBUTE);
     }
 
-    public String getAllowEcpFlow() {
-        if (getAttributes() == null) return null;
-        return getAttributes().get(SamlConfigAttributes.SAML_ALLOW_ECP_FLOW);
-    }
-
     public String getSamlArtifactBinding() {
         if (getAttributes() == null) return null;
         return getAttributes().get(SamlConfigAttributes.SAML_ARTIFACT_BINDING);

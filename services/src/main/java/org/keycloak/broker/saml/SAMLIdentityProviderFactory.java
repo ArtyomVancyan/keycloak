@@ -123,7 +123,6 @@ public class SAMLIdentityProviderFactory extends AbstractIdentityProviderFactory
                         }
 
                     }
-                    samlIdentityProviderConfig.setIdpEntityId(entityType.getEntityID());
                     samlIdentityProviderConfig.setSingleLogoutServiceUrl(singleLogoutServiceUrl);
                     samlIdentityProviderConfig.setSingleSignOnServiceUrl(singleSignOnServiceUrl);
                     samlIdentityProviderConfig.setWantAuthnRequestsSigned(idpDescriptor.isWantAuthnRequestsSigned());

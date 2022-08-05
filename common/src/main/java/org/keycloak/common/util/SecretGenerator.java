@@ -5,9 +5,7 @@ import java.util.Random;
 
 public class SecretGenerator {
 
-    public static final int SECRET_LENGTH_256_BITS = 32;
-    public static final int SECRET_LENGTH_384_BITS = 48;
-    public static final int SECRET_LENGTH_512_BITS = 64;
+    public static final int DEFAULT_LENGTH = 32;
 
     public static final char[] UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
 
@@ -32,7 +30,7 @@ public class SecretGenerator {
     }
 
     public String randomString() {
-        return randomString(SECRET_LENGTH_256_BITS, ALPHANUM);
+        return randomString(DEFAULT_LENGTH, ALPHANUM);
     }
 
     public String randomString(int length) {
@@ -57,7 +55,7 @@ public class SecretGenerator {
         return new String(buf);
     }
     public byte[] randomBytes() {
-        return randomBytes(SECRET_LENGTH_256_BITS);
+        return randomBytes(DEFAULT_LENGTH);
     }
 
     public byte[] randomBytes(int length) {

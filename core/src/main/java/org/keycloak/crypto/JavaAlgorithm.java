@@ -103,15 +103,4 @@ public class JavaAlgorithm {
         }
     }
 
-    public static boolean isRSAJavaAlgorithm(String algorithm) {
-        return getJavaAlgorithm(algorithm).contains("RSA");
-    }
-
-    public static boolean isECJavaAlgorithm(String algorithm) {
-        return getJavaAlgorithm(algorithm).contains("ECDSA");
-    }
-
-    public static boolean isHMACJavaAlgorithm(String algorithm) {
-        return getJavaAlgorithm(algorithm).contains("HMAC");
-    }
 }

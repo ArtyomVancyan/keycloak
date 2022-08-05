@@ -31,6 +31,7 @@ import org.keycloak.testsuite.utils.arquillian.ContainerConstants;
  * @author hmlnarik
  */
 @AppServerContainer(ContainerConstants.APP_SERVER_WILDFLY_CLUSTER)
+@AppServerContainer(ContainerConstants.APP_SERVER_WILDFLY_DEPRECATED_CLUSTER)
 @AppServerContainer(ContainerConstants.APP_SERVER_EAP_CLUSTER)
 @AppServerContainer(ContainerConstants.APP_SERVER_EAP6_CLUSTER)
 public class SAMLAdapterClusterTest extends AbstractSAMLAdapterClusteredTest {

@@ -17,16 +17,18 @@
 
 package org.keycloak.quarkus.runtime.cli;
 
+import static org.keycloak.quarkus.runtime.configuration.Configuration.getMappedPropertyName;
+import static org.keycloak.quarkus.runtime.configuration.MicroProfileConfigProvider.NS_KEYCLOAK_PREFIX;
 import static org.keycloak.quarkus.runtime.configuration.mappers.PropertyMappers.getMapper;
 import static picocli.CommandLine.Help.Column.Overflow.SPAN;
 import static picocli.CommandLine.Help.Column.Overflow.WRAP;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import org.keycloak.quarkus.runtime.cli.command.Build;
+import org.keycloak.quarkus.runtime.cli.command.StartDev;
 import org.keycloak.quarkus.runtime.configuration.mappers.PropertyMapper;
-import org.keycloak.quarkus.runtime.configuration.mappers.PropertyMappers;
 import org.keycloak.utils.StringUtil;
 
 import picocli.CommandLine;
@@ -47,38 +49,12 @@ public final class Help extends CommandLine.Help {
     }
 
     @Override
-    public String optionList(Layout layout, Comparator<OptionSpec> optionSort, IParamLabelRenderer valueLabelRenderer) {
-        List<OptionSpec> visibleOptionsNotInGroups = excludeHiddenAndGroupOptions(commandSpec().options());
-        return optionListExcludingGroups(visibleOptionsNotInGroups, layout, optionSort, valueLabelRenderer) + optionListGroupSections();
-    }
-
-    private List<OptionSpec> excludeHiddenAndGroupOptions(List<OptionSpec> all) {
-        List<OptionSpec> result = new ArrayList<>(all);
-
-        for (ArgGroupSpec group : optionSectionGroups()) {
-            result.removeAll(group.allOptionsNested());
-        }
-
-        for (Iterator<OptionSpec> iter = result.iterator(); iter.hasNext(); ) {
-            OptionSpec optionSpec = iter.next();
-
-            if (!isVisible(optionSpec)) {
-                iter.remove();
-            }
-        }
-
-        return result;
-    }
-
-    @Override
     public Layout createDefaultLayout() {
         return new Layout(colorScheme(), createTextTable(), createDefaultOptionRenderer(), createDefaultParameterRenderer()) {
             @Override
-            public void addOptions(List<OptionSpec> options, IParamLabelRenderer paramLabelRenderer) {
-                for (OptionSpec optionSpec : options) {
-                    if (isVisible(optionSpec)) {
-                        addOption(optionSpec, paramLabelRenderer);
-                    }
+            public void addOption(OptionSpec option, IParamLabelRenderer paramLabelRenderer) {
+                if (isVisible(option)) {
+                    super.addOption(option, paramLabelRenderer);
                 }
             }
         };
@@ -153,26 +129,35 @@ public final class Help extends CommandLine.Help {
     }
 
     private boolean isVisible(OptionSpec option) {
-        if (option.description().length == 0) {
-            // do not show options without a description
-            return false;
+        if (allOptions) {
+            return true;
         }
 
-        PropertyMapper<?> mapper = getMapper(option.longestName());
+        String optionName = option.longestName();
+        boolean isFeatureOption = optionName.startsWith("--feature");
+        String canonicalOptionName = NS_KEYCLOAK_PREFIX.concat(optionName.replace("--", ""));
+        String propertyName = getMappedPropertyName(canonicalOptionName);
+        PropertyMapper mapper = getMapper(propertyName);
 
-        if (mapper == null) {
-            // only filter mapped options, defaults to the hidden marker
-            return !option.hidden();
+        if (mapper == null && !isFeatureOption) {
+            // only filter mapped and non-feature options
+            return true;
         }
 
-        boolean isUnsupportedOption = !PropertyMappers.isSupported(mapper);
+        String commandName = commandSpec().name();
+        boolean isBuildTimeProperty = isFeatureOption || mapper.isBuildTime();
 
-        if (isUnsupportedOption) {
-            // unsupported options removed from help if all options are not requested
-            return !option.hidden() && allOptions;
+        if (Build.NAME.equals(commandName)) {
+            // by default, build command only shows build time props
+            return isBuildTimeProperty;
         }
 
-        return !option.hidden();
+        if (StartDev.NAME.equals(commandName)) {
+            // by default, start-dev command only shows runtime props
+            return !isBuildTimeProperty;
+        }
+
+        return true;
     }
 
     public void setAllOptions(boolean allOptions) {

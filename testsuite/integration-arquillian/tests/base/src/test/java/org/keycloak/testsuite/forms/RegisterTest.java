@@ -18,7 +18,6 @@ package org.keycloak.testsuite.forms;
 
 import org.jboss.arquillian.graphene.page.Page;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 import org.keycloak.authentication.AuthenticationFlow;
@@ -31,7 +30,6 @@ import org.keycloak.common.Profile;
 import org.keycloak.events.Details;
 import org.keycloak.events.EventType;
 import org.keycloak.models.AuthenticationExecutionModel;
-import org.keycloak.representations.idm.EventRepresentation;
 import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.keycloak.testsuite.AssertEvents;
@@ -48,7 +46,6 @@ import org.keycloak.testsuite.updaters.RealmAttributeUpdater;
 import org.keycloak.testsuite.util.FlowUtil;
 import org.keycloak.testsuite.util.GreenMailRule;
 import org.keycloak.testsuite.util.MailUtils;
-import org.keycloak.testsuite.util.OAuthClient;
 import org.keycloak.testsuite.util.UserBuilder;
 
 import javax.mail.internet.MimeMessage;
@@ -180,8 +177,6 @@ public class RegisterTest extends AbstractTestRealmKeycloakTest {
 
     @Test
     public void registerUpperCaseEmailWithChangedEmailAsUsername() throws IOException {
-        Assume.assumeTrue("See https://github.com/keycloak/keycloak/issues/10245", isUserCacheEnabled());
-
         String userId = registerUpperCaseAndGetUserId(false);
         assertThat(userId, notNullValue());
         oauth.openLogout();
@@ -680,12 +675,11 @@ public class RegisterTest extends AbstractTestRealmKeycloakTest {
                 .assertEvent()
                 .getUserId();
 
-        EventRepresentation loginEvent = events.expectLogin()
+        events.expectLogin()
                 .detail("username", EMAIL_OR_USERNAME.toLowerCase())
                 .user(userId)
                 .assertEvent();
-        OAuthClient.AccessTokenResponse tokenResponse = sendTokenRequestAndGetResponse(loginEvent);
-        oauth.idTokenHint(tokenResponse.getIdToken());
+
         assertUserBasicRegisterAttributes(userId, emailAsUsername ? null : USERNAME, EMAIL, "firstName", "lastName");
 
         return userId;

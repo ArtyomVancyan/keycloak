@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Red Hat, Inc. and/or its affiliates
+ * Copyright 2021 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,6 @@
 package org.keycloak.models.map.authorization.adapter;
 
 
-import java.util.Objects;
 import org.keycloak.authorization.model.Policy;
 import org.keycloak.authorization.model.Resource;
 import org.keycloak.authorization.model.ResourceServer;
@@ -26,22 +25,13 @@ import org.keycloak.authorization.model.Scope;
 import org.keycloak.authorization.store.StoreFactory;
 
 
-import org.keycloak.models.RealmModel;
 import org.keycloak.models.map.authorization.entity.MapPermissionTicketEntity;
 import static org.keycloak.authorization.UserManagedPermissionUtil.updatePolicy;
 
 public class MapPermissionTicketAdapter extends AbstractPermissionTicketModel<MapPermissionTicketEntity> {
-
-    private final RealmModel realm;
-    private ResourceServer resourceServer;
-
-    public MapPermissionTicketAdapter(RealmModel realm, ResourceServer resourceServer, MapPermissionTicketEntity entity, StoreFactory storeFactory) {
+    
+    public MapPermissionTicketAdapter(MapPermissionTicketEntity entity, StoreFactory storeFactory) {
         super(entity, storeFactory);
-
-        Objects.requireNonNull(realm, "realm");
-
-        this.realm = realm;
-        this.resourceServer = resourceServer;
     }
 
     @Override
@@ -61,13 +51,13 @@ public class MapPermissionTicketAdapter extends AbstractPermissionTicketModel<Ma
 
     @Override
     public Resource getResource() {
-        return storeFactory.getResourceStore().findById(realm, getResourceServer(), entity.getResourceId());
+        return storeFactory.getResourceStore().findById(entity.getResourceId(), entity.getResourceServerId());
     }
 
     @Override
     public Scope getScope() {
         if (entity.getScopeId() == null) return null;
-        return storeFactory.getScopeStore().findById(realm, getResourceServer(), entity.getScopeId());
+        return storeFactory.getScopeStore().findById(entity.getScopeId(), entity.getResourceServerId());
     }
 
     @Override
@@ -93,16 +83,13 @@ public class MapPermissionTicketAdapter extends AbstractPermissionTicketModel<Ma
 
     @Override
     public ResourceServer getResourceServer() {
-        if (resourceServer == null) {
-            resourceServer = storeFactory.getResourceServerStore().findById(realm, entity.getResourceServerId());
-        }
-        return resourceServer;
+        return storeFactory.getResourceServerStore().findById(entity.getResourceServerId());
     }
 
     @Override
     public Policy getPolicy() {
         if (entity.getPolicyId() == null) return null;
-        return storeFactory.getPolicyStore().findById(realm, getResourceServer(), entity.getPolicyId());
+        return storeFactory.getPolicyStore().findById(entity.getPolicyId(), entity.getResourceServerId());
     }
 
     @Override

@@ -17,13 +17,9 @@
 
 package org.keycloak.testsuite.console.page;
 
-import org.keycloak.testsuite.util.UIUtils;
 import org.openqa.selenium.By;
-import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
-
-import java.util.Optional;
 
 import static org.keycloak.testsuite.auth.page.AuthRealm.TEST;
 import static org.keycloak.testsuite.util.WaitUtils.waitUntilElement;
@@ -62,14 +58,16 @@ public class AdminConsoleRealm extends AdminConsoleRealmsRoot {
         return configureMenu;
     }
 
+//    public RealmResource realmResource() {
+//        return realmsResource().realm(getConsoleRealm());
+//    }
+
     public static class ConfigureMenu {
 
         @FindBy(partialLinkText = "Realm Settings")
         private WebElement realmSettingsLink;
         @FindBy(partialLinkText = "Clients")
         private WebElement clientsLink;
-        @FindBy(partialLinkText = "Client Scopes")
-        private WebElement clientScopesLink;
         @FindBy(partialLinkText = "Roles")
         private WebElement rolesLink;
         @FindBy(partialLinkText = "Identity Providers")
@@ -80,61 +78,29 @@ public class AdminConsoleRealm extends AdminConsoleRealmsRoot {
         private WebElement authenticationLink;
 
         public void realmSettings() {
-            navigateToTab(realmSettingsLink);
+            realmSettingsLink.click();
         }
 
         public void clients() {
-            navigateToTab(clientsLink);
-        }
-
-        public void clientScopesLink() {
-            navigateToTab(clientScopesLink);
+            clientsLink.click();
         }
 
         public void roles() {
-            navigateToTab(rolesLink);
+            rolesLink.click();
         }
 
         public void identityProviders() {
-            navigateToTab(identityProvidersLink);
+            identityProvidersLink.click();
         }
 
         public void userFederation() {
-            navigateToTab(userFederationLink);
+            userFederationLink.click();
         }
 
         public void authentication() {
-            navigateToTab(authenticationLink);
+            authenticationLink.click();
         }
 
-        // Elements
-        public WebElement getRealmSettingsTab() {
-            return realmSettingsLink;
-        }
-
-        public WebElement getClientsTab() {
-            return clientsLink;
-        }
-
-        public WebElement getClientScopesTab() {
-            return clientScopesLink;
-        }
-
-        public WebElement getRolesTab() {
-            return rolesLink;
-        }
-
-        public WebElement getUserFederationTab() {
-            return userFederationLink;
-        }
-
-        public WebElement getIdentityProvidersTab() {
-            return identityProvidersLink;
-        }
-
-        public WebElement getAuthenticationTab() {
-            return authenticationLink;
-        }
     }
 
     @FindBy(xpath = "//div[./h2[text()='Manage']]")
@@ -146,83 +112,25 @@ public class AdminConsoleRealm extends AdminConsoleRealmsRoot {
     }
 
     public static class ManageMenu {
-        @FindBy(partialLinkText = "Groups")
-        private WebElement groupsLink;
+
         @FindBy(partialLinkText = "Users")
         private WebElement usersLink;
         @FindBy(partialLinkText = "Sessions")
         private WebElement sessionsLink;
         @FindBy(partialLinkText = "Events")
         private WebElement eventsLink;
-        @FindBy(partialLinkText = "Import")
-        private WebElement importLink;
-        @FindBy(partialLinkText = "Export")
-        private WebElement exportLink;
-
-        public void groups() {
-            navigateToTab(groupsLink);
-        }
 
         public void users() {
-            navigateToTab(usersLink);
+            usersLink.click();
         }
 
         public void sessions() {
-            navigateToTab(sessionsLink);
+            sessionsLink.click();
         }
 
         public void events() {
-            navigateToTab(eventsLink);
-        }
-
-        public void importTab() {
-            navigateToTab(importLink);
-        }
-
-        public void exportTab() {
-            navigateToTab(exportLink);
-        }
-
-        // Elements
-        public WebElement getGroupsTab() {
-            return groupsLink;
-        }
-
-        public WebElement getUsersTab() {
-            return groupsLink;
-        }
-
-        public WebElement getSessionsTab() {
-            return groupsLink;
-        }
-
-        public WebElement getEventsTab() {
-            return groupsLink;
-        }
-
-        public WebElement getImportTab() {
-            return groupsLink;
-        }
-
-        public WebElement getExportTab() {
-            return groupsLink;
+            eventsLink.click();
         }
     }
 
-    public static void navigateToTab(WebElement tab) {
-        if (tab == null) return;
-        UIUtils.clickLink(tab);
-    }
-
-    public static boolean isTabActive(WebElement tab) {
-        try {
-            final WebElement parent = tab != null ? tab.findElement(By.xpath("./..")) : null;
-
-            return parent != null && Optional.ofNullable(parent.getAttribute("class"))
-                    .map(f -> f.equals("active"))
-                    .orElse(false);
-        } catch (NoSuchElementException e) {
-            return false;
-        }
-    }
 }

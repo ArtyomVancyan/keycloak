@@ -35,9 +35,7 @@ public class KeycloakSecurityHeadersFilter implements ContainerResponseFilter {
     public void filter(ContainerRequestContext containerRequestContext, ContainerResponseContext containerResponseContext) {
         KeycloakSession session = Resteasy.getContextData(KeycloakSession.class);
 
-        if (session != null) {
-            SecurityHeadersProvider securityHeadersProvider = session.getProvider(SecurityHeadersProvider.class);
-            securityHeadersProvider.addHeaders(containerRequestContext, containerResponseContext);
-        }
+        SecurityHeadersProvider securityHeadersProvider = session.getProvider(SecurityHeadersProvider.class);
+        securityHeadersProvider.addHeaders(containerRequestContext, containerResponseContext);
     }
 }

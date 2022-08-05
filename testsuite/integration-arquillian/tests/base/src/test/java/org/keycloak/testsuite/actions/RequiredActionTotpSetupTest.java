@@ -47,14 +47,12 @@ import org.keycloak.testsuite.pages.LoginConfigTotpPage;
 import org.keycloak.testsuite.pages.LoginPage;
 import org.keycloak.testsuite.pages.LoginTotpPage;
 import org.keycloak.testsuite.pages.RegisterPage;
-import org.keycloak.testsuite.util.OAuthClient;
 import org.keycloak.testsuite.util.RealmBuilder;
 import org.keycloak.testsuite.util.UserBuilder;
 import org.openqa.selenium.By;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -343,8 +341,7 @@ public class RequiredActionTotpSetupTest extends AbstractTestRealmKeycloakTest {
 
         EventRepresentation loginEvent = events.expectLogin().session(authSessionId).assertEvent();
 
-        OAuthClient.AccessTokenResponse tokenResponse = sendTokenRequestAndGetResponse(loginEvent);
-        oauth.idTokenHint(tokenResponse.getIdToken()).openLogout();
+        oauth.openLogout();
 
         events.expectLogout(authSessionId).assertEvent();
 
@@ -405,8 +402,7 @@ public class RequiredActionTotpSetupTest extends AbstractTestRealmKeycloakTest {
         EventRepresentation loginEvent = events.expectLogin().user(userId).detail(Details.USERNAME, "setuptotp2").assertEvent();
 
         // Logout
-        OAuthClient.AccessTokenResponse tokenResponse = sendTokenRequestAndGetResponse(loginEvent);
-        oauth.idTokenHint(tokenResponse.getIdToken()).openLogout();
+        oauth.openLogout();
         events.expectLogout(loginEvent.getSessionId()).user(userId).assertEvent();
 
         // Try to login after logout
@@ -434,8 +430,8 @@ public class RequiredActionTotpSetupTest extends AbstractTestRealmKeycloakTest {
         events.expectAccount(EventType.REMOVE_TOTP).user(userId).assertEvent();
 
         // Logout
-        accountTotpPage.logout();
-        events.expectLogout(loginEvent.getSessionId()).user(userId).detail(Details.REDIRECT_URI, oauth.AUTH_SERVER_ROOT + "/realms/test/account/totp").assertEvent();
+        oauth.openLogout();
+        events.expectLogout(loginEvent.getSessionId()).user(userId).assertEvent();
 
         // Try to login
         loginPage.open();
@@ -484,8 +480,7 @@ public class RequiredActionTotpSetupTest extends AbstractTestRealmKeycloakTest {
 
         EventRepresentation loginEvent = events.expectLogin().session(sessionId).assertEvent();
 
-        OAuthClient.AccessTokenResponse tokenResponse = sendTokenRequestAndGetResponse(loginEvent);
-        oauth.idTokenHint(tokenResponse.getIdToken()).openLogout();
+        oauth.openLogout();
 
         events.expectLogout(loginEvent.getSessionId()).assertEvent();
 
@@ -537,8 +532,7 @@ public class RequiredActionTotpSetupTest extends AbstractTestRealmKeycloakTest {
 
         EventRepresentation loginEvent = events.expectLogin().session(sessionId).assertEvent();
 
-        OAuthClient.AccessTokenResponse tokenResponse = sendTokenRequestAndGetResponse(loginEvent);
-        oauth.idTokenHint(tokenResponse.getIdToken()).openLogout();
+        oauth.openLogout();
 
         events.expectLogout(loginEvent.getSessionId()).assertEvent();
 
@@ -550,10 +544,9 @@ public class RequiredActionTotpSetupTest extends AbstractTestRealmKeycloakTest {
 
         assertEquals(RequestType.AUTH_RESPONSE, appPage.getRequestType());
 
-        loginEvent = events.expectLogin().assertEvent();
+        events.expectLogin().assertEvent();
 
-        tokenResponse = sendTokenRequestAndGetResponse(loginEvent);
-        oauth.idTokenHint(tokenResponse.getIdToken()).openLogout();
+        oauth.openLogout();
         events.expectLogout(null).session(AssertEvents.isUUID()).assertEvent();
 
         // test lookAheadWindow

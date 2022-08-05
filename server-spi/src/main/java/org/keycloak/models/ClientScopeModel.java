@@ -18,7 +18,6 @@
 package org.keycloak.models;
 
 import java.util.Map;
-import java.util.Optional;
 
 import org.keycloak.common.util.ObjectUtil;
 import org.keycloak.provider.ProviderEvent;
@@ -68,8 +67,6 @@ public interface ClientScopeModel extends ProtocolMapperContainerModel, ScopeCon
     String CONSENT_SCREEN_TEXT = "consent.screen.text";
     String GUI_ORDER = "gui.order";
     String INCLUDE_IN_TOKEN_SCOPE = "include.in.token.scope";
-    String IS_DYNAMIC_SCOPE = "is.dynamic.scope";
-    String DYNAMIC_SCOPE_REGEXP = "dynamic.scope.regexp";
 
     default boolean isDisplayOnConsentScreen() {
         String displayVal = getAttribute(DISPLAY_ON_CONSENT_SCREEN);
@@ -109,17 +106,5 @@ public interface ClientScopeModel extends ProtocolMapperContainerModel, ScopeCon
 
     default void setIncludeInTokenScope(boolean includeInTokenScope) {
         setAttribute(INCLUDE_IN_TOKEN_SCOPE, String.valueOf(includeInTokenScope));
-    }
-
-    default boolean isDynamicScope() {
-        return Boolean.parseBoolean(getAttribute(IS_DYNAMIC_SCOPE));
-    }
-
-    default void setIsDynamicScope(boolean isDynamicScope) {
-        setAttribute(IS_DYNAMIC_SCOPE, String.valueOf(isDynamicScope));
-    }
-
-    default String getDynamicScopeRegexp() {
-        return getAttribute(DYNAMIC_SCOPE_REGEXP);
     }
 }

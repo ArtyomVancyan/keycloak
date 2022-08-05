@@ -46,7 +46,6 @@ import org.keycloak.models.credential.PasswordUserCredentialModel;
 import org.keycloak.models.utils.TimeBasedOTP;
 import org.keycloak.storage.StorageId;
 import org.keycloak.storage.UserStorageProvider;
-import org.keycloak.storage.UserStorageUtil;
 import org.keycloak.storage.adapter.AbstractUserAdapterFederatedStorage;
 import org.keycloak.storage.user.UserLookupProvider;
 import org.keycloak.storage.user.UserQueryProvider;
@@ -101,6 +100,7 @@ public class BackwardsCompatibilityUserStorage implements UserLookupProvider, Us
                     throw new RuntimeException("Unsupported to change username");
                 }
             }
+
         };
     }
 
@@ -157,7 +157,7 @@ public class BackwardsCompatibilityUserStorage implements UserLookupProvider, Us
 
             users.get(translateUserName(user.getUsername())).hashedPassword = newPassword;
 
-            UserCache userCache = UserStorageUtil.userCache(session);
+            UserCache userCache = session.userCache();
             if (userCache != null) {
                 userCache.evict(realm, user);
             }

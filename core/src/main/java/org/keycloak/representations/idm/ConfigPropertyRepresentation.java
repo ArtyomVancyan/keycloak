@@ -31,7 +31,6 @@ public class ConfigPropertyRepresentation {
     protected Object defaultValue;
     protected List<String> options;
     protected boolean secret;
-    private boolean readOnly;
 
     public String getName() {
         return name;
@@ -87,13 +86,5 @@ public class ConfigPropertyRepresentation {
 
     public void setSecret(boolean secret) {
         this.secret = secret;
-    }
-
-    public void setReadOnly(boolean readOnly) {
-        this.readOnly = readOnly;
-    }
-
-    public boolean isReadOnly() {
-        return readOnly;
     }
 }

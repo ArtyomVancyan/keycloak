@@ -17,34 +17,14 @@
 
 package org.keycloak.events.admin;
 
-import java.util.Map;
-import java.util.Objects;
-import org.keycloak.util.EnumWithStableIndex;
-
 /**
  * @author <a href="mailto:sthorger@redhat.com">Stian Thorgersen</a>
  */
-public enum OperationType implements EnumWithStableIndex {
+public enum OperationType {
 
-    CREATE(0),
-    UPDATE(1),
-    DELETE(2),
-    ACTION(3);
+    CREATE,
+    UPDATE,
+    DELETE,
+    ACTION;
 
-    private final int stableIndex;
-    private static final Map<Integer, OperationType> BY_ID = EnumWithStableIndex.getReverseIndex(values());
-
-    private OperationType(int stableIndex) {
-        Objects.requireNonNull(stableIndex);
-        this.stableIndex = stableIndex;
-    }
-
-    @Override
-    public int getStableIndex() {
-        return stableIndex;
-    }
-
-    public static OperationType valueOfInteger(Integer id) {
-        return id == null ? null : BY_ID.get(id);
-    }
 }

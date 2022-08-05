@@ -16,14 +16,13 @@
  */
 package org.keycloak.models.map.common.delegate;
 
-import org.keycloak.models.map.common.EntityField;
 import org.keycloak.models.map.common.UpdatableEntity;
 
 /**
  *
  * @author hmlnarik
  */
-public class SimpleDelegateProvider<T extends UpdatableEntity> implements DelegateProvider<T> {
+public class SimpleDelegateProvider<T extends UpdatableEntity> implements DelegateProvider {
 
     private final T delegate;
 
@@ -32,7 +31,7 @@ public class SimpleDelegateProvider<T extends UpdatableEntity> implements Delega
     }
 
     @Override
-    public T getDelegate(boolean isRead, Enum<? extends EntityField<T>> field, Object... parameters) {
+    public T getDelegate(boolean isRead, Object field, Object... parameters) {
         return this.delegate;
     }
 

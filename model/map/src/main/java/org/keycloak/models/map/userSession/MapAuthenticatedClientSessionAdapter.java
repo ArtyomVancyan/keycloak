@@ -20,21 +20,17 @@ import org.keycloak.models.ClientModel;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserSessionModel;
-import org.keycloak.models.map.common.TimeAdapter;
 
-import java.util.Collections;
 import java.util.Map;
-
-import static org.keycloak.models.map.userSession.SessionExpiration.setClientSessionExpiration;
 
 /**
  * @author <a href="mailto:mkanis@redhat.com">Martin Kanis</a>
  */
 public abstract class MapAuthenticatedClientSessionAdapter extends AbstractAuthenticatedClientSessionModel {
 
-    public MapAuthenticatedClientSessionAdapter(KeycloakSession session, RealmModel realm,
+    public MapAuthenticatedClientSessionAdapter(KeycloakSession session, RealmModel realm, ClientModel client,
                                                 UserSessionModel userSession, MapAuthenticatedClientSessionEntity entity) {
-        super(session, realm, userSession, entity);
+        super(session, realm, client, userSession, entity);
     }
 
     @Override
@@ -44,16 +40,12 @@ public abstract class MapAuthenticatedClientSessionAdapter extends AbstractAuthe
 
     @Override
     public int getTimestamp() {
-        Long timestamp = entity.getTimestamp();
-        return timestamp != null ? TimeAdapter.fromLongWithTimeInSecondsToIntegerWithTimeInSeconds(TimeAdapter.fromMilliSecondsToSeconds(timestamp)) : 0;
+        return entity.getTimestamp();
     }
 
     @Override
     public void setTimestamp(int timestamp) {
-        entity.setTimestamp(TimeAdapter.fromSecondsToMilliseconds(timestamp));
-
-        // whenever the timestamp is changed recompute the expiration time
-        setClientSessionExpiration(entity, realm, getClient());
+        entity.setTimestamp(timestamp);
     }
 
     @Override
@@ -73,8 +65,7 @@ public abstract class MapAuthenticatedClientSessionAdapter extends AbstractAuthe
 
     @Override
     public int getCurrentRefreshTokenUseCount() {
-        Integer currentRefreshTokenUseCount = entity.getCurrentRefreshTokenUseCount();
-        return currentRefreshTokenUseCount != null ? currentRefreshTokenUseCount : 0;
+        return entity.getCurrentRefreshTokenUseCount();
     }
 
     @Override
@@ -84,7 +75,7 @@ public abstract class MapAuthenticatedClientSessionAdapter extends AbstractAuthe
 
     @Override
     public String getNote(String name) {
-        return (name != null) ? entity.getNote(name) : null;
+        return (name != null) ? entity.getNotes().get(name) : null;
     }
 
     @Override
@@ -93,7 +84,7 @@ public abstract class MapAuthenticatedClientSessionAdapter extends AbstractAuthe
             if (value == null) {
                 entity.removeNote(name);
             } else {
-                entity.setNote(name, value);
+                entity.addNote(name, value);
             }
         }
     }
@@ -107,8 +98,7 @@ public abstract class MapAuthenticatedClientSessionAdapter extends AbstractAuthe
 
     @Override
     public Map<String, String> getNotes() {
-        Map<String, String> notes = entity.getNotes();
-        return notes == null ? Collections.emptyMap() : Collections.unmodifiableMap(notes);
+        return entity.getNotes();
     }
 
     @Override
@@ -128,7 +118,7 @@ public abstract class MapAuthenticatedClientSessionAdapter extends AbstractAuthe
 
     @Override
     public ClientModel getClient() {
-        return realm.getClientById(entity.getClientId());
+        return client;
     }
 
     @Override

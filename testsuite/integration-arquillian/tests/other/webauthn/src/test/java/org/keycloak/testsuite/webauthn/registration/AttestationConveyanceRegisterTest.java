@@ -21,12 +21,9 @@ import com.webauthn4j.data.AttestationConveyancePreference;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.keycloak.models.credential.dto.WebAuthnCredentialData;
-import org.keycloak.testsuite.arquillian.annotation.IgnoreBrowserDriver;
-import org.keycloak.testsuite.webauthn.AbstractWebAuthnVirtualTest;
 import org.keycloak.testsuite.webauthn.updaters.AbstractWebAuthnRealmUpdater;
 import org.keycloak.testsuite.webauthn.utils.WebAuthnDataWrapper;
 import org.keycloak.testsuite.webauthn.utils.WebAuthnRealmData;
-import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.virtualauthenticator.Credential;
 
 import java.io.IOException;
@@ -40,14 +37,14 @@ import static org.keycloak.testsuite.webauthn.authenticators.DefaultVirtualAuthO
 /**
  * @author <a href="mailto:mabartos@redhat.com">Martin Bartos</a>
  */
-public class AttestationConveyanceRegisterTest extends AbstractWebAuthnVirtualTest {
+public class AttestationConveyanceRegisterTest extends AbstractWebAuthnRegisterTest {
 
     @Test
     public void attestationDefaultValue() {
         WebAuthnRealmData realmData = new WebAuthnRealmData(testRealm().toRepresentation(), isPasswordless());
         assertThat(realmData.getAttestationConveyancePreference(), is(DEFAULT_WEBAUTHN_POLICY_NOT_SPECIFIED));
 
-        registerDefaultUser();
+        registerDefaultWebAuthnUser();
         displayErrorMessageIfPresent();
 
         final String credentialType = getCredentialType();
@@ -64,21 +61,18 @@ public class AttestationConveyanceRegisterTest extends AbstractWebAuthnVirtualTe
 
     @Ignore("invalid cert path")
     @Test
-    @IgnoreBrowserDriver(FirefoxDriver.class)
     public void attestationConveyancePreferenceNone() {
         assertAttestationConveyance(true, AttestationConveyancePreference.NONE);
     }
 
     @Ignore("invalid cert path")
     @Test
-    @IgnoreBrowserDriver(FirefoxDriver.class)
     public void attestationConveyancePreferenceIndirect() {
         assertAttestationConveyance(true, AttestationConveyancePreference.INDIRECT);
     }
 
     @Ignore("invalid cert path")
     @Test
-    @IgnoreBrowserDriver(FirefoxDriver.class)
     public void attestationConveyancePreferenceDirect() {
         getVirtualAuthManager().useAuthenticator(DEFAULT.getOptions().setHasResidentKey(true).setIsUserConsenting(true).setHasUserVerification(true));
         assertAttestationConveyance(true, AttestationConveyancePreference.DIRECT);
@@ -97,7 +91,7 @@ public class AttestationConveyanceRegisterTest extends AbstractWebAuthnVirtualTe
             WebAuthnRealmData realmData = new WebAuthnRealmData(testRealm().toRepresentation(), isPasswordless());
             assertThat(realmData.getAttestationConveyancePreference(), is(attestation.getValue()));
 
-            registerDefaultUser(shouldSuccess);
+            registerDefaultWebAuthnUser(shouldSuccess);
             displayErrorMessageIfPresent();
 
             final boolean isErrorCurrent = webAuthnErrorPage.isCurrent();

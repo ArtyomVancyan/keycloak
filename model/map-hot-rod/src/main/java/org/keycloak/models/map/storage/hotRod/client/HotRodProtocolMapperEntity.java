@@ -22,10 +22,11 @@ import org.keycloak.models.map.annotations.GenerateHotRodEntityImplementation;
 import org.keycloak.models.map.storage.hotRod.common.AbstractHotRodEntity;
 import org.keycloak.models.map.storage.hotRod.common.HotRodPair;
 
+import java.util.Objects;
 import java.util.Set;
 
 @GenerateHotRodEntityImplementation(implementInterface = "org.keycloak.models.map.client.MapProtocolMapperEntity")
-public class HotRodProtocolMapperEntity extends AbstractHotRodEntity {
+public class HotRodProtocolMapperEntity implements AbstractHotRodEntity {
     @ProtoField(number = 1)
     public String id;
     @ProtoField(number = 2)

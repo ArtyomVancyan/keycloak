@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Red Hat, Inc. and/or its affiliates
+ * Copyright 2016 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -94,8 +94,6 @@ import org.keycloak.sessions.AuthenticationSessionModel;
 import org.keycloak.sessions.RootAuthenticationSessionModel;
 import org.keycloak.util.JsonSerialization;
 import org.keycloak.services.util.DefaultClientSessionContext;
-
-import static org.keycloak.utils.LockObjectsForModification.lockUserSessionsForModification;
 
 /**
  * @author <a href="mailto:psilva@redhat.com">Pedro Igor</a>
@@ -226,7 +224,7 @@ public class AuthorizationTokenService {
 
             if (isGranted(ticket, request, permissions)) {
                 AuthorizationProvider authorization = request.getAuthorization();
-                ClientModel targetClient = authorization.getRealm().getClientById(resourceServer.getClientId());
+                ClientModel targetClient = authorization.getRealm().getClientById(resourceServer.getId());
                 Metadata metadata = request.getMetadata();
                 String responseMode = metadata != null ? metadata.getResponseMode() : null;
 
@@ -313,7 +311,7 @@ public class AuthorizationTokenService {
             userSessionModel = sessions.createUserSession(KeycloakModelUtils.generateId(), realm, user, user.getUsername(), request.getClientConnection().getRemoteAddr(),
                     ServiceAccountConstants.CLIENT_AUTH, false, null, null, UserSessionModel.SessionPersistenceState.TRANSIENT);
         } else {
-            userSessionModel = lockUserSessionsForModification(keycloakSession, () -> sessions.getUserSession(realm, accessToken.getSessionState()));
+            userSessionModel = sessions.getUserSession(realm, accessToken.getSessionState());
 
             if (userSessionModel == null) {
                 userSessionModel = sessions.getOfflineUserSession(realm, accessToken.getSessionState());
@@ -440,7 +438,7 @@ public class AuthorizationTokenService {
             throw unknownServerIdException;
         }
 
-        ResourceServer resourceServer = resourceServerStore.findByClient(clientModel);
+        ResourceServer resourceServer = resourceServerStore.findById(clientModel.getId());
 
         if (resourceServer == null) {
             CorsErrorResponseException unsupportedPermissionsException = new CorsErrorResponseException(request.getCors(), OAuthErrorException.INVALID_REQUEST, "Client does not support permissions", Status.BAD_REQUEST);
@@ -496,16 +494,16 @@ public class AuthorizationTokenService {
             }
         }
 
-        resolvePreviousGrantedPermissions(request, resourceServer, permissionsToEvaluate, resourceStore, scopeStore, limit);
+        resolvePreviousGrantedPermissions(ticket, request, resourceServer, permissionsToEvaluate, resourceStore, scopeStore, limit);
 
         return permissionsToEvaluate.values();
     }
 
-    private void resolvePreviousGrantedPermissions(KeycloakAuthorizationRequest request, ResourceServer resourceServer,
-                                                   Map<String, ResourcePermission> permissionsToEvaluate, ResourceStore resourceStore, ScopeStore scopeStore,
-                                                   AtomicInteger limit) {
+    private void resolvePreviousGrantedPermissions(PermissionTicketToken ticket,
+            KeycloakAuthorizationRequest request, ResourceServer resourceServer,
+            Map<String, ResourcePermission> permissionsToEvaluate, ResourceStore resourceStore, ScopeStore scopeStore,
+            AtomicInteger limit) {
         AccessToken rpt = request.getRpt();
-        RealmModel realm = resourceServer.getRealm();
 
         if (rpt != null && rpt.isActive()) {
             Authorization authorizationData = rpt.getAuthorization();
@@ -519,7 +517,7 @@ public class AuthorizationTokenService {
                             break;
                         }
 
-                        Resource resource = resourceStore.findById(realm, resourceServer, grantedPermission.getResourceId());
+                        Resource resource = resourceStore.findById(grantedPermission.getResourceId(), ticket.getIssuedFor());
 
                         if (resource != null) {
                             ResourcePermission permission = permissionsToEvaluate.get(resource.getId());
@@ -543,7 +541,7 @@ public class AuthorizationTokenService {
                             }
 
                             for (String scopeName : grantedPermission.getScopes()) {
-                                Scope scope = scopeStore.findByName(resourceServer, scopeName);
+                                Scope scope = scopeStore.findByName(scopeName, resourceServer.getId());
 
                                 if (scope != null) {
                                     if (!permission.getScopes().contains(scope)) {
@@ -564,7 +562,7 @@ public class AuthorizationTokenService {
             Set<Scope> requestedScopesModel) {
         AtomicBoolean processed = new AtomicBoolean();
 
-        resourceStore.findByScopes(resourceServer, requestedScopesModel, resource -> {
+        resourceStore.findByScope(requestedScopesModel.stream().map(Scope::getId).collect(Collectors.toList()), resourceServer.getId(), resource -> {
             if (limit != null && limit.get() <= 0) {
                 return;
             }
@@ -603,7 +601,7 @@ public class AuthorizationTokenService {
         Resource resource;
 
         if (resourceId.indexOf('-') != -1) {
-            resource = resourceStore.findById(resourceServer.getRealm(), resourceServer, resourceId);
+            resource = resourceStore.findById(resourceId, resourceServer.getId());
         } else {
             resource = null;
         }
@@ -613,33 +611,33 @@ public class AuthorizationTokenService {
         } else if (resourceId.startsWith("resource-type:")) {
             // only resource types, no resource instances. resource types are owned by the resource server
             String resourceType = resourceId.substring("resource-type:".length());
-            resourceStore.findByType(resourceServer, resourceType, resourceServer.getClientId(),
+            resourceStore.findByType(resourceType, resourceServer.getId(), resourceServer.getId(),
                     resource1 -> addPermission(request, resourceServer, authorization, permissionsToEvaluate, limit, requestedScopesModel, resource1));
         } else if (resourceId.startsWith("resource-type-any:")) {
             // any resource with a given type
             String resourceType = resourceId.substring("resource-type-any:".length());
-            resourceStore.findByType(resourceServer, resourceType, null,
+            resourceStore.findByType(resourceType, null, resourceServer.getId(),
                     resource12 -> addPermission(request, resourceServer, authorization, permissionsToEvaluate, limit, requestedScopesModel, resource12));
         } else if (resourceId.startsWith("resource-type-instance:")) {
             // only resource instances with a given type
             String resourceType = resourceId.substring("resource-type-instance:".length());
-            resourceStore.findByTypeInstance(resourceServer, resourceType,
+            resourceStore.findByTypeInstance(resourceType, resourceServer.getId(),
                     resource13 -> addPermission(request, resourceServer, authorization, permissionsToEvaluate, limit, requestedScopesModel, resource13));
         } else if (resourceId.startsWith("resource-type-owner:")) {
             // only resources where the current identity is the owner
             String resourceType = resourceId.substring("resource-type-owner:".length());
-            resourceStore.findByType(resourceServer, resourceType, identity.getId(),
+            resourceStore.findByType(resourceType, identity.getId(), resourceServer.getId(),
                     resource14 -> addPermission(request, resourceServer, authorization, permissionsToEvaluate, limit, requestedScopesModel, resource14));
         } else {
-            Resource ownerResource = resourceStore.findByName(resourceServer, resourceId, identity.getId());
+            Resource ownerResource = resourceStore.findByName(resourceId, identity.getId(), resourceServer.getId());
 
             if (ownerResource != null) {
                 permission.setResourceId(ownerResource.getId());
                 addPermission(request, resourceServer, authorization, permissionsToEvaluate, limit, requestedScopesModel, ownerResource);
             }
 
-            if (!identity.isResourceServer() || !identity.getId().equals(resourceServer.getClientId())) {
-                List<PermissionTicket> tickets = storeFactory.getPermissionTicketStore().findGranted(resourceServer, resourceId, identity.getId());
+            if (!identity.isResourceServer() || !identity.getId().equals(resourceServer.getId())) {
+                List<PermissionTicket> tickets = storeFactory.getPermissionTicketStore().findGranted(resourceId, identity.getId(), resourceServer.getId());
 
                 if (!tickets.isEmpty()) {
                     List<Scope> scopes = new ArrayList<>();
@@ -659,7 +657,7 @@ public class AuthorizationTokenService {
                     resourcePermission.setGranted(true);
                 }
 
-                Resource serverResource = resourceStore.findByName(resourceServer, resourceId);
+                Resource serverResource = resourceStore.findByName(resourceId, resourceServer.getId());
 
                 if (serverResource != null) {
                     permission.setResourceId(serverResource.getId());
@@ -688,7 +686,7 @@ public class AuthorizationTokenService {
             requestedScopes.addAll(Arrays.asList(clientAdditionalScopes.split(" ")));
         }
 
-        Set<Scope> requestedScopesModel = requestedScopes.stream().map(s -> scopeStore.findByName(resourceServer, s)).filter(
+        Set<Scope> requestedScopesModel = requestedScopes.stream().map(s -> scopeStore.findByName(s, resourceServer.getId())).filter(
                 Objects::nonNull).collect(Collectors.toSet());
 
         if (!requestedScopes.isEmpty() && requestedScopesModel.isEmpty()) {

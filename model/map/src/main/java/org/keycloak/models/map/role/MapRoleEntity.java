@@ -16,6 +16,8 @@
  */
 package org.keycloak.models.map.role;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.keycloak.models.map.annotations.GenerateEntityImplementations;
 import org.keycloak.models.map.common.AbstractEntity;
@@ -45,10 +47,10 @@ public interface MapRoleEntity extends AbstractEntity, UpdatableEntity, EntityWi
             this.updated |= id != null;
         }
 
-        @Override
-        public Boolean isClientRole() {
-            return getClientId() != null;
-        }
+    }
+
+    default Boolean isComposite() {
+        return ! (getCompositeRoles() == null || getCompositeRoles().isEmpty());
     }
 
     Boolean isClientRole();

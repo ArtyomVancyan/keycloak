@@ -16,7 +16,6 @@
  */
 package org.keycloak.saml.processing.core.util;
 
-import org.keycloak.common.util.Base64;
 import org.keycloak.common.util.PemUtils;
 import org.keycloak.dom.xmlsec.w3.xmldsig.DSAKeyValueType;
 import org.keycloak.dom.xmlsec.w3.xmldsig.KeyValueType;
@@ -29,6 +28,7 @@ import org.keycloak.saml.common.constants.JBossSAMLConstants;
 import org.keycloak.saml.common.constants.WSTrustConstants;
 import org.keycloak.saml.common.exceptions.ParsingException;
 import org.keycloak.saml.common.exceptions.ProcessingException;
+import org.keycloak.saml.common.util.Base64;
 import org.keycloak.saml.common.util.DocumentUtil;
 import org.keycloak.saml.common.util.StringUtil;
 import org.keycloak.saml.common.util.SystemPropertiesUtil;
@@ -107,6 +107,7 @@ public class XMLSignatureUtil {
 
     // Set some system properties and Santuario providers. Run this block before any other class initialization.
     static {
+        ProvidersUtil.ensure();
         SystemPropertiesUtil.ensure();
         String keyInfoProp = SecurityActions.getSystemProperty("picketlink.xmlsig.includeKeyInfo", null);
         if (StringUtil.isNotNull(keyInfoProp)) {
@@ -518,7 +519,7 @@ public class XMLSignatureUtil {
         DOMValidateContext valContext = new DOMValidateContext(validationKeySelector, signatureNode);
         XMLSignature signature = fac.unmarshalXMLSignature(valContext);
         boolean coreValidity = signature.validate(valContext);
-
+        
         if (! coreValidity) {
             if (logger.isTraceEnabled()) {
                 boolean sv = signature.getSignatureValue().validate(valContext);

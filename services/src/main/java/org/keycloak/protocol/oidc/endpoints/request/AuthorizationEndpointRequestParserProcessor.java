@@ -17,7 +17,6 @@
 
 package org.keycloak.protocol.oidc.endpoints.request;
 
-import org.keycloak.common.Profile;
 import org.keycloak.common.util.StreamUtil;
 import org.keycloak.connections.httpclient.HttpClientProvider;
 import org.keycloak.events.Errors;
@@ -32,7 +31,6 @@ import org.keycloak.protocol.oidc.utils.RedirectUtils;
 import org.keycloak.services.ErrorPageException;
 import org.keycloak.services.ServicesLogger;
 import org.keycloak.services.messages.Messages;
-import org.keycloak.services.util.AuthorizationContextUtil;
 
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -96,10 +94,6 @@ public class AuthorizationEndpointRequestParserProcessor {
                         new AuthzEndpointRequestObjectParser(session, retrievedRequest, client).parseRequest(request);
                     }
                 }
-            }
-
-            if (Profile.isFeatureEnabled(Profile.Feature.DYNAMIC_SCOPES)) {
-                request.authorizationRequestContext = AuthorizationContextUtil.getAuthorizationRequestContextFromScopes(session, request.getScope());
             }
 
             return request;

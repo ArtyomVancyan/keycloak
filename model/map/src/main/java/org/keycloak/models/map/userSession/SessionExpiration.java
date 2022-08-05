@@ -19,7 +19,6 @@ package org.keycloak.models.map.userSession;
 import org.keycloak.common.util.Time;
 import org.keycloak.models.ClientModel;
 import org.keycloak.models.RealmModel;
-import org.keycloak.models.map.common.TimeAdapter;
 import org.keycloak.protocol.oidc.OIDCConfigAttributes;
 
 /**
@@ -28,72 +27,71 @@ import org.keycloak.protocol.oidc.OIDCConfigAttributes;
 public class SessionExpiration {
 
     public static void setClientSessionExpiration(MapAuthenticatedClientSessionEntity entity, RealmModel realm, ClientModel client) {
-        long timestampMillis = entity.getTimestamp() != null ? entity.getTimestamp() : 0L;
-        if (Boolean.TRUE.equals(entity.isOffline())) {
-            long sessionExpires = timestampMillis + TimeAdapter.fromSecondsToMilliseconds(realm.getOfflineSessionIdleTimeout());
+        if (entity.isOffline()) {
+            long sessionExpires = entity.getTimestamp() + realm.getOfflineSessionIdleTimeout();
             if (realm.isOfflineSessionMaxLifespanEnabled()) {
-                sessionExpires = timestampMillis + TimeAdapter.fromSecondsToMilliseconds(realm.getOfflineSessionMaxLifespan());
+                sessionExpires = entity.getTimestamp() + realm.getOfflineSessionMaxLifespan();
 
                 long clientOfflineSessionMaxLifespan;
                 String clientOfflineSessionMaxLifespanPerClient = client.getAttribute(OIDCConfigAttributes.CLIENT_OFFLINE_SESSION_MAX_LIFESPAN);
                 if (clientOfflineSessionMaxLifespanPerClient != null && !clientOfflineSessionMaxLifespanPerClient.trim().isEmpty()) {
-                    clientOfflineSessionMaxLifespan = TimeAdapter.fromSecondsToMilliseconds(Long.parseLong(clientOfflineSessionMaxLifespanPerClient));
+                    clientOfflineSessionMaxLifespan = Long.parseLong(clientOfflineSessionMaxLifespanPerClient);
                 } else {
-                    clientOfflineSessionMaxLifespan = TimeAdapter.fromSecondsToMilliseconds(realm.getClientOfflineSessionMaxLifespan());
+                    clientOfflineSessionMaxLifespan = realm.getClientOfflineSessionMaxLifespan();
                 }
 
                 if (clientOfflineSessionMaxLifespan > 0) {
-                    long clientOfflineSessionMaxExpiration = timestampMillis + clientOfflineSessionMaxLifespan;
+                    long clientOfflineSessionMaxExpiration = entity.getTimestamp() + clientOfflineSessionMaxLifespan;
                     sessionExpires = Math.min(sessionExpires, clientOfflineSessionMaxExpiration);
                 }
             }
 
-            long expiration = timestampMillis + TimeAdapter.fromSecondsToMilliseconds(realm.getOfflineSessionIdleTimeout());
+            long expiration = entity.getTimestamp() + realm.getOfflineSessionIdleTimeout();
 
             long clientOfflineSessionIdleTimeout;
             String clientOfflineSessionIdleTimeoutPerClient = client.getAttribute(OIDCConfigAttributes.CLIENT_OFFLINE_SESSION_IDLE_TIMEOUT);
             if (clientOfflineSessionIdleTimeoutPerClient != null && !clientOfflineSessionIdleTimeoutPerClient.trim().isEmpty()) {
-                clientOfflineSessionIdleTimeout = TimeAdapter.fromSecondsToMilliseconds(Long.parseLong(clientOfflineSessionIdleTimeoutPerClient));
+                clientOfflineSessionIdleTimeout = Long.parseLong(clientOfflineSessionIdleTimeoutPerClient);
             } else {
-                clientOfflineSessionIdleTimeout = TimeAdapter.fromSecondsToMilliseconds(realm.getClientOfflineSessionIdleTimeout());
+                clientOfflineSessionIdleTimeout = realm.getClientOfflineSessionIdleTimeout();
             }
 
             if (clientOfflineSessionIdleTimeout > 0) {
-                long clientOfflineSessionIdleExpiration = timestampMillis + clientOfflineSessionIdleTimeout;
+                long clientOfflineSessionIdleExpiration = entity.getTimestamp() + clientOfflineSessionIdleTimeout;
                 expiration = Math.min(expiration, clientOfflineSessionIdleExpiration);
             }
 
             entity.setExpiration(Math.min(expiration, sessionExpires));
         } else {
-            long sessionExpires = timestampMillis + (realm.getSsoSessionMaxLifespanRememberMe() > 0
-                    ? TimeAdapter.fromSecondsToMilliseconds(realm.getSsoSessionMaxLifespanRememberMe()) : TimeAdapter.fromSecondsToMilliseconds(realm.getSsoSessionMaxLifespan()));
+            long sessionExpires = (long) entity.getTimestamp() + (realm.getSsoSessionMaxLifespanRememberMe() > 0
+                    ? realm.getSsoSessionMaxLifespanRememberMe() : realm.getSsoSessionMaxLifespan());
 
             long clientSessionMaxLifespan;
             String clientSessionMaxLifespanPerClient = client.getAttribute(OIDCConfigAttributes.CLIENT_SESSION_MAX_LIFESPAN);
             if (clientSessionMaxLifespanPerClient != null && !clientSessionMaxLifespanPerClient.trim().isEmpty()) {
-                clientSessionMaxLifespan = TimeAdapter.fromSecondsToMilliseconds(Long.parseLong(clientSessionMaxLifespanPerClient));
+                clientSessionMaxLifespan = Long.parseLong(clientSessionMaxLifespanPerClient);
             } else {
-                clientSessionMaxLifespan = TimeAdapter.fromSecondsToMilliseconds(realm.getClientSessionMaxLifespan());
+                clientSessionMaxLifespan = realm.getClientSessionMaxLifespan();
             }
 
             if (clientSessionMaxLifespan > 0) {
-                long clientSessionMaxExpiration = timestampMillis + clientSessionMaxLifespan;
+                long clientSessionMaxExpiration = entity.getTimestamp() + clientSessionMaxLifespan;
                 sessionExpires = Math.min(sessionExpires, clientSessionMaxExpiration);
             }
 
-            long expiration = timestampMillis + (realm.getSsoSessionIdleTimeoutRememberMe() > 0
-                    ? TimeAdapter.fromSecondsToMilliseconds(realm.getSsoSessionIdleTimeoutRememberMe()) : TimeAdapter.fromSecondsToMilliseconds(realm.getSsoSessionIdleTimeout()));
+            long expiration = (long) entity.getTimestamp() + (realm.getSsoSessionIdleTimeoutRememberMe() > 0
+                    ? realm.getSsoSessionIdleTimeoutRememberMe() : realm.getSsoSessionIdleTimeout());
 
             long clientSessionIdleTimeout;
             String clientSessionIdleTimeoutPerClient = client.getAttribute(OIDCConfigAttributes.CLIENT_SESSION_IDLE_TIMEOUT);
             if (clientSessionIdleTimeoutPerClient != null && !clientSessionIdleTimeoutPerClient.trim().isEmpty()) {
-                clientSessionIdleTimeout = TimeAdapter.fromSecondsToMilliseconds(Long.parseLong(clientSessionIdleTimeoutPerClient));
+                clientSessionIdleTimeout = Long.parseLong(clientSessionIdleTimeoutPerClient);
             } else {
-                clientSessionIdleTimeout = TimeAdapter.fromSecondsToMilliseconds(realm.getClientSessionIdleTimeout());
+                clientSessionIdleTimeout = realm.getClientSessionIdleTimeout();
             }
 
             if (clientSessionIdleTimeout > 0) {
-                long clientSessionIdleExpiration = timestampMillis + clientSessionIdleTimeout;
+                long clientSessionIdleExpiration = entity.getTimestamp() + clientSessionIdleTimeout;
                 expiration = Math.min(expiration, clientSessionIdleExpiration);
             }
 
@@ -102,52 +100,50 @@ public class SessionExpiration {
     }
 
     public static void setUserSessionExpiration(MapUserSessionEntity entity, RealmModel realm) {
-        long timestampMillis = entity.getTimestamp() != null ? entity.getTimestamp() : 0L;
-        long lastSessionRefreshMillis = entity.getLastSessionRefresh() != null ? entity.getLastSessionRefresh() : 0L;
-        if (Boolean.TRUE.equals(entity.isOffline())) {
-            long sessionExpires = lastSessionRefreshMillis + TimeAdapter.fromSecondsToMilliseconds(realm.getOfflineSessionIdleTimeout());
+        if (entity.isOffline()) {
+            long sessionExpires = entity.getLastSessionRefresh() + realm.getOfflineSessionIdleTimeout();
             if (realm.isOfflineSessionMaxLifespanEnabled()) {
-                sessionExpires = timestampMillis + TimeAdapter.fromSecondsToMilliseconds(realm.getOfflineSessionMaxLifespan());
+                sessionExpires = entity.getStarted() + realm.getOfflineSessionMaxLifespan();
 
-                long clientOfflineSessionMaxLifespan = TimeAdapter.fromSecondsToMilliseconds(realm.getClientOfflineSessionMaxLifespan());
+                long clientOfflineSessionMaxLifespan = realm.getClientOfflineSessionMaxLifespan();
 
                 if (clientOfflineSessionMaxLifespan > 0) {
-                    long clientOfflineSessionMaxExpiration = timestampMillis + clientOfflineSessionMaxLifespan;
+                    long clientOfflineSessionMaxExpiration = entity.getStarted() + clientOfflineSessionMaxLifespan;
                     sessionExpires = Math.min(sessionExpires, clientOfflineSessionMaxExpiration);
                 }
             }
 
-            long expiration = lastSessionRefreshMillis + TimeAdapter.fromSecondsToMilliseconds(realm.getOfflineSessionIdleTimeout());
+            long expiration = entity.getLastSessionRefresh() + realm.getOfflineSessionIdleTimeout();
 
-            long clientOfflineSessionIdleTimeout = TimeAdapter.fromSecondsToMilliseconds(realm.getClientOfflineSessionIdleTimeout());
+            long clientOfflineSessionIdleTimeout = realm.getClientOfflineSessionIdleTimeout();
 
             if (clientOfflineSessionIdleTimeout > 0) {
-                long clientOfflineSessionIdleExpiration = Time.currentTimeMillis() + clientOfflineSessionIdleTimeout;
+                long clientOfflineSessionIdleExpiration = Time.currentTime() + clientOfflineSessionIdleTimeout;
                 expiration = Math.min(expiration, clientOfflineSessionIdleExpiration);
             }
 
             entity.setExpiration(Math.min(expiration, sessionExpires));
         } else {
-            long sessionExpires = timestampMillis
-                    + (Boolean.TRUE.equals(entity.isRememberMe()) && realm.getSsoSessionMaxLifespanRememberMe() > 0
-                    ? TimeAdapter.fromSecondsToMilliseconds(realm.getSsoSessionMaxLifespanRememberMe())
-                    : TimeAdapter.fromSecondsToMilliseconds(realm.getSsoSessionMaxLifespan()));
+            long sessionExpires = (long) entity.getStarted()
+                    + (entity.isRememberMe() && realm.getSsoSessionMaxLifespanRememberMe() > 0
+                    ? realm.getSsoSessionMaxLifespanRememberMe()
+                    : realm.getSsoSessionMaxLifespan());
 
-            long clientSessionMaxLifespan = TimeAdapter.fromSecondsToMilliseconds(realm.getClientSessionMaxLifespan());
+            long clientSessionMaxLifespan = realm.getClientSessionMaxLifespan();
 
             if (clientSessionMaxLifespan > 0) {
-                long clientSessionMaxExpiration = timestampMillis + clientSessionMaxLifespan;
+                long clientSessionMaxExpiration = entity.getStarted() + clientSessionMaxLifespan;
                 sessionExpires = Math.min(sessionExpires, clientSessionMaxExpiration);
             }
 
-            long expiration = lastSessionRefreshMillis + (Boolean.TRUE.equals(entity.isRememberMe()) && realm.getSsoSessionIdleTimeoutRememberMe() > 0
-                    ? TimeAdapter.fromSecondsToMilliseconds(realm.getSsoSessionIdleTimeoutRememberMe())
-                    : TimeAdapter.fromSecondsToMilliseconds(realm.getSsoSessionIdleTimeout()));
+            long expiration = (long) entity.getLastSessionRefresh() + (entity.isRememberMe() && realm.getSsoSessionIdleTimeoutRememberMe() > 0
+                    ? realm.getSsoSessionIdleTimeoutRememberMe()
+                    : realm.getSsoSessionIdleTimeout());
 
-            long clientSessionIdleTimeout = TimeAdapter.fromSecondsToMilliseconds(realm.getClientSessionIdleTimeout());
+            long clientSessionIdleTimeout = realm.getClientSessionIdleTimeout();
 
             if (clientSessionIdleTimeout > 0) {
-                long clientSessionIdleExpiration = lastSessionRefreshMillis + clientSessionIdleTimeout;
+                long clientSessionIdleExpiration = entity.getLastSessionRefresh() + clientSessionIdleTimeout;
                 expiration = Math.min(expiration, clientSessionIdleExpiration);
             }
 

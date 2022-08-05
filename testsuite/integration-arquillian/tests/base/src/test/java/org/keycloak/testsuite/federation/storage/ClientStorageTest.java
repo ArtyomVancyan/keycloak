@@ -19,19 +19,16 @@ package org.keycloak.testsuite.federation.storage;
 
 import org.jboss.arquillian.graphene.page.Page;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.keycloak.OAuth2Constants;
-import org.keycloak.common.Profile.Feature;
 import org.keycloak.common.util.MultivaluedHashMap;
 import org.keycloak.component.ComponentModel;
 import org.keycloak.events.Details;
 import org.keycloak.models.ClientModel;
 import org.keycloak.models.Constants;
 import org.keycloak.models.KeycloakSession;
-import org.keycloak.models.LegacyRealmModel;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.cache.infinispan.ClientAdapter;
 import org.keycloak.representations.AccessToken;
@@ -44,7 +41,6 @@ import org.keycloak.storage.client.ClientStorageProvider;
 import org.keycloak.storage.client.ClientStorageProviderModel;
 import org.keycloak.testsuite.AbstractTestRealmKeycloakTest;
 import org.keycloak.testsuite.AssertEvents;
-import org.keycloak.testsuite.ProfileAssume;
 import org.keycloak.testsuite.admin.ApiUtil;
 import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
 import org.keycloak.testsuite.auth.page.AuthRealm;
@@ -81,7 +77,6 @@ import static org.junit.Assert.assertThat;
 import static org.keycloak.testsuite.admin.ApiUtil.findUserByUsername;
 import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
 import org.keycloak.testsuite.util.AdminClientUtil;
-import org.junit.BeforeClass;
 
 /**
  * Test that clients can override auth flows
@@ -116,11 +111,6 @@ public class ClientStorageTest extends AbstractTestRealmKeycloakTest {
         return id;
     }
 
-    @BeforeClass
-    public static void checkNotMapStorage() {
-        ProfileAssume.assumeFeatureDisabled(Feature.MAP_STORAGE);
-    }
-
     @Before
     public void addProvidersBeforeTest() throws URISyntaxException, IOException {
         ComponentRepresentation provider = new ComponentRepresentation();
@@ -152,7 +142,7 @@ public class ClientStorageTest extends AbstractTestRealmKeycloakTest {
             testingClient.server().run(session -> {
                 RealmModel realm = session.realms().getRealmByName(AuthRealm.TEST);
 
-                assertThat(session.clients()
+                assertThat(session.clientStorageManager()
                             .searchClientsByClientIdStream(realm, "client", null, null)
                             .map(ClientModel::getClientId)
                             .collect(Collectors.toList()),
@@ -162,7 +152,7 @@ public class ClientStorageTest extends AbstractTestRealmKeycloakTest {
                         );
 
                 // test the pagination; the clients from local storage (root-url-client) are fetched first
-                assertThat(session.clients()
+                assertThat(session.clientStorageManager()
                                 .searchClientsByClientIdStream(realm, "client", 0, 1)
                                 .map(ClientModel::getClientId)
                                 .collect(Collectors.toList()),
@@ -170,7 +160,7 @@ public class ClientStorageTest extends AbstractTestRealmKeycloakTest {
                                 not(hasItem(hardcodedClient)),
                                 hasItem("root-url-client"))
                 );
-                assertThat(session.clients()
+                assertThat(session.clientStorageManager()
                                 .searchClientsByClientIdStream(realm, "client", 1, 1)
                                 .map(ClientModel::getClientId)
                                 .collect(Collectors.toList()),
@@ -188,7 +178,7 @@ public class ClientStorageTest extends AbstractTestRealmKeycloakTest {
 
             testingClient.server().run(session -> {
                 // search for clients and check hardcoded-client is not present
-                assertThat(session.clients()
+                assertThat(session.clientStorageManager()
                         .searchClientsByClientIdStream(session.realms().getRealmByName(AuthRealm.TEST), "client", null, null)
                         .map(ClientModel::getClientId)
                         .collect(Collectors.toList()),
@@ -204,48 +194,23 @@ public class ClientStorageTest extends AbstractTestRealmKeycloakTest {
     public void testClientStats() throws Exception {
         testDirectGrant("hardcoded-client");
         testDirectGrant("hardcoded-client");
-        testDirectGrant("direct-grant");
         testBrowser("test-app");
-        offlineTokenDirectGrantFlowNoRefresh("hardcoded-client");
-        offlineTokenDirectGrantFlowNoRefresh("hardcoded-client");
-        offlineTokenDirectGrantFlowNoRefresh("direct-grant");
-        offlineTokenDirectGrantFlowNoRefresh("direct-grant");
+        offlineTokenDirectGrantFlowNoRefresh();
         List<Map<String, String>> list = adminClient.realm("test").getClientSessionStats();
         boolean hardTested = false;
         boolean testAppTested = false;
-        boolean directTested = false;
         for (Map<String, String> entry : list) {
             if (entry.get("clientId").equals("hardcoded-client")) {
-                Assert.assertEquals("4", entry.get("active"));
-                Assert.assertEquals("2", entry.get("offline"));
+                Assert.assertEquals("3", entry.get("active"));
+                Assert.assertEquals("1", entry.get("offline"));
                 hardTested = true;
             } else if (entry.get("clientId").equals("test-app")) {
                 Assert.assertEquals("1", entry.get("active"));
                 Assert.assertEquals("0", entry.get("offline"));
                 testAppTested = true;
-            } else if (entry.get("clientId").equals("direct-grant")) {
-                Assert.assertEquals("3", entry.get("active"));
-                Assert.assertEquals("2", entry.get("offline"));
-                directTested = true;
             }
         }
-        Assert.assertTrue(hardTested && testAppTested && directTested);
-
-        testingClient.server().run(session -> {
-            RealmModel realm = session.realms().getRealmByName("test");
-
-            ClientModel hardcoded = realm.getClientByClientId("hardcoded-client");
-            long activeUserSessions = session.sessions().getActiveUserSessions(realm, hardcoded);
-            long offlineSessionsCount = session.sessions().getOfflineSessionsCount(realm, hardcoded);
-            Assert.assertEquals(4, activeUserSessions);
-            Assert.assertEquals(2, offlineSessionsCount);
-
-            ClientModel direct = realm.getClientByClientId("direct-grant");
-            activeUserSessions = session.sessions().getActiveUserSessions(realm, direct);
-            offlineSessionsCount = session.sessions().getOfflineSessionsCount(realm, direct);
-            Assert.assertEquals(3, activeUserSessions);
-            Assert.assertEquals(2, offlineSessionsCount);
-        });
+        Assert.assertTrue(hardTested && testAppTested);
     }
 
 
@@ -336,13 +301,11 @@ public class ClientStorageTest extends AbstractTestRealmKeycloakTest {
 
     @Test
     public void testDailyEviction() {
-        Assume.assumeTrue("User cache disabled.", isUserCacheEnabled());
-
         testIsCached();
 
         testingClient.server().run(session -> {
             RealmModel realm = session.realms().getRealmByName("test");
-            ClientStorageProviderModel model = ((LegacyRealmModel) realm).getClientStorageProvidersStream().findFirst().get();
+            ClientStorageProviderModel model = realm.getClientStorageProvidersStream().findFirst().get();
             Calendar eviction = Calendar.getInstance();
             eviction.add(Calendar.HOUR, 1);
             model.setCachePolicy(CacheableStorageProviderModel.CachePolicy.EVICT_DAILY);
@@ -361,13 +324,11 @@ public class ClientStorageTest extends AbstractTestRealmKeycloakTest {
     }
     @Test
     public void testWeeklyEviction() {
-        Assume.assumeTrue("User cache disabled.", isUserCacheEnabled());
-
         testIsCached();
 
         testingClient.server().run(session -> {
             RealmModel realm = session.realms().getRealmByName("test");
-            ClientStorageProviderModel model = ((LegacyRealmModel) realm).getClientStorageProvidersStream().findAny().get();
+            ClientStorageProviderModel model = realm.getClientStorageProvidersStream().findAny().get();
             Calendar eviction = Calendar.getInstance();
             eviction.add(Calendar.HOUR, 4 * 24);
             model.setCachePolicy(CacheableStorageProviderModel.CachePolicy.EVICT_WEEKLY);
@@ -389,13 +350,11 @@ public class ClientStorageTest extends AbstractTestRealmKeycloakTest {
     }
     @Test
     public void testMaxLifespan() {
-        Assume.assumeTrue("User cache disabled.", isUserCacheEnabled());
-
         testIsCached();
 
         testingClient.server().run(session -> {
             RealmModel realm = session.realms().getRealmByName("test");
-            ClientStorageProviderModel model = ((LegacyRealmModel) realm).getClientStorageProvidersStream().findFirst().get();
+            ClientStorageProviderModel model = realm.getClientStorageProvidersStream().findFirst().get();
             model.setCachePolicy(CacheableStorageProviderModel.CachePolicy.MAX_LIFESPAN);
             model.setMaxLifespan(1 * 60 * 60 * 1000);
             realm.updateComponent(model);
@@ -428,8 +387,6 @@ public class ClientStorageTest extends AbstractTestRealmKeycloakTest {
 
     @Test
     public void testIsCached() {
-        Assume.assumeTrue("User cache disabled.", isUserCacheEnabled());
-
         testingClient.server().run(session -> {
             RealmModel realm = session.realms().getRealmByName("test");
             ClientModel hardcoded = realm.getClientByClientId("hardcoded-client");
@@ -441,13 +398,11 @@ public class ClientStorageTest extends AbstractTestRealmKeycloakTest {
 
     @Test
     public void testNoCache() {
-        Assume.assumeTrue("User cache disabled.", isUserCacheEnabled());
-
         testIsCached();
 
         testingClient.server().run(session -> {
             RealmModel realm = session.realms().getRealmByName("test");
-            ClientStorageProviderModel model = ((LegacyRealmModel) realm).getClientStorageProvidersStream().findFirst().get();
+            ClientStorageProviderModel model = realm.getClientStorageProvidersStream().findFirst().get();
             model.setCachePolicy(CacheableStorageProviderModel.CachePolicy.NO_CACHE);
             realm.updateComponent(model);
         });
@@ -467,7 +422,7 @@ public class ClientStorageTest extends AbstractTestRealmKeycloakTest {
     private void setDefaultCachePolicy() {
         testingClient.server().run(session -> {
             RealmModel realm = session.realms().getRealmByName("test");
-            ClientStorageProviderModel model = ((LegacyRealmModel) realm).getClientStorageProvidersStream().findFirst().get();
+            ClientStorageProviderModel model = realm.getClientStorageProvidersStream().findFirst().get();
             model.setCachePolicy(CacheableStorageProviderModel.CachePolicy.DEFAULT);
             realm.updateComponent(model);
         });
@@ -505,9 +460,9 @@ public class ClientStorageTest extends AbstractTestRealmKeycloakTest {
         // Assert same token can be refreshed again
         testRefreshWithOfflineToken(token, offlineToken, offlineTokenString, token.getSessionState(), userId);
     }
-    public void offlineTokenDirectGrantFlowNoRefresh(String clientId) throws Exception {
+    public void offlineTokenDirectGrantFlowNoRefresh() throws Exception {
         oauth.scope(OAuth2Constants.OFFLINE_ACCESS);
-        oauth.clientId(clientId);
+        oauth.clientId("hardcoded-client");
         OAuthClient.AccessTokenResponse tokenResponse = oauth.doGrantAccessTokenRequest("password", "test-user@localhost", "password");
         Assert.assertNull(tokenResponse.getErrorDescription());
         AccessToken token = oauth.verifyToken(tokenResponse.getAccessToken());

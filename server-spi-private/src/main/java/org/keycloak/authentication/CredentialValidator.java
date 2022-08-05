@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 public interface CredentialValidator<T extends CredentialProvider> {
     T getCredentialProvider(KeycloakSession session);
     default List<CredentialModel> getCredentials(KeycloakSession session, RealmModel realm, UserModel user) {
-        return user.credentialManager().getStoredCredentialsByTypeStream(getCredentialProvider(session).getType())
+        return session.userCredentialManager().getStoredCredentialsByTypeStream(realm, user, getCredentialProvider(session).getType())
                 .collect(Collectors.toList());
     }
     default String getType(KeycloakSession session) {

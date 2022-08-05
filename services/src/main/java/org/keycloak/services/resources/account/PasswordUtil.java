@@ -7,27 +7,16 @@ import org.keycloak.models.credential.PasswordCredentialModel;
 
 public class PasswordUtil {
 
-    private final UserModel user;
+    private KeycloakSession session;
+    private UserModel user;
 
-    @Deprecated
     public PasswordUtil(KeycloakSession session, UserModel user) {
+        this.session = session;
         this.user = user;
     }
 
-    public PasswordUtil(UserModel user) {
-        this.user = user;
-    }
-
-    /**
-     * @deprecated Instead, use {@link #isConfigured()}
-     */
-    @Deprecated
     public boolean isConfigured(KeycloakSession session, RealmModel realm, UserModel user) {
-        return user.credentialManager().isConfiguredFor(PasswordCredentialModel.TYPE);
-    }
-
-    public boolean isConfigured() {
-        return user.credentialManager().isConfiguredFor(PasswordCredentialModel.TYPE);
+        return session.userCredentialManager().isConfiguredFor(realm, user, PasswordCredentialModel.TYPE);
     }
 
     public void update() {

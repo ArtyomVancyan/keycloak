@@ -65,7 +65,7 @@ public class ConcurrentTransactionsTest extends AbstractTestRealmKeycloakTest {
         try {
             KeycloakModelUtils.runJobInTransaction(session.getKeycloakSessionFactory(), (KeycloakSession sessionSetup) -> {
 
-                RealmModel realm = sessionSetup.realms().getRealmByName("test");
+                RealmModel realm = sessionSetup.realms().getRealm("test");
                 sessionSetup.users().addUser(realm, "user1").setEmail("user1@localhost");
                 sessionSetup.users().addUser(realm, "user2").setEmail("user2@localhost");
 
@@ -109,14 +109,10 @@ public class ConcurrentTransactionsTest extends AbstractTestRealmKeycloakTest {
                                 throw new IllegalStateException("Timeout when waiting for updateLatch");
                             }
 
-                            // the behavior upon reading client information would depend on the store:
-                            // * it might return the new values if this really touches the store and it using read committed and not repeatable read
-                            // * it might return the old values if the information is cached within the current session (either explicitly, or implicitly using the JPA persistence context), or using repeatable read
-                            // * it might throw an exception if a concurrent modification exception occurred when reading additional data from the store and read committed is used
+                            logger.info("transaction1: Going to read client again");
 
-                            // logger.info("transaction1: Going to read client again");
-                            // client1 = currentSession.clients().getClientByClientId(realm1, "client");
-                            // logger.info("transaction1: secret: " + client1.getSecret());
+                            client1 = currentSession.clients().getClientByClientId(realm1, "client");
+                            logger.info("transaction1: secret: " + client1.getSecret());
 
                         } catch (Exception e) {
                             exceptionHolder.set(e);
@@ -196,7 +192,7 @@ public class ConcurrentTransactionsTest extends AbstractTestRealmKeycloakTest {
 
     // KEYCLOAK-3296 , KEYCLOAK-3494
     @Test
-    @ModelTest(skipForMapStorage = true) // skipped for map storage - to be revisited (GHI #12910)
+    @ModelTest
     public void removeUserAttribute(KeycloakSession session) throws Exception {
 
         try {

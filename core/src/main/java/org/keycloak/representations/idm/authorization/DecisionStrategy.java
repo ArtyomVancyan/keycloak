@@ -16,48 +16,27 @@
  */
 package org.keycloak.representations.idm.authorization;
 
-import java.util.Map;
-import java.util.Objects;
-import org.keycloak.util.EnumWithStableIndex;
-
 /**
  * The decision strategy dictates how the policies associated with a given policy are evaluated and how a final decision
  * is obtained.
  *
  * @author <a href="mailto:psilva@redhat.com">Pedro Igor</a>
  */
-public enum DecisionStrategy implements EnumWithStableIndex {
+public enum DecisionStrategy {
 
     /**
      * Defines that at least one policy must evaluate to a positive decision in order to the overall decision be also positive.
      */
-    AFFIRMATIVE(0),
+    AFFIRMATIVE,
 
     /**
      * Defines that all policies must evaluate to a positive decision in order to the overall decision be also positive.
      */
-    UNANIMOUS(1),
+    UNANIMOUS,
 
     /**
      * Defines that the number of positive decisions must be greater than the number of negative decisions. If the number of positive and negative is the same,
      * the final decision will be negative.
      */
-    CONSENSUS(2);
-
-    private final int stableIndex;
-    private static final Map<Integer, DecisionStrategy> BY_ID = EnumWithStableIndex.getReverseIndex(values());
-
-    private DecisionStrategy(int stableIndex) {
-        Objects.requireNonNull(stableIndex);
-        this.stableIndex = stableIndex;
-    }
-
-    @Override
-    public int getStableIndex() {
-        return stableIndex;
-    }
-
-    public static DecisionStrategy valueOfInteger(Integer id) {
-        return id == null ? null : BY_ID.get(id);
-    }
+    CONSENSUS
 }

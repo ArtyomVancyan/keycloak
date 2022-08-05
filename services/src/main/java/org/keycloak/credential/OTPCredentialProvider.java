@@ -19,6 +19,7 @@ package org.keycloak.credential;
 import org.jboss.logging.Logger;
 import org.keycloak.common.util.ObjectUtil;
 import org.keycloak.common.util.Time;
+import org.keycloak.models.RequiredActionProviderModel;
 import org.keycloak.models.credential.OTPCredentialModel;
 import org.keycloak.models.credential.dto.OTPCredentialData;
 import org.keycloak.models.credential.dto.OTPSecretData;
@@ -41,6 +42,26 @@ public class OTPCredentialProvider implements CredentialProvider<OTPCredentialMo
 
     protected KeycloakSession session;
 
+    /*protected List<CredentialModel> getCachedCredentials(UserModel user, String type) {
+        if (!(user instanceof CachedUserModel)) return null;
+        CachedUserModel cached = (CachedUserModel)user;
+        if (cached.isMarkedForEviction()) return null;
+        List<CredentialModel> rtn = (List<CredentialModel>)cached.getCachedWith().get(getType());
+        if (rtn == null) return Collections.EMPTY_LIST;
+        return rtn;
+    }*/
+
+    private UserCredentialStore getCredentialStore() {
+        return session.userCredentialManager();
+    }
+
+    /*@Override
+    public void onCache(RealmModel realm, CachedUserModel user, UserModel delegate) {
+        List<CredentialModel> creds = getCredentialStore().getStoredCredentialsByType(realm, user, getType());
+        user.getCachedWith().put(getType(), creds);
+
+    }*/
+
     public OTPCredentialProvider(KeycloakSession session) {
         this.session = session;
     }
@@ -50,12 +71,12 @@ public class OTPCredentialProvider implements CredentialProvider<OTPCredentialMo
         if (credentialModel.getCreatedDate() == null) {
             credentialModel.setCreatedDate(Time.currentTimeMillis());
         }
-        return user.credentialManager().createStoredCredential(credentialModel);
+        return getCredentialStore().createCredential(realm, user, credentialModel);
     }
 
     @Override
     public boolean deleteCredential(RealmModel realm, UserModel user, String credentialId) {
-        return user.credentialManager().removeStoredCredentialById(credentialId);
+        return getCredentialStore().removeStoredCredential(realm, user, credentialId);
     }
 
     @Override
@@ -71,7 +92,7 @@ public class OTPCredentialProvider implements CredentialProvider<OTPCredentialMo
     @Override
     public boolean isConfiguredFor(RealmModel realm, UserModel user, String credentialType) {
         if (!supportsCredentialType(credentialType)) return false;
-        return user.credentialManager().getStoredCredentialsByTypeStream(credentialType).findAny().isPresent();
+        return getCredentialStore().getStoredCredentialsByTypeStream(realm, user, credentialType).count() > 0;
     }
 
     public boolean isConfiguredFor(RealmModel realm, UserModel user){
@@ -94,7 +115,7 @@ public class OTPCredentialProvider implements CredentialProvider<OTPCredentialMo
             return false;
         }
 
-        CredentialModel credential = user.credentialManager().getStoredCredentialById(credentialInput.getCredentialId());
+        CredentialModel credential = getCredentialStore().getStoredCredentialById(realm, user, credentialInput.getCredentialId());
         OTPCredentialModel otpCredentialModel = OTPCredentialModel.createFromCredentialModel(credential);
         OTPSecretData secretData = otpCredentialModel.getOTPSecretData();
         OTPCredentialData credentialData = otpCredentialModel.getOTPCredentialData();
@@ -106,7 +127,7 @@ public class OTPCredentialProvider implements CredentialProvider<OTPCredentialMo
                 return false;
             }
             otpCredentialModel.updateCounter(counter);
-            user.credentialManager().updateStoredCredential(otpCredentialModel);
+            getCredentialStore().updateCredential(realm, user, otpCredentialModel);
             return true;
         } else if (OTPCredentialModel.TOTP.equals(credentialData.getSubType())) {
             TimeBasedOTP validator = new TimeBasedOTP(credentialData.getAlgorithm(), credentialData.getDigits(), credentialData.getPeriod(), policy.getLookAheadWindow());

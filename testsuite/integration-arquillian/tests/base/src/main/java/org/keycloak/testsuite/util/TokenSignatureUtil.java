@@ -30,7 +30,6 @@ import org.jboss.logging.Logger;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.ClientResource;
 import org.keycloak.common.util.Base64;
-import org.keycloak.common.util.BouncyIntegration;
 import org.keycloak.common.util.MultivaluedHashMap;
 import org.keycloak.crypto.Algorithm;
 import org.keycloak.crypto.JavaAlgorithm;
@@ -137,7 +136,7 @@ public class TokenSignatureUtil {
     private static void registerKeyProvider(String realm, String providerSpecificKey, String providerSpecificValue, String providerId, Keycloak adminClient, TestContext testContext) {
         long priority = System.currentTimeMillis();
 
-        ComponentRepresentation rep = createKeyRep("valid", providerId, adminClient);
+        ComponentRepresentation rep = createKeyRep("valid", providerId);
         rep.setConfig(new MultivaluedHashMap<>());
         rep.getConfig().putSingle("priority", Long.toString(priority));
         rep.getConfig().putSingle(providerSpecificKey, providerSpecificValue);
@@ -148,10 +147,10 @@ public class TokenSignatureUtil {
         }
     }
 
-    private static ComponentRepresentation createKeyRep(String name, String providerId, Keycloak adminClient) {
+    private static ComponentRepresentation createKeyRep(String name, String providerId) {
         ComponentRepresentation rep = new ComponentRepresentation();
         rep.setName(name);
-        rep.setParentId(adminClient.realm(TEST_REALM_NAME).toRepresentation().getId());
+        rep.setParentId(TEST_REALM_NAME);
         rep.setProviderId(providerId);
         rep.setProviderType(KeyProvider.class.getName());
         rep.setConfig(new MultivaluedHashMap<>());
@@ -189,7 +188,7 @@ public class TokenSignatureUtil {
     private static Signature getSignature(String sigAlgName) {
         try {
             // use Bouncy Castle for signature verification intentionally
-            Signature signature = Signature.getInstance(JavaAlgorithm.getJavaAlgorithm(sigAlgName), BouncyIntegration.PROVIDER);
+            Signature signature = Signature.getInstance(JavaAlgorithm.getJavaAlgorithm(sigAlgName), "BC");
             return signature;
         } catch (Exception e) {
             throw new RuntimeException(e);

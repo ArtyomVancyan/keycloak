@@ -84,8 +84,7 @@ public class HardcodedLDAPRoleStorageMapper extends AbstractLDAPStorageMapper {
 
             @Override
             public boolean hasRole(RoleModel role) {
-                RoleModel hardcodedRole = getRole(realm);
-                return super.hasRole(role) || (hardcodedRole != null && hardcodedRole.hasRole(role));
+                return super.hasRole(role) || role.equals(getRole(realm));
             }
 
             @Override

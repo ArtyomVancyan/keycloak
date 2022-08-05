@@ -160,7 +160,7 @@ public class DockerAuthV2Protocol implements LoginProtocol {
     }
 
     @Override
-    public Response finishBrowserLogout(final UserSessionModel userSession, AuthenticationSessionModel logoutSession) {
+    public Response finishLogout(final UserSessionModel userSession) {
         return errorResponse(userSession, "finishLogout");
     }
 

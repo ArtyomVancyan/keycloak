@@ -31,7 +31,6 @@ import org.keycloak.models.UserModel;
 import org.keycloak.models.utils.UserModelDelegate;
 import org.keycloak.representations.idm.ComponentRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
-import org.keycloak.storage.UserStoragePrivateUtil;
 import org.keycloak.storage.ldap.LDAPStorageProvider;
 import org.keycloak.storage.ldap.LDAPUtils;
 import org.keycloak.storage.ldap.idm.model.LDAPObject;
@@ -163,7 +162,7 @@ public class LDAPBinaryAttributesTest extends AbstractLDAPTest {
         String joeId = joe.getId();
         testingClient.server().run(session -> {
             RealmModel test = session.realms().getRealmByName("test");
-            UserModel userById = UserStoragePrivateUtil.userLocalStorage(session).getUserById(test, joeId);
+            UserModel userById = session.userLocalStorage().getUserById(test, joeId);
 
             assertThat(userById.getAttributes().get(LDAPConstants.JPEG_PHOTO), is(nullValue()));
         });

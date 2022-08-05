@@ -16,9 +16,9 @@
  */
 package org.keycloak.authentication.authenticators.browser;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.keycloak.Config;
 import org.keycloak.authentication.AuthenticationFlowContext;
@@ -37,12 +37,6 @@ public final class DeployedScriptAuthenticatorFactory extends ScriptBasedAuthent
     private ScriptProviderMetadata metadata;
     private AuthenticatorConfigModel model;
     private List<ProviderConfigProperty> configProperties;
-    private Authenticator authenticator = new ScriptBasedAuthenticator() {
-        @Override
-        protected AuthenticatorConfigModel getAuthenticatorConfig(AuthenticationFlowContext context) {
-            return model;
-        }
-    };
 
     public DeployedScriptAuthenticatorFactory(ScriptProviderMetadata metadata) {
         this.metadata = metadata;
@@ -54,12 +48,22 @@ public final class DeployedScriptAuthenticatorFactory extends ScriptBasedAuthent
 
     @Override
     public Authenticator create(KeycloakSession session) {
-        return authenticator;
+        return new ScriptBasedAuthenticator() {
+            @Override
+            protected AuthenticatorConfigModel getAuthenticatorConfig(AuthenticationFlowContext context) {
+                return model;
+            }
+        };
     }
 
     @Override
     public String getId() {
         return metadata.getId();
+    }
+
+    @Override
+    public boolean isConfigurable() {
+        return false;
     }
 
     @Override
@@ -93,11 +97,6 @@ public final class DeployedScriptAuthenticatorFactory extends ScriptBasedAuthent
         return configProperties;
     }
 
-    @Override
-    public AuthenticatorConfigModel getConfig() {
-        return model;
-    }
-
     public void setMetadata(ScriptProviderMetadata metadata) {
         this.metadata = metadata;
     }
@@ -110,20 +109,12 @@ public final class DeployedScriptAuthenticatorFactory extends ScriptBasedAuthent
         AuthenticatorConfigModel model = new AuthenticatorConfigModel();
 
         model.setId(metadata.getId());
-        model.setAlias(sanitizeString(metadata.getName()));
-
-        Map<String, String> config = new HashMap<>();
-
-        model.setConfig(config);
-
-        config.put("scriptName", metadata.getName());
-        config.put("scriptCode", metadata.getCode());
-        config.put("scriptDescription", metadata.getDescription());
+        model.setAlias(metadata.getName());
+        model.setConfig(new HashMap<>());
+        model.getConfig().put("scriptName", metadata.getName());
+        model.getConfig().put("scriptCode", metadata.getCode());
+        model.getConfig().put("scriptDescription", metadata.getDescription());
 
         return model;
-    }
-
-    private String sanitizeString(String value) {
-        return value.replace('/', '-').replace('.', '-');
     }
 }

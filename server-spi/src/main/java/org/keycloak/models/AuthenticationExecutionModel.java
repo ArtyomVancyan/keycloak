@@ -19,9 +19,6 @@ package org.keycloak.models;
 
 import java.io.Serializable;
 import java.util.Comparator;
-import java.util.Map;
-import java.util.Objects;
-import org.keycloak.util.EnumWithStableIndex;
 
 /**
 * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
@@ -121,28 +118,11 @@ public class AuthenticationExecutionModel implements Serializable {
         this.authenticatorFlow = authenticatorFlow;
     }
 
-    public enum Requirement implements EnumWithStableIndex {
-        REQUIRED(0),
-        CONDITIONAL(1),
-        ALTERNATIVE(2),
-        DISABLED(3);
-
-        private final int stableIndex;
-        private static final Map<Integer, Requirement> BY_ID = EnumWithStableIndex.getReverseIndex(values());
-
-        private Requirement(int stableIndex) {
-            Objects.requireNonNull(stableIndex);
-            this.stableIndex = stableIndex;
-        }
-
-        @Override
-        public int getStableIndex() {
-            return stableIndex;
-        }
-
-        public static Requirement valueOfInteger(Integer id) {
-            return id == null ? null : BY_ID.get(id);
-        }
+    public enum Requirement {
+        REQUIRED,
+        CONDITIONAL,
+        ALTERNATIVE,
+        DISABLED
     }
 
     public boolean isRequired() {

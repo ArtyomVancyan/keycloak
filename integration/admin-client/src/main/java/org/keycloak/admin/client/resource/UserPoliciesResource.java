@@ -26,6 +26,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.jboss.resteasy.annotations.cache.NoCache;
 import org.keycloak.representations.idm.authorization.UserPolicyRepresentation;
 
 /**
@@ -44,5 +45,6 @@ public interface UserPoliciesResource {
     @Path("/search")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @NoCache
     UserPolicyRepresentation findByName(@QueryParam("name") String name);
 }

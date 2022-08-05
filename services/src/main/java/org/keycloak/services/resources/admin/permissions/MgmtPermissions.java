@@ -256,7 +256,7 @@ class MgmtPermissions implements AdminPermissionEvaluator, AdminPermissionManage
         ClientModel client = getRealmManagementClient();
         if (client == null) return null;
         ResourceServerStore resourceServerStore = authz.getStoreFactory().getResourceServerStore();
-        realmResourceServer = resourceServerStore.findByClient(client);
+        realmResourceServer = resourceServerStore.findById(client.getId());
         return realmResourceServer;
 
     }
@@ -265,9 +265,9 @@ class MgmtPermissions implements AdminPermissionEvaluator, AdminPermissionManage
         if (!Profile.isFeatureEnabled(Profile.Feature.AUTHORIZATION)) return null;
         if (realmResourceServer != null) return realmResourceServer;
         ClientModel client = getRealmManagementClient();
-        realmResourceServer = authz.getStoreFactory().getResourceServerStore().findByClient(client);
+        realmResourceServer = authz.getStoreFactory().getResourceServerStore().findById(client.getId());
         if (realmResourceServer == null) {
-            realmResourceServer = authz.getStoreFactory().getResourceServerStore().create(client);
+            realmResourceServer = authz.getStoreFactory().getResourceServerStore().create(client.getId());
         }
         return realmResourceServer;
     }
@@ -283,17 +283,17 @@ class MgmtPermissions implements AdminPermissionEvaluator, AdminPermissionManage
 
     public Scope initializeRealmScope(String name) {
         ResourceServer server = initializeRealmResourceServer();
-        Scope scope  = authz.getStoreFactory().getScopeStore().findByName(server, name);
+        Scope scope  = authz.getStoreFactory().getScopeStore().findByName(name, server.getId());
         if (scope == null) {
-            scope = authz.getStoreFactory().getScopeStore().create(server, name);
+            scope = authz.getStoreFactory().getScopeStore().create(name, server);
         }
         return scope;
     }
 
     public Scope initializeScope(String name, ResourceServer server) {
-        Scope scope  = authz.getStoreFactory().getScopeStore().findByName(server, name);
+        Scope scope  = authz.getStoreFactory().getScopeStore().findByName(name, server.getId());
         if (scope == null) {
-            scope = authz.getStoreFactory().getScopeStore().create(server, name);
+            scope = authz.getStoreFactory().getScopeStore().create(name, server);
         }
         return scope;
     }
@@ -316,7 +316,7 @@ class MgmtPermissions implements AdminPermissionEvaluator, AdminPermissionManage
     public Scope realmScope(String scope) {
         ResourceServer server = realmResourceServer();
         if (server == null) return null;
-        return authz.getStoreFactory().getScopeStore().findByName(server, scope);
+        return authz.getStoreFactory().getScopeStore().findByName(scope, server.getId());
     }
 
     public boolean evaluatePermission(Resource resource, ResourceServer resourceServer, Scope... scope) {

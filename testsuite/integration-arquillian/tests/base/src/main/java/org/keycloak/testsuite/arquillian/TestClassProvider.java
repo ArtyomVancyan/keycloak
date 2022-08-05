@@ -26,9 +26,7 @@ public class TestClassProvider {
             "/org/jboss/jandex",
             "/org/openqa/selenium",
             "/com/webauthn4j",
-            "/com/fasterxml/jackson/dataformat/cbor",
-            "/org/slf4j",
-            "/org/apache"
+            "/com/fasterxml/jackson/dataformat/cbor"
     };
 
     private Undertow server;

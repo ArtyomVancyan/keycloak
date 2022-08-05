@@ -182,7 +182,8 @@ integration-arquillian
 │  │
 │  ├──app-server
 │  │  ├──jboss (wildfly/eap/as)
-│  │  └──tomcat
+│  │  ├──tomcat
+│  │  └──karaf
 │  │
 │  └──wildfly-balancer
 │
@@ -193,7 +194,8 @@ integration-arquillian
    └──other   (common settings for all test modules dependent on base)
       │
       ├──adapters         (common settings for all adapter test modules - will be moved into base)
-      │  └──jboss
+      │  ├──jboss
+      │  └──karaf
       │
       ├──console          
       ├──console_no_users 

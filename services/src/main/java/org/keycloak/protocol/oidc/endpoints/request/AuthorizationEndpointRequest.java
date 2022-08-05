@@ -17,8 +17,6 @@
 
 package org.keycloak.protocol.oidc.endpoints.request;
 
-import org.keycloak.rar.AuthorizationRequestContext;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -51,8 +49,6 @@ public class AuthorizationEndpointRequest {
     String codeChallengeMethod;
 
     String acr;
-
-    AuthorizationRequestContext authorizationRequestContext;
 
     public String getAcr() {
         return acr;
@@ -132,19 +128,7 @@ public class AuthorizationEndpointRequest {
         return invalidRequestMessage;
     }
 
-    public void setInvalidRequestMessage(String invalidRequestMessage) {
-        this.invalidRequestMessage = invalidRequestMessage;
-    }
-
     public String getUiLocales() {
         return uiLocales;
-    }
-
-    public AuthorizationRequestContext getAuthorizationRequestContext() {
-        return authorizationRequestContext;
-    }
-
-    public void setAuthorizationRequestContext(AuthorizationRequestContext authorizationRequestContext) {
-        this.authorizationRequestContext = authorizationRequestContext;
     }
 }

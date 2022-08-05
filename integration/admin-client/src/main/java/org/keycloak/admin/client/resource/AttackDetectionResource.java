@@ -17,6 +17,8 @@
 
 package org.keycloak.admin.client.resource;
 
+import org.jboss.resteasy.annotations.cache.NoCache;
+
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -32,6 +34,7 @@ public interface AttackDetectionResource {
 
     @GET
     @Path("brute-force/users/{userId}")
+    @NoCache
     @Produces(MediaType.APPLICATION_JSON)
     Map<String, Object> bruteForceUserStatus(@PathParam("userId") String userId);
 

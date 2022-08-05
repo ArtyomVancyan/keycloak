@@ -30,6 +30,7 @@ import java.util.Properties;
 
 import javax.net.ssl.SSLPeerUnverifiedException;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -94,7 +95,7 @@ public class DefaultHttpClientFactoryTest {
 
 		StringBuilder sb = new StringBuilder();
 		sb.append("{");
-		sb.append(String.join(",", params));
+		sb.append(StringUtils.join(params, ','));
 		sb.append("}");
 		
 		return sb.toString();

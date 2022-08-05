@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Red Hat, Inc. and/or its affiliates
+ * Copyright 2021 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,22 +18,14 @@
 package org.keycloak.models.map.authorization.adapter;
 
 
-import java.util.Objects;
 import org.keycloak.authorization.model.ResourceServer;
 import org.keycloak.authorization.store.StoreFactory;
-import org.keycloak.models.RealmModel;
 import org.keycloak.models.map.authorization.entity.MapScopeEntity;
 
 public class MapScopeAdapter extends AbstractScopeModel<MapScopeEntity> {
 
-    private final RealmModel realm;
-    private ResourceServer resourceServer;
-
-    public MapScopeAdapter(RealmModel realm, ResourceServer resourceServer, MapScopeEntity entity, StoreFactory storeFactory) {
+    public MapScopeAdapter(MapScopeEntity entity, StoreFactory storeFactory) {
         super(entity, storeFactory);
-        Objects.requireNonNull(realm);
-        this.realm = realm;
-        this.resourceServer = resourceServer;
     }
 
     @Override
@@ -76,10 +68,7 @@ public class MapScopeAdapter extends AbstractScopeModel<MapScopeEntity> {
 
     @Override
     public ResourceServer getResourceServer() {
-        if (resourceServer == null) {
-            resourceServer = storeFactory.getResourceServerStore().findById(realm, entity.getResourceServerId());
-        }
-        return resourceServer;
+        return storeFactory.getResourceServerStore().findById(entity.getResourceServerId());
     }
 
     @Override

@@ -215,7 +215,11 @@ public class EventBuilder {
         if (store != null) {
             Set<String> eventTypes = realm.getEnabledEventTypesStream().collect(Collectors.toSet());
             if (!eventTypes.isEmpty() ? eventTypes.contains(event.getType().name()) : event.getType().isSaveByDefault()) {
-                store.onEvent(event);
+                try {
+                    store.onEvent(event);
+                } catch (Throwable t) {
+                    log.error("Failed to save event", t);
+                }
             }
         }
 

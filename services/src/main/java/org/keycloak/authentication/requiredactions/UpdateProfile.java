@@ -18,6 +18,8 @@
 package org.keycloak.authentication.requiredactions;
 
 import org.keycloak.Config;
+import org.keycloak.OAuth2Constants;
+import org.keycloak.authentication.DisplayTypeRequiredActionFactory;
 import org.keycloak.authentication.InitiatedActionSupport;
 import org.keycloak.authentication.RequiredActionContext;
 import org.keycloak.authentication.RequiredActionFactory;
@@ -45,7 +47,7 @@ import java.util.List;
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
  * @version $Revision: 1 $
  */
-public class UpdateProfile implements RequiredActionProvider, RequiredActionFactory {
+public class UpdateProfile implements RequiredActionProvider, RequiredActionFactory, DisplayTypeRequiredActionFactory {
     @Override
     public InitiatedActionSupport initiatedActionSupport() {
         return InitiatedActionSupport.SUPPORTED;
@@ -110,6 +112,16 @@ public class UpdateProfile implements RequiredActionProvider, RequiredActionFact
     public RequiredActionProvider create(KeycloakSession session) {
         return this;
     }
+
+
+    @Override
+    public RequiredActionProvider createDisplay(KeycloakSession session, String displayType) {
+        if (displayType == null) return this;
+        if (!OAuth2Constants.DISPLAY_CONSOLE.equalsIgnoreCase(displayType)) return null;
+        return ConsoleUpdateProfile.SINGLETON;
+    }
+
+
 
     @Override
     public void init(Config.Scope config) {

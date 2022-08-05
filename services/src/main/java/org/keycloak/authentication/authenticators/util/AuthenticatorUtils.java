@@ -17,7 +17,6 @@
 
 package org.keycloak.authentication.authenticators.util;
 
-import org.keycloak.authentication.AuthenticationFlowContext;
 import org.keycloak.events.Errors;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
@@ -39,9 +38,5 @@ public final class AuthenticatorUtils {
             return null;
         }
         return null;
-    }
-
-    public static String getDisabledByBruteForceEventError(AuthenticationFlowContext authnFlowContext, UserModel authenticatedUser) {
-        return AuthenticatorUtils.getDisabledByBruteForceEventError(authnFlowContext.getProtector(), authnFlowContext.getSession(), authnFlowContext.getRealm(), authenticatedUser);
     }
 }

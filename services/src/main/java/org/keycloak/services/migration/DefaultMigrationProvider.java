@@ -102,11 +102,6 @@ public class DefaultMigrationProvider implements MigrationProvider {
     }
 
     @Override
-    public void addOIDCAcrClientScope(RealmModel realm) {
-        OIDCLoginProtocolFactory.addAcrClientScope(realm);
-    }
-
-    @Override
     public void close() {
     }
 

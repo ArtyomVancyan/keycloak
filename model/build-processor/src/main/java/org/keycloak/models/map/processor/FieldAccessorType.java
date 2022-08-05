@@ -26,7 +26,6 @@ import javax.lang.model.element.Name;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
 import static org.keycloak.models.map.processor.Util.getGenericsDeclaration;
-import static org.keycloak.models.map.processor.Util.pluralToSingular;
 
 /**
  *
@@ -53,7 +52,7 @@ enum FieldAccessorType {
     COLLECTION_ADD {
         @Override
         public boolean is(ExecutableElement method, String fieldName, Types types, TypeMirror fieldType) {
-            String fieldNameSingular = pluralToSingular(fieldName);
+            String fieldNameSingular = fieldName.endsWith("s") ? fieldName.substring(0, fieldName.length() - 1) : fieldName;
             String methodName = "add" + fieldNameSingular;
             List<TypeMirror> res = getGenericsDeclaration(fieldType);
             return Objects.equals(methodName, method.getSimpleName().toString())
@@ -64,7 +63,7 @@ enum FieldAccessorType {
     COLLECTION_DELETE {
         @Override
         public boolean is(ExecutableElement method, String fieldName, Types types, TypeMirror fieldType) {
-            String fieldNameSingular = pluralToSingular(fieldName);
+            String fieldNameSingular = fieldName.endsWith("s") ? fieldName.substring(0, fieldName.length() - 1) : fieldName;
             String removeFromCollection = "remove" + fieldNameSingular;
             List<TypeMirror> res = getGenericsDeclaration(fieldType);
             return Objects.equals(removeFromCollection, method.getSimpleName().toString())
@@ -75,7 +74,7 @@ enum FieldAccessorType {
     MAP_ADD {
         @Override
         public boolean is(ExecutableElement method, String fieldName, Types types, TypeMirror fieldType) {
-            String fieldNameSingular = pluralToSingular(fieldName);
+            String fieldNameSingular = fieldName.endsWith("s") ? fieldName.substring(0, fieldName.length() - 1) : fieldName;
             String methodName = "set" + fieldNameSingular;
             List<TypeMirror> res = getGenericsDeclaration(fieldType);
             return Objects.equals(methodName, method.getSimpleName().toString())
@@ -87,7 +86,7 @@ enum FieldAccessorType {
     MAP_GET {
         @Override
         public boolean is(ExecutableElement method, String fieldName, Types types, TypeMirror fieldType) {
-            String fieldNameSingular = pluralToSingular(fieldName);
+            String fieldNameSingular = fieldName.endsWith("s") ? fieldName.substring(0, fieldName.length() - 1) : fieldName;
             String methodName = "get" + fieldNameSingular;
             List<TypeMirror> res = getGenericsDeclaration(fieldType);
             return Objects.equals(methodName, method.getSimpleName().toString())

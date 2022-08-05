@@ -20,6 +20,8 @@ package org.keycloak.keys.loader;
 import org.jboss.logging.Logger;
 import org.keycloak.authentication.authenticators.client.JWTClientAuthenticator;
 import org.keycloak.common.util.KeyUtils;
+import org.keycloak.crypto.Algorithm;
+import org.keycloak.crypto.KeyType;
 import org.keycloak.crypto.KeyUse;
 import org.keycloak.crypto.KeyWrapper;
 import org.keycloak.jose.jwk.JSONWebKeySet;
@@ -104,6 +106,8 @@ public class ClientPublicKeyLoader implements PublicKeyLoader {
             throw new ModelException("Client has both publicKey and certificate configured");
         }
 
+        keyWrapper.setAlgorithm(Algorithm.RS256);
+        keyWrapper.setType(KeyType.RSA);
         keyWrapper.setUse(KeyUse.SIG);
         String kid = null;
         if (encodedCertificate != null) {
@@ -112,7 +116,6 @@ public class ClientPublicKeyLoader implements PublicKeyLoader {
             kid = certInfo.getKid() != null ? certInfo.getKid() : KeyUtils.createKeyId(clientCert.getPublicKey());
             keyWrapper.setKid(kid);
             keyWrapper.setPublicKey(clientCert.getPublicKey());
-            keyWrapper.setType(clientCert.getPublicKey().getAlgorithm());
             keyWrapper.setCertificate(clientCert);
         } else {
             PublicKey publicKey = KeycloakModelUtils.getPublicKey(encodedPublicKey);
@@ -120,7 +123,6 @@ public class ClientPublicKeyLoader implements PublicKeyLoader {
             kid = certInfo.getKid() != null ? certInfo.getKid() : KeyUtils.createKeyId(publicKey);
             keyWrapper.setKid(kid);
             keyWrapper.setPublicKey(publicKey);
-            keyWrapper.setType(publicKey.getAlgorithm());
         }
         return keyWrapper;
     }

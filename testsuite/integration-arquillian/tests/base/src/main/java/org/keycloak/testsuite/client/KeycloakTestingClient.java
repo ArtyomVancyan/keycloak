@@ -45,7 +45,7 @@ public class KeycloakTestingClient implements AutoCloseable {
         if (resteasyClient != null) {
             client = resteasyClient;
         } else {
-            ResteasyClientBuilder resteasyClientBuilder = (ResteasyClientBuilder) ResteasyClientBuilder.newBuilder();
+            ResteasyClientBuilder resteasyClientBuilder = new ResteasyClientBuilder();
             resteasyClientBuilder.connectionPoolSize(10);
             if (serverUrl.startsWith("https")) {
                 // Disable PKIX path validation errors when running tests using SSL

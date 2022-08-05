@@ -40,7 +40,6 @@ import org.junit.Test;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.adapters.authentication.JWTClientCredentialsProvider;
 import org.keycloak.client.registration.Auth;
-import org.keycloak.common.Profile;
 import org.keycloak.common.util.KeycloakUriBuilder;
 import org.keycloak.connections.infinispan.InfinispanConnectionProvider;
 import org.keycloak.constants.ServiceUrlConstants;
@@ -59,7 +58,6 @@ import org.keycloak.representations.idm.ClientInitialAccessPresentation;
 import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.representations.oidc.OIDCClientRepresentation;
 import org.keycloak.testsuite.Assert;
-import org.keycloak.testsuite.ProfileAssume;
 import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
 import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
 import org.keycloak.testsuite.client.resources.TestApplicationResourceUrls;
@@ -181,8 +179,6 @@ public class OIDCJwksClientRegistrationTest extends AbstractClientRegistrationTe
 
     @Test
     public void testTwoClientsWithSameKid() throws Exception {
-        ProfileAssume.assumeFeatureDisabled(Profile.Feature.MAP_STORAGE);
-
         // Create client with manually set "kid"
         OIDCClientRepresentation response = createClientWithManuallySetKid("a1");
 
@@ -211,8 +207,7 @@ public class OIDCJwksClientRegistrationTest extends AbstractClientRegistrationTe
         assertAuthenticateClientSuccess(generatedKeys, response, "a1");
 
         // Assert item in publicKey cache for client1
-        String expectedCacheKey = PublicKeyStorageUtils.getClientModelCacheKey(
-                adminClient.realm(REALM_NAME).toRepresentation().getId(), response.getClientId());
+        String expectedCacheKey = PublicKeyStorageUtils.getClientModelCacheKey(REALM_NAME, response.getClientId());
         Assert.assertTrue(testingClient.testing().cache(InfinispanConnectionProvider.KEYS_CACHE_NAME).contains(expectedCacheKey));
 
         // Assert it's not possible to authenticate as client2 with the same "kid" like client1
@@ -222,8 +217,6 @@ public class OIDCJwksClientRegistrationTest extends AbstractClientRegistrationTe
 
     @Test
     public void testPublicKeyCacheInvalidatedWhenUpdatingClient() throws Exception {
-        ProfileAssume.assumeFeatureDisabled(Profile.Feature.MAP_STORAGE);
-
         OIDCClientRepresentation response = createClientWithManuallySetKid("a1");
 
         Map<String, String> generatedKeys = testingClient.testApp().oidcClientEndpoints().getKeysAsPem();
@@ -232,8 +225,7 @@ public class OIDCJwksClientRegistrationTest extends AbstractClientRegistrationTe
         assertAuthenticateClientSuccess(generatedKeys, response, "a1");
 
         // Assert item in publicKey cache for client1
-        String expectedCacheKey = PublicKeyStorageUtils.getClientModelCacheKey(
-                adminClient.realm(REALM_NAME).toRepresentation().getId(), response.getClientId());
+        String expectedCacheKey = PublicKeyStorageUtils.getClientModelCacheKey(REALM_NAME, response.getClientId());
         Assert.assertTrue(testingClient.testing().cache(InfinispanConnectionProvider.KEYS_CACHE_NAME).contains(expectedCacheKey));
 
 
@@ -277,8 +269,6 @@ public class OIDCJwksClientRegistrationTest extends AbstractClientRegistrationTe
 
     @Test
     public void createClientWithJWKSURI_rotateClientKeys() throws Exception {
-        ProfileAssume.assumeFeatureDisabled(Profile.Feature.MAP_STORAGE);
-
         OIDCClientRepresentation clientRep = createRep();
 
         clientRep.setGrantTypes(Collections.singletonList(OAuth2Constants.CLIENT_CREDENTIALS));

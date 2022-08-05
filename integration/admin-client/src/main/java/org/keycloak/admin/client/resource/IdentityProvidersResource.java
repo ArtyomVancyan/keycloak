@@ -17,6 +17,7 @@
 
 package org.keycloak.admin.client.resource;
 
+import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
 import org.keycloak.representations.idm.IdentityProviderRepresentation;
 
 import javax.ws.rs.Consumes;
@@ -57,7 +58,7 @@ public interface IdentityProvidersResource {
     @Path("import-config")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
-    Map<String, String> importFrom(Object data);
+    Map<String, String> importFrom(MultipartFormDataOutput data);
 
     @POST
     @Path("import-config")

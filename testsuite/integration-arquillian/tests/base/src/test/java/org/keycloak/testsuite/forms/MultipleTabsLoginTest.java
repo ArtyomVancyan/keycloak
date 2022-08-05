@@ -17,10 +17,6 @@
 
 package org.keycloak.testsuite.forms;
 
-import static org.junit.Assert.fail;
-import static org.keycloak.testsuite.util.ServerURLs.getAuthServerContextRoot;
-import static org.keycloak.testsuite.util.URLAssert.assertCurrentUrlStartsWith;
-
 import org.jboss.arquillian.graphene.page.Page;
 import org.junit.Before;
 import org.junit.Rule;
@@ -51,6 +47,10 @@ import org.keycloak.testsuite.util.ClientBuilder;
 import org.keycloak.testsuite.util.GreenMailRule;
 import org.keycloak.testsuite.util.UserBuilder;
 import org.openqa.selenium.NoSuchElementException;
+
+import static org.junit.Assert.fail;
+import static org.keycloak.testsuite.util.URLAssert.assertCurrentUrlStartsWith;
+import static org.keycloak.testsuite.util.ServerURLs.getAuthServerContextRoot;
 
 /**
  * Tries to simulate testing with multiple browser tabs
@@ -145,8 +145,7 @@ public class MultipleTabsLoginTest extends AbstractTestRealmKeycloakTest {
         updatePasswordPage.assertCurrent();
 
         updatePasswordPage.changePassword("password", "password");
-        updateProfilePage.prepareUpdate().firstName("John").lastName("Doe3")
-                .email("john@doe3.com").submit();
+        updateProfilePage.update("John", "Doe3", "john@doe3.com");
         appPage.assertCurrent();
 
         // Try to go back to tab 1. We should have ALREADY_LOGGED_IN info page
@@ -185,8 +184,7 @@ public class MultipleTabsLoginTest extends AbstractTestRealmKeycloakTest {
         // Login success now
         loginPage.login("login-test", "password");
         updatePasswordPage.changePassword("password", "password");
-        updateProfilePage.prepareUpdate().firstName("John").lastName("Doe3")
-                .email("john@doe3.com").submit();
+        updateProfilePage.update("John", "Doe3", "john@doe3.com");
         appPage.assertCurrent();
     }
 
@@ -210,8 +208,7 @@ public class MultipleTabsLoginTest extends AbstractTestRealmKeycloakTest {
         // Login success now
         loginPage.login("login-test", "password");
         updatePasswordPage.changePassword("password", "password");
-        updateProfilePage.prepareUpdate().firstName("John").lastName("Doe3")
-                .email("john@doe3.com").submit();
+        updateProfilePage.update("John", "Doe3", "john@doe3.com");
         appPage.assertCurrent();
     }
 
@@ -236,8 +233,7 @@ public class MultipleTabsLoginTest extends AbstractTestRealmKeycloakTest {
         updatePasswordPage.assertCurrent();
 
         updatePasswordPage.changePassword("password", "password");
-        updateProfilePage.prepareUpdate().firstName("John").lastName("Doe3")
-                .email("john@doe3.com").submit();
+        updateProfilePage.update("John", "Doe3", "john@doe3.com");
         appPage.assertCurrent();
     }
 
@@ -275,8 +271,7 @@ public class MultipleTabsLoginTest extends AbstractTestRealmKeycloakTest {
         updatePasswordPage.assertCurrent();
 
         updatePasswordPage.changePassword("password", "password");
-        updateProfilePage.prepareUpdate().firstName("John").lastName("Doe3")
-                .email("john@doe3.com").submit();
+        updateProfilePage.update("John", "Doe3", "john@doe3.com");
         appPage.assertCurrent();
     }
 
@@ -302,8 +297,7 @@ public class MultipleTabsLoginTest extends AbstractTestRealmKeycloakTest {
         driver.navigate().to(tab1Url);
         loginPage.login("login-test", "password");
         updatePasswordPage.changePassword("password", "password");
-        updateProfilePage.prepareUpdate().firstName("John").lastName("Doe3")
-                .email("john@doe3.com").submit();
+        updateProfilePage.update("John", "Doe3", "john@doe3.com");
 
         // Assert I am redirected to the appPage in tab1
         appPage.assertCurrent();
@@ -338,8 +332,7 @@ public class MultipleTabsLoginTest extends AbstractTestRealmKeycloakTest {
         driver.navigate().to(tab1Url);
         loginPage.login("login-test", "password");
         updatePasswordPage.changePassword("password", "password");
-        updateProfilePage.prepareUpdate().firstName("John").lastName("Doe3")
-                .email("john@doe3.com").submit();
+        updateProfilePage.update("John", "Doe3", "john@doe3.com");
 
         // Assert I am redirected to the appPage in tab1 and have state corresponding to tab1
         appPage.assertCurrent();
@@ -372,8 +365,7 @@ public class MultipleTabsLoginTest extends AbstractTestRealmKeycloakTest {
         // Continue in tab2 and finish login here
         loginPage.login("login-test", "password");
         updatePasswordPage.changePassword("password", "password");
-        updateProfilePage.prepareUpdate().firstName("John").lastName("Doe3")
-                .email("john@doe3.com").submit();
+        updateProfilePage.update("John", "Doe3", "john@doe3.com");
 
         // Assert I am redirected to the appPage in tab2 and have state corresponding to tab2
         appPage.assertCurrent();
@@ -415,8 +407,7 @@ public class MultipleTabsLoginTest extends AbstractTestRealmKeycloakTest {
         updatePasswordPage.assertCurrent();
 
         updatePasswordPage.changePassword("password", "password");
-        updateProfilePage.prepareUpdate().firstName("John").lastName("Doe3")
-                .email("john@doe3.com").submit();
+        updateProfilePage.update("John", "Doe3", "john@doe3.com");
         appPage.assertCurrent();
 
         // Try to go back to tab 1. We should have ALREADY_LOGGED_IN info page

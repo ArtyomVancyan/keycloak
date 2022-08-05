@@ -251,7 +251,7 @@ public class GeneratedRsaKeyProviderTest extends AbstractKeycloakTest {
     protected ComponentRepresentation createRep(String name, String providerId) {
         ComponentRepresentation rep = new ComponentRepresentation();
         rep.setName(name);
-        rep.setParentId(adminClient.realm("test").toRepresentation().getId());
+        rep.setParentId("test");
         rep.setProviderId(providerId);
         rep.setProviderType(KeyProvider.class.getName());
         rep.setConfig(new MultivaluedHashMap<>());

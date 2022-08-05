@@ -91,7 +91,6 @@ public class OIDCScopeTest extends AbstractOIDCScopeTest {
         attrs.add("street", "Elm 5");
         attrs.add("phoneNumber", "111-222-333");
         attrs.add("phoneNumberVerified", "true");
-        attrs.add("updatedAt", "1643282255");
         user.setAttributes(attrs);
 
         testRealm.getUsers().add(user);
@@ -219,7 +218,6 @@ public class OIDCScopeTest extends AbstractOIDCScopeTest {
             Assert.assertEquals("John", idToken.getGivenName());
             Assert.assertEquals("Doe", idToken.getFamilyName());
             Assert.assertEquals("John Doe", idToken.getName());
-            Assert.assertEquals(new Long(1643282255L),idToken.getUpdatedAt());
         } else {
             Assert.assertNull(idToken.getPreferredUsername());
             Assert.assertNull(idToken.getGivenName());

@@ -37,8 +37,6 @@ import org.keycloak.testsuite.util.RealmBuilder;
 import javax.ws.rs.core.Response;
 import java.util.List;
 
-import static org.keycloak.testsuite.auth.page.AuthRealm.TEST;
-
 /**
  *
  * @author Stan Silvert ssilvert@redhat.com (C) 2016 Red Hat Inc.
@@ -75,7 +73,7 @@ public abstract class AbstractClientTest extends AbstractAuthTest {
     }
 
     protected String getRealmId() {
-        return adminClient.realm(TEST).toRepresentation().getId();
+        return "test";
     }
 
     // returns UserRepresentation retrieved from server, with all fields, including id

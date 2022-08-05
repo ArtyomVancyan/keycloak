@@ -10,4 +10,3 @@ Maintainers
 * [Stan Silvert](https://github.com/ssilvert)
 * [Takashi Norimatsu](https://github.com/tnorimat)
 * [Thomas Darimont](https://github.com/thomasdarimont)
-* [Václav Muzikář](https://github.com/vmuzikar)

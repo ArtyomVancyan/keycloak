@@ -21,7 +21,6 @@ package org.keycloak.authentication.authenticators.x509;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 
-import org.keycloak.common.util.BouncyIntegration;
 import org.keycloak.common.util.Time;
 import org.keycloak.connections.httpclient.HttpClientProvider;
 import org.keycloak.models.Constants;
@@ -655,11 +654,11 @@ public class CertificateValidator {
             intermediateCerts.add(clientCert);
         }
         CertStore intermediateCertStore = CertStore.getInstance("Collection",
-            new CollectionCertStoreParameters(intermediateCerts), BouncyIntegration.PROVIDER);
+            new CollectionCertStoreParameters(intermediateCerts), "BC");
         pkixParams.addCertStore(intermediateCertStore);
 
         // Build and verify the certification chain
-        CertPathBuilder builder = CertPathBuilder.getInstance("PKIX", BouncyIntegration.PROVIDER);
+        CertPathBuilder builder = CertPathBuilder.getInstance("PKIX", "BC");
         PKIXCertPathBuilderResult result =
             (PKIXCertPathBuilderResult) builder.build(pkixParams);
         return result;

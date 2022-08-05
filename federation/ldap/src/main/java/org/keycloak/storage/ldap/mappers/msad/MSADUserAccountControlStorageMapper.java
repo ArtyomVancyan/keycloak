@@ -75,7 +75,7 @@ public class MSADUserAccountControlStorageMapper extends AbstractLDAPStorageMapp
 
     @Override
     public LDAPOperationDecorator beforePasswordUpdate(UserModel user, LDAPObject ldapUser, UserCredentialModel password) {
-        // Not apply policies if password is reset by admin (not by user themself)
+        // Not apply policies if password is reset by admin (not by user himself)
         if (password.isAdminRequest()) {
             return null;
         }

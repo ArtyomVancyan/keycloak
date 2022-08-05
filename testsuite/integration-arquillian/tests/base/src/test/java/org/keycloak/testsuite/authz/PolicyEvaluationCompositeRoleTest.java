@@ -75,11 +75,11 @@ public class PolicyEvaluationCompositeRoleTest extends AbstractAuthzTest {
 
         AuthorizationProviderFactory factory = (AuthorizationProviderFactory)session.getKeycloakSessionFactory().getProviderFactory(AuthorizationProvider.class);
         AuthorizationProvider authz = factory.create(session, realm);
-        ResourceServer resourceServer = authz.getStoreFactory().getResourceServerStore().create(client);
+        ResourceServer resourceServer = authz.getStoreFactory().getResourceServerStore().create(client.getId());
         Policy policy = createRolePolicy(authz, resourceServer, role1);
 
-        Scope scope = authz.getStoreFactory().getScopeStore().create(resourceServer, "myscope");
-        Resource resource = authz.getStoreFactory().getResourceStore().create(resourceServer, "myresource", resourceServer.getClientId());
+        Scope scope = authz.getStoreFactory().getScopeStore().create("myscope", resourceServer);
+        Resource resource = authz.getStoreFactory().getResourceStore().create("myresource", resourceServer, resourceServer.getId());
         addScopePermission(authz, resourceServer, "mypermission", resource, scope, policy);
 
         RoleModel composite = realm.addRole("composite");
@@ -100,7 +100,7 @@ public class PolicyEvaluationCompositeRoleTest extends AbstractAuthzTest {
         representation.setDecisionStrategy(DecisionStrategy.UNANIMOUS);
         representation.setLogic(Logic.POSITIVE);
 
-        return authz.getStoreFactory().getPolicyStore().create(resourceServer, representation);
+        return authz.getStoreFactory().getPolicyStore().create(representation, resourceServer);
     }
 
 
@@ -116,7 +116,7 @@ public class PolicyEvaluationCompositeRoleTest extends AbstractAuthzTest {
         config.put("roles", roleValues);
         representation.setConfig(config);
 
-        return authz.getStoreFactory().getPolicyStore().create(resourceServer, representation);
+        return authz.getStoreFactory().getPolicyStore().create(representation, resourceServer);
     }
 
 

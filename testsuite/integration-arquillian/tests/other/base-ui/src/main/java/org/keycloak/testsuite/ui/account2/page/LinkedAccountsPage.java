@@ -77,7 +77,7 @@ public class LinkedAccountsPage extends AbstractLoggedInPage {
         @FindBy(xpath = ".//*[contains(@id,'idp-icon')]")
         private WebElement iconElement;
 
-        @FindBy(xpath = ".//*[contains(@id,'idp-label')]")
+        @FindBy(xpath = ".//*[contains(@id,'idp-badge')]")
         private WebElement badgeElement;
 
         @FindBy(xpath = ".//*[contains(@id,'idp-username')]")
@@ -104,11 +104,11 @@ public class LinkedAccountsPage extends AbstractLoggedInPage {
         }
 
         public boolean hasSocialLoginBadge() {
-            return getTextFromElement(badgeElement).equals("Social login");
+            return getTextFromElement(badgeElement).equals("Social Login");
         }
 
         public boolean hasSystemDefinedBadge() {
-            return getTextFromElement(badgeElement).equals("System defined");
+            return getTextFromElement(badgeElement).equals("System Defined");
         }
 
         public boolean hasSocialIcon() {

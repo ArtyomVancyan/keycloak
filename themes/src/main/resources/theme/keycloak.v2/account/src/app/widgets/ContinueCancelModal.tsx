@@ -15,7 +15,7 @@
  */
 
 import * as React from 'react';
-import { Modal, ModalVariant, Button, ButtonProps } from '@patternfly/react-core';
+import { Modal, Button, ButtonProps } from '@patternfly/react-core';
 import {Msg} from './Msg';
 
 /**
@@ -34,6 +34,7 @@ interface ContinueCancelModalProps {
     onContinue: () => void;
     onClose?: () => void;
     isDisabled?: boolean;
+    isLarge?: boolean;
 }
 
 interface ContinueCancelModalState {
@@ -51,7 +52,8 @@ export class ContinueCancelModal extends React.Component<ContinueCancelModalProp
         buttonVariant: 'primary',
         modalContinueButtonLabel: 'continue',
         modalCancelButtonLabel: 'doCancel',
-        isDisabled: false
+        isDisabled: false,
+        isSmall: true
     };
 
     public constructor(props: ContinueCancelModalProps) {
@@ -85,16 +87,15 @@ export class ContinueCancelModal extends React.Component<ContinueCancelModalProp
                 {this.props.render && this.props.render(this.handleModalToggle)}
                 <Modal
                     {...this.props}
-                    variant={ModalVariant.small}
                     title={Msg.localize(this.props.modalTitle)}
                     isOpen={isModalOpen}
                     onClose={this.handleModalToggle}
                     actions={[
-                        <Button id='modal-confirm' key="confirm" variant="primary" onClick={this.handleContinue}>
-                            <Msg msgKey={this.props.modalContinueButtonLabel!}/>
-                        </Button>,
                         <Button id='modal-cancel' key="cancel" variant="secondary" onClick={this.handleModalToggle}>
                             <Msg msgKey={this.props.modalCancelButtonLabel!}/>
+                        </Button>,
+                        <Button id='modal-confirm' key="confirm" variant="primary" onClick={this.handleContinue}>
+                            <Msg msgKey={this.props.modalContinueButtonLabel!}/>
                         </Button>
                     ]}
                 >

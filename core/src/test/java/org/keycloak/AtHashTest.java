@@ -17,10 +17,13 @@
 
 package org.keycloak;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.Assert;
 import org.junit.Test;
 import org.keycloak.crypto.Algorithm;
 import org.keycloak.jose.jws.crypto.HashUtils;
+
+import java.security.Security;
 
 /**
  * See "at_hash" in OIDC specification
@@ -28,6 +31,10 @@ import org.keycloak.jose.jws.crypto.HashUtils;
  * @author <a href="mailto:mposolda@redhat.com">Marek Posolda</a>
  */
 public class AtHashTest {
+
+    static {
+        if (Security.getProvider("BC") == null) Security.addProvider(new BouncyCastleProvider());
+    }
 
     @Test
     public void testAtHashRsa() {

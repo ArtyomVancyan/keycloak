@@ -45,7 +45,7 @@ public class ClientIdAndSecretCredentialsProvider implements ClientCredentialsPr
 
     @Override
     public void init(KeycloakDeployment deployment, Object config) {
-        clientSecret = (config == null ? null : config.toString());
+        clientSecret = (String) config;
     }
 
     @Override
@@ -54,7 +54,7 @@ public class ClientIdAndSecretCredentialsProvider implements ClientCredentialsPr
 
         if (!deployment.isPublicClient()) {
             if (clientSecret != null) {
-                String authorization = BasicAuthHelper.UrlEncoded.createHeader(clientId, clientSecret);
+                String authorization = BasicAuthHelper.createHeader(clientId, clientSecret);
                 requestHeaders.put("Authorization", authorization);
             } else {
                 logger.warnf("Client '%s' doesn't have secret available", clientId);

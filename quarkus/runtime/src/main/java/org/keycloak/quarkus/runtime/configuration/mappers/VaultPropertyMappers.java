@@ -1,9 +1,5 @@
 package org.keycloak.quarkus.runtime.configuration.mappers;
 
-import org.keycloak.config.VaultOptions;
-
-import static org.keycloak.quarkus.runtime.configuration.mappers.PropertyMapper.fromOption;
-
 final class VaultPropertyMappers {
 
     private VaultPropertyMappers() {
@@ -11,25 +7,27 @@ final class VaultPropertyMappers {
 
     public static PropertyMapper[] getVaultPropertyMappers() {
         return new PropertyMapper[] {
-                fromOption(VaultOptions.VAULT)
-                        .paramLabel("provider")
-                        .build(),
-                fromOption(VaultOptions.VAULT_DIR)
-                        .to("kc.spi-vault-file-dir")
+                builder()
+                        .from("vault.file.path")
+                        .to("kc.spi.vault.files-plaintext.dir")
+                        .description("If set, secrets can be obtained by reading the content of files within the given path.")
                         .paramLabel("dir")
                         .build(),
-                fromOption(VaultOptions.VAULT_UNMAPPED)
+                builder()
+                        .from("vault.hashicorp.")
                         .to("quarkus.vault.")
+                        .description("If set, secrets can be obtained from Hashicorp Vault.")
                         .build(),
-                fromOption(VaultOptions.VAULT_URL)
-                        .to("quarkus.vault.url")
-                        .paramLabel("paths")
-                        .build(),
-                fromOption(VaultOptions.VAULT_KV_PATHS)
-                        .to("kc.spi-vault-hashicorp-paths")
+                builder()
+                        .from("vault.hashicorp.paths")
+                        .to("kc.spi.vault.hashicorp.paths")
+                        .description("A set of one or more paths that should be used when looking up secrets.")
                         .paramLabel("paths")
                         .build()
         };
     }
 
+    private static PropertyMapper.Builder builder() {
+        return PropertyMapper.builder(ConfigCategory.VAULT).isBuildTimeProperty(true);
+    }
 }

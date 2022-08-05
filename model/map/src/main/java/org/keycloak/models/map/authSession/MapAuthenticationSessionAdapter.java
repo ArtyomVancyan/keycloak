@@ -23,10 +23,11 @@ import org.keycloak.models.UserModel;
 import org.keycloak.sessions.AuthenticationSessionModel;
 import org.keycloak.sessions.RootAuthenticationSessionModel;
 
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author <a href="mailto:mkanis@redhat.com">Martin Kanis</a>
@@ -58,20 +59,20 @@ public class MapAuthenticationSessionAdapter implements AuthenticationSessionMod
 
     @Override
     public Map<String, ExecutionStatus> getExecutionStatus() {
-        Map<String, ExecutionStatus> executionStatus = entity.getExecutionStatuses();
-        return executionStatus == null ? Collections.emptyMap() : Collections.unmodifiableMap(executionStatus);
+        return entity.getExecutionStatus();
     }
 
     @Override
     public void setExecutionStatus(String authenticator, ExecutionStatus status) {
         Objects.requireNonNull(authenticator, "The provided authenticator can't be null!");
         Objects.requireNonNull(status, "The provided execution status can't be null!");
-        this.entity.setExecutionStatus(authenticator, status);
+        parent.setUpdated(!Objects.equals(entity.getExecutionStatus().put(authenticator, status), status));
     }
 
     @Override
     public void clearExecutionStatus() {
-        entity.setExecutionStatuses(null);
+        parent.setUpdated(!entity.getExecutionStatus().isEmpty());
+        entity.getExecutionStatus().clear();
     }
 
     @Override
@@ -82,25 +83,25 @@ public class MapAuthenticationSessionAdapter implements AuthenticationSessionMod
     @Override
     public void setAuthenticatedUser(UserModel user) {
         String userId = (user == null) ? null : user.getId();
+        parent.setUpdated(!Objects.equals(userId, entity.getAuthUserId()));
         entity.setAuthUserId(userId);
     }
 
     @Override
     public Set<String> getRequiredActions() {
-        Set<String> requiredActions = entity.getRequiredActions();
-        return requiredActions == null ? Collections.emptySet() : Collections.unmodifiableSet(requiredActions);
+        return new HashSet<>(entity.getRequiredActions());
     }
 
     @Override
     public void addRequiredAction(String action) {
         Objects.requireNonNull(action, "The provided action can't be null!");
-        entity.addRequiredAction(action);
+        parent.setUpdated(entity.getRequiredActions().add(action));
     }
 
     @Override
     public void removeRequiredAction(String action) {
         Objects.requireNonNull(action, "The provided action can't be null!");
-        entity.removeRequiredAction(action);
+        parent.setUpdated(entity.getRequiredActions().remove(action));
     }
 
     @Override
@@ -117,77 +118,99 @@ public class MapAuthenticationSessionAdapter implements AuthenticationSessionMod
 
     @Override
     public void setUserSessionNote(String name, String value) {
-        entity.setUserSessionNote(name, value);
+        if (name != null) {
+            if (value == null) {
+                parent.setUpdated(entity.getUserSessionNotes().remove(name) != null);
+            } else {
+                parent.setUpdated(!Objects.equals(entity.getUserSessionNotes().put(name, value), value));
+            }
+        }
     }
 
     @Override
     public Map<String, String> getUserSessionNotes() {
-        Map<String, String> userSessionNotes = entity.getUserSessionNotes();
-        return userSessionNotes == null ? Collections.emptyMap() : Collections.unmodifiableMap(userSessionNotes);
+        return new ConcurrentHashMap<>(entity.getUserSessionNotes());
     }
 
     @Override
     public void clearUserSessionNotes() {
-        entity.setUserSessionNotes(null);
+        parent.setUpdated(!entity.getUserSessionNotes().isEmpty());
+        entity.getUserSessionNotes().clear();
     }
 
     @Override
     public String getAuthNote(String name) {
-        Map<String, String> authNotes = entity.getAuthNotes();
-        return (name != null && authNotes != null) ? authNotes.get(name) : null;
+        return (name != null) ? entity.getAuthNotes().get(name) : null;
     }
 
     @Override
     public void setAuthNote(String name, String value) {
-        entity.setAuthNote(name, value);
+        if (name != null) {
+            if (value == null) {
+                parent.setUpdated(entity.getAuthNotes().remove(name) != null);
+            } else {
+                parent.setUpdated(!Objects.equals(entity.getAuthNotes().put(name, value), value));
+            }
+        }
     }
 
     @Override
     public void removeAuthNote(String name) {
-        entity.removeAuthNote(name);
+        if (name != null) {
+            parent.setUpdated(entity.getAuthNotes().remove(name) != null);
+        }
     }
 
     @Override
     public void clearAuthNotes() {
-        entity.setAuthNotes(null);
+        parent.setUpdated(!entity.getAuthNotes().isEmpty());
+        entity.getAuthNotes().clear();
     }
 
     @Override
     public String getClientNote(String name) {
-        return (name != null) ? getClientNotes().get(name) : null;
+        return (name != null) ? entity.getClientNotes().get(name) : null;
     }
 
     @Override
     public void setClientNote(String name, String value) {
-        entity.setClientNote(name, value);
+        if (name != null) {
+            if (value == null) {
+                parent.setUpdated(entity.getClientNotes().remove(name) != null);
+            } else {
+                parent.setUpdated(!Objects.equals(entity.getClientNotes().put(name, value), value));
+            }
+        }
     }
 
     @Override
     public void removeClientNote(String name) {
-        entity.removeClientNote(name);
+        if (name != null) {
+            parent.setUpdated(entity.getClientNotes().remove(name) != null);
+        }
     }
 
     @Override
     public Map<String, String> getClientNotes() {
-        Map<String, String> clientNotes = entity.getClientNotes();
-        return clientNotes == null ? Collections.emptyMap() : Collections.unmodifiableMap(clientNotes);
+        return new ConcurrentHashMap<>(entity.getClientNotes());
     }
 
     @Override
     public void clearClientNotes() {
-        entity.setClientNotes(null);
+        parent.setUpdated(!entity.getClientNotes().isEmpty());
+        entity.getClientNotes().clear();
     }
 
     @Override
     public Set<String> getClientScopes() {
-        Set<String> clientScopes = entity.getClientScopes();
-        return clientScopes == null ? Collections.emptySet() : Collections.unmodifiableSet(clientScopes);
+        return new HashSet<>(entity.getClientScopes());
     }
 
     @Override
     public void setClientScopes(Set<String> clientScopes) {
         Objects.requireNonNull(clientScopes, "The provided client scopes set can't be null!");
-        entity.setClientScopes(clientScopes);
+        parent.setUpdated(!Objects.equals(entity.getClientScopes(), clientScopes));
+        entity.setClientScopes(new HashSet<>(clientScopes));
     }
 
     @Override
@@ -197,6 +220,7 @@ public class MapAuthenticationSessionAdapter implements AuthenticationSessionMod
 
     @Override
     public void setRedirectUri(String uri) {
+        parent.setUpdated(!Objects.equals(entity.getRedirectUri(), uri));
         entity.setRedirectUri(uri);
     }
 
@@ -217,6 +241,7 @@ public class MapAuthenticationSessionAdapter implements AuthenticationSessionMod
 
     @Override
     public void setAction(String action) {
+        parent.setUpdated(!Objects.equals(entity.getAction(), action));
         entity.setAction(action);
     }
 
@@ -227,6 +252,7 @@ public class MapAuthenticationSessionAdapter implements AuthenticationSessionMod
 
     @Override
     public void setProtocol(String method) {
+        parent.setUpdated(!Objects.equals(entity.getProtocol(), method));
         entity.setProtocol(method);
     }
 }

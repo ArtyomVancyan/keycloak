@@ -80,6 +80,7 @@ import static org.keycloak.testsuite.util.WaitUtils.waitUntilElement;
  */
 @AppServerContainer(ContainerConstants.APP_SERVER_UNDERTOW)
 @AppServerContainer(ContainerConstants.APP_SERVER_WILDFLY)
+@AppServerContainer(ContainerConstants.APP_SERVER_WILDFLY_DEPRECATED)
 @AppServerContainer(ContainerConstants.APP_SERVER_EAP)
 @AppServerContainer(ContainerConstants.APP_SERVER_EAP6)
 @AppServerContainer(ContainerConstants.APP_SERVER_EAP71)
@@ -124,7 +125,11 @@ public class OIDCPublicKeyRotationAdapterTest extends AbstractServletsAdapterTes
         loginToTokenMinTtlApp();
 
         // Logout
-        ApiUtil.findUserByUsernameId(adminClient.realm("demo"), "bburke@redhat.com").logout();
+        String logoutUri = OIDCLoginProtocolService.logoutUrl(authServerPage.createUriBuilder())
+                .queryParam(OAuth2Constants.REDIRECT_URI, tokenMinTTLPage.toString())
+                .build("demo").toString();
+        driver.navigate().to(logoutUri);
+        assertCurrentUrlStartsWithLoginUrlOf(testRealmPage);
 
         // Generate new realm key
         generateNewRealmKey();
@@ -137,13 +142,14 @@ public class OIDCPublicKeyRotationAdapterTest extends AbstractServletsAdapterTes
         URLAssert.assertCurrentUrlStartsWith(tokenMinTTLPage.getInjectedUrl().toString());
         Assert.assertNull(tokenMinTTLPage.getAccessToken());
 
-        ApiUtil.findUserByUsernameId(adminClient.realm("demo"), "bburke@redhat.com").logout();
+        driver.navigate().to(logoutUri);
+        assertCurrentUrlStartsWithLoginUrlOf(testRealmPage);
 
         setAdapterAndServerTimeOffset(300, tokenMinTTLPage.toString() + "/unsecured/foo");
 
         // Try to login. Should work now due to realm key change
         loginToTokenMinTtlApp();
-        ApiUtil.findUserByUsernameId(adminClient.realm("demo"), "bburke@redhat.com").logout();
+        driver.navigate().to(logoutUri);
 
         // Revert public keys change
         resetKeycloakDeploymentForAdapter(tokenMinTTLPage.toString() + "/unsecured/foo");
@@ -182,7 +188,9 @@ public class OIDCPublicKeyRotationAdapterTest extends AbstractServletsAdapterTes
         assertTrue(pageSource.contains("Bill Burke") && pageSource.contains("Stian Thorgersen"));
 
         // Logout
-        ApiUtil.findUserByUsernameId(adminClient.realm("demo"), "bburke@redhat.com").logout();
+        String logoutUri = OIDCLoginProtocolService.logoutUrl(authServerPage.createUriBuilder())
+                .queryParam(OAuth2Constants.REDIRECT_URI, securePortal.toString()).build("demo").toString();
+        driver.navigate().to(logoutUri);
     }
 
 

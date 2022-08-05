@@ -32,11 +32,6 @@ public class LoginUsernameOnlyPage extends LoginPage {
         }
     }
 
-    // Click button without fill anything
-    public void clickSubmitButton() {
-        submitButton.click();
-    }
-
     /**
      * Not supported for this implementation
      *

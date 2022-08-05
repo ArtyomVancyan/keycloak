@@ -133,7 +133,7 @@ public class ImportTest extends AbstractTestRealmKeycloakTest {
             RealmModel realm = session.realms().getRealmByName("authz-bug");
             AuthorizationProvider authz = session.getProvider(AuthorizationProvider.class);
             ClientModel client = realm.getClientByClientId("appserver");
-            ResourceServer resourceServer = authz.getStoreFactory().getResourceServerStore().findByClient(client);
+            ResourceServer resourceServer = authz.getStoreFactory().getResourceServerStore().findById(client.getId());
             Assert.assertEquals("AFFIRMATIVE", resourceServer.getDecisionStrategy().name());
         });
     }

@@ -24,6 +24,7 @@ import org.keycloak.credential.CredentialModel;
 import org.keycloak.credential.CredentialProvider;
 import org.keycloak.credential.CredentialTypeMetadata;
 import org.keycloak.credential.CredentialTypeMetadataContext;
+import org.keycloak.credential.UserCredentialStore;
 import org.keycloak.examples.authenticator.credential.SecretQuestionCredentialModel;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
@@ -43,6 +44,11 @@ public class SecretQuestionCredentialProvider implements CredentialProvider<Secr
         this.session = session;
     }
 
+    private UserCredentialStore getCredentialStore() {
+        return session.userCredentialManager();
+    }
+
+
     @Override
     public boolean isValid(RealmModel realm, UserModel user, CredentialInput input) {
         if (!(input instanceof UserCredentialModel)) {
@@ -56,7 +62,7 @@ public class SecretQuestionCredentialProvider implements CredentialProvider<Secr
         if (challengeResponse == null) {
             return false;
         }
-        CredentialModel credentialModel = user.credentialManager().getStoredCredentialById(input.getCredentialId());
+        CredentialModel credentialModel = getCredentialStore().getStoredCredentialById(realm, user, input.getCredentialId());
         SecretQuestionCredentialModel sqcm = getCredentialFromModel(credentialModel);
         return sqcm.getSecretQuestionSecretData().getAnswer().equals(challengeResponse);
     }
@@ -69,7 +75,7 @@ public class SecretQuestionCredentialProvider implements CredentialProvider<Secr
     @Override
     public boolean isConfiguredFor(RealmModel realm, UserModel user, String credentialType) {
         if (!supportsCredentialType(credentialType)) return false;
-        return user.credentialManager().getStoredCredentialsByTypeStream(credentialType).findAny().isPresent();
+        return getCredentialStore().getStoredCredentialsByTypeStream(realm, user, credentialType).count() > 0;
     }
 
     @Override
@@ -77,12 +83,12 @@ public class SecretQuestionCredentialProvider implements CredentialProvider<Secr
         if (credentialModel.getCreatedDate() == null) {
             credentialModel.setCreatedDate(Time.currentTimeMillis());
         }
-        return user.credentialManager().createStoredCredential(credentialModel);
+        return getCredentialStore().createCredential(realm, user, credentialModel);
     }
 
     @Override
     public boolean deleteCredential(RealmModel realm, UserModel user, String credentialId) {
-        return user.credentialManager().removeStoredCredentialById(credentialId);
+        return getCredentialStore().removeStoredCredential(realm, user, credentialId);
     }
 
     @Override

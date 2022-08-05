@@ -370,7 +370,7 @@ public class StaxParserUtil {
     public static Boolean getBooleanAttributeValue(StartElement startElement, HasQName attrName) {
         Attribute attr = startElement.getAttributeByName(attrName.getQName());
         String value = getAttributeValue(attr);
-        return toBoolean(value);
+        return value == null ? null : Boolean.valueOf(value);
     }
 
     /**
@@ -384,11 +384,7 @@ public class StaxParserUtil {
     public static Boolean getBooleanAttributeValueRP(StartElement startElement, HasQName attrName) {
         Attribute attr = startElement.getAttributeByName(attrName.getQName());
         String value = getAttributeValueRP(attr);
-        return toBoolean(value);
-    }
-
-    private static Boolean toBoolean(String value) {
-    	return value==null ? null : Boolean.valueOf(value) || "1".equals(value);
+        return value == null ? null : Boolean.valueOf(value);
     }
 
     /**
@@ -527,7 +523,7 @@ public class StaxParserUtil {
      *
      * @param xmlEventReader
      *
-     * @return A <b>trimmed</b> string value with all property references replaced if any.
+     * @return A <b>trimmed</b> string value with all property references replaced if any. 
      * If there are no valid references the input string will be returned
      *
      * @throws ParsingException

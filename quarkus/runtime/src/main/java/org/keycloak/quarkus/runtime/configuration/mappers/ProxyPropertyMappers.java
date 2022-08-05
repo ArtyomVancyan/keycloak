@@ -2,52 +2,51 @@ package org.keycloak.quarkus.runtime.configuration.mappers;
 
 import io.smallrye.config.ConfigSourceInterceptorContext;
 
-import java.util.Optional;
+import java.util.Arrays;
+import java.util.function.BiFunction;
 
-import static java.util.Optional.of;
-import static org.keycloak.quarkus.runtime.configuration.mappers.PropertyMapper.fromOption;
 import static org.keycloak.quarkus.runtime.integration.QuarkusPlatform.addInitializationException;
 
-import org.keycloak.config.ProxyOptions;
 import org.keycloak.quarkus.runtime.Messages;
 
 final class ProxyPropertyMappers {
+
+    private static final String[] possibleProxyValues = {"none", "edge", "reencrypt", "passthrough"};
 
     private ProxyPropertyMappers(){}
 
     public static PropertyMapper[] getProxyPropertyMappers() {
         return new PropertyMapper[] {
-                fromOption(ProxyOptions.PROXY)
+                builder().from("proxy")
                         .to("quarkus.http.proxy.proxy-address-forwarding")
-                        .transformer(ProxyPropertyMappers::getValidProxyModeValue)
+                        .defaultValue("none")
+                        .transformer(getValidProxyModeValue())
+                        .expectedValues(Arrays.asList(possibleProxyValues))
+                        .description("The proxy address forwarding mode if the server is behind a reverse proxy. " +
+                                "Possible values are: " + String.join(",",possibleProxyValues))
                         .paramLabel("mode")
-                        .build(),
-                fromOption(ProxyOptions.PROXY_FORWARDED_HOST)
-                        .to("quarkus.http.proxy.enable-forwarded-host")
-                        .mapFrom("proxy")
-                        .transformer(ProxyPropertyMappers::getResolveEnableForwardedHost)
+                        .category(ConfigCategory.PROXY)
                         .build()
         };
     }
 
-    private static Optional<String> getValidProxyModeValue(Optional<String> value, ConfigSourceInterceptorContext context) {
-        String mode = value.get();
-
-        switch (mode) {
-            case "none":
-                return of(Boolean.FALSE.toString());
-            case "edge":
-            case "reencrypt":
-            case "passthrough":
-                return of(Boolean.TRUE.toString());
-            default:
-                addInitializationException(Messages.invalidProxyMode(mode));
-                return of(Boolean.FALSE.toString());
-        }
+    private static BiFunction<String, ConfigSourceInterceptorContext, String> getValidProxyModeValue() {
+        return (mode, context) -> {
+            switch (mode) {
+                case "none":
+                    return "false";
+                case "edge":
+                case "reencrypt":
+                case "passthrough":
+                    return "true";
+                default:
+                    addInitializationException(Messages.invalidProxyMode(mode));
+                    return "false";
+            }
+        };
     }
 
-    private static Optional<String> getResolveEnableForwardedHost(Optional<String> proxy, ConfigSourceInterceptorContext context) {
-        return of(String.valueOf(!ProxyOptions.Mode.none.name().equals(proxy)));
+    private static PropertyMapper.Builder builder() {
+        return PropertyMapper.builder(ConfigCategory.PROXY);
     }
-
 }

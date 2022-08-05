@@ -214,9 +214,7 @@ public class GroupAdapter implements GroupModel.Streams , JpaModel<GroupEntity> 
 
     @Override
     public boolean hasRole(RoleModel role) {
-        if (RoleUtils.hasRole(getRoleMappingsStream(), role)) return true;
-        GroupModel parent = getParent();
-        return parent != null && parent.hasRole(role);
+        return RoleUtils.hasRole(getRoleMappingsStream(), role);
     }
 
     protected TypedQuery<GroupRoleMappingEntity> getGroupRoleMappingEntityTypedQuery(RoleModel role) {

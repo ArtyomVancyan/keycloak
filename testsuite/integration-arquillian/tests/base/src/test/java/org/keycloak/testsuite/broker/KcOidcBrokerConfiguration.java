@@ -4,7 +4,6 @@ import org.keycloak.broker.oidc.OIDCIdentityProviderConfig;
 import org.keycloak.models.IdentityProviderModel;
 import org.keycloak.models.IdentityProviderSyncMode;
 import org.keycloak.protocol.ProtocolMapperUtils;
-import org.keycloak.protocol.oidc.OIDCAdvancedConfigWrapper;
 import org.keycloak.protocol.oidc.OIDCLoginProtocol;
 import org.keycloak.protocol.oidc.mappers.HardcodedClaim;
 import org.keycloak.protocol.oidc.mappers.OIDCAttributeMapperHelper;
@@ -72,8 +71,6 @@ public class KcOidcBrokerConfiguration implements BrokerConfiguration {
 
         client.setAdminUrl(getConsumerRoot() +
                 "/auth/realms/" + REALM_CONS_NAME + "/broker/" + IDP_OIDC_ALIAS + "/endpoint");
-
-        OIDCAdvancedConfigWrapper.fromClientRepresentation(client).setPostLogoutRedirectUris(Collections.singletonList("+"));
 
         ProtocolMapperRepresentation emailMapper = new ProtocolMapperRepresentation();
         emailMapper.setName("email");
@@ -172,8 +169,6 @@ public class KcOidcBrokerConfiguration implements BrokerConfiguration {
 
         client.setBaseUrl(getConsumerRoot() +
                 "/auth/realms/" + REALM_CONS_NAME + "/app");
-
-        OIDCAdvancedConfigWrapper.fromClientRepresentation(client).setPostLogoutRedirectUris(Collections.singletonList("+"));
 
         return Collections.singletonList(client);
     }

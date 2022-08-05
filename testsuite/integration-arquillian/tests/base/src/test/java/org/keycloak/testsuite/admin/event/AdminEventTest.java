@@ -40,7 +40,6 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
-import static org.keycloak.testsuite.auth.page.AuthRealm.MASTER;
 
 /**
  * Test getting and filtering admin events.
@@ -49,13 +48,10 @@ import static org.keycloak.testsuite.auth.page.AuthRealm.MASTER;
  */
 public class AdminEventTest extends AbstractEventTest {
 
-    private String masterRealmId;
-
     @Before
     public void initConfig() {
         enableEvents();
         testRealmResource().clearAdminEvents();
-        this.masterRealmId = adminClient.realm(MASTER).toRepresentation().getId();
     }
 
     private List<AdminEventRepresentation> events() {
@@ -97,7 +93,7 @@ public class AdminEventTest extends AbstractEventTest {
         assertThat(event.getError(), is(nullValue()));
 
         AuthDetailsRepresentation details = event.getAuthDetails();
-        assertThat(details.getRealmId(), is(equalTo(masterRealmId)));
+        assertThat(details.getRealmId(), is(equalTo("master")));
         assertThat(details.getClientId(), is(notNullValue()));
         assertThat(details.getUserId(), is(notNullValue()));
         assertThat(details.getIpAddress(), is(notNullValue()));
@@ -113,7 +109,7 @@ public class AdminEventTest extends AbstractEventTest {
         assertThat(event.getOperationType(), is(equalTo("CREATE")));
 
         assertThat(event.getRealmId(), is(equalTo(realmName())));
-        assertThat(event.getAuthDetails().getRealmId(), is(equalTo(masterRealmId)));
+        assertThat(event.getAuthDetails().getRealmId(), is(equalTo("master")));
         assertThat(event.getRepresentation(), is(nullValue()));
     }
 
@@ -168,7 +164,7 @@ public class AdminEventTest extends AbstractEventTest {
         assertThat(event.getOperationType(), is(equalTo("UPDATE")));
         assertThat(event.getRealmId(), is(equalTo(realmName())));
         assertThat(event.getResourcePath(), is(equalTo("events/config")));
-        assertThat(event.getAuthDetails().getRealmId(), is(equalTo(masterRealmId)));
+        assertThat(event.getAuthDetails().getRealmId(), is(equalTo("master")));
         assertThat(event.getRepresentation(), is(notNullValue()));
     }
     

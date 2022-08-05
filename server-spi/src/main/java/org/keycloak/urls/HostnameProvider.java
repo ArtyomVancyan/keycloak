@@ -34,7 +34,7 @@ public interface HostnameProvider extends Provider {
      * Returns the URL scheme. If not implemented will delegate to {@link #getScheme(UriInfo)}.
      *
      * @param originalUriInfo the original URI
-     * @param type type of the request
+     * @param uype type of the request
      * @return the schema
      */
     default String getScheme(UriInfo originalUriInfo, UrlType type) {

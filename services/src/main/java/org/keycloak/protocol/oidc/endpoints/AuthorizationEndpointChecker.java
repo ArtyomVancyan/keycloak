@@ -27,7 +27,6 @@ import javax.ws.rs.core.Response;
 import org.jboss.logging.Logger;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.OAuthErrorException;
-import org.keycloak.common.Profile;
 import org.keycloak.events.Details;
 import org.keycloak.events.Errors;
 import org.keycloak.events.EventBuilder;
@@ -193,10 +192,6 @@ public class AuthorizationEndpointChecker {
         }
     }
 
-    public boolean isInvalidResponseType(AuthorizationEndpointChecker.AuthorizationCheckException ex) {
-        return "Missing parameter: response_type".equals(ex.getErrorDescription()) || OAuthErrorException.UNSUPPORTED_RESPONSE_TYPE.equals(ex.getError());
-    }
-
     public void checkInvalidRequestMessage() throws AuthorizationCheckException {
         if (request.getInvalidRequestMessage() != null) {
             event.error(Errors.INVALID_REQUEST);
@@ -211,13 +206,7 @@ public class AuthorizationEndpointChecker {
     }
 
     public void checkValidScope() throws AuthorizationCheckException {
-        boolean validScopes;
-        if (Profile.isFeatureEnabled(Profile.Feature.DYNAMIC_SCOPES)) {
-            validScopes = TokenManager.isValidScope(request.getScope(), request.getAuthorizationRequestContext(), client);
-        } else {
-            validScopes = TokenManager.isValidScope(request.getScope(), client);
-        }
-        if (!validScopes) {
+        if (!TokenManager.isValidScope(request.getScope(), client)) {
             ServicesLogger.LOGGER.invalidParameter(OIDCLoginProtocol.SCOPE_PARAM);
             event.error(Errors.INVALID_REQUEST);
             throw new AuthorizationCheckException(Response.Status.BAD_REQUEST, OAuthErrorException.INVALID_SCOPE, "Invalid scopes: " + request.getScope());
@@ -231,7 +220,7 @@ public class AuthorizationEndpointChecker {
             return;
         }
 
-        if (parsedResponseType.hasResponseType(OIDCResponseType.ID_TOKEN) && request.getNonce() == null) {
+        if (parsedResponseType.isImplicitOrHybridFlow() && request.getNonce() == null) {
             ServicesLogger.LOGGER.missingParameter(OIDCLoginProtocol.NONCE_PARAM);
             event.error(Errors.INVALID_REQUEST);
             throw new AuthorizationCheckException(Response.Status.BAD_REQUEST, OAuthErrorException.INVALID_REQUEST, "Missing parameter: nonce");
@@ -248,7 +237,7 @@ public class AuthorizationEndpointChecker {
         // PKCE not adopted to OAuth2 Implicit Grant and OIDC Implicit Flow,
         // adopted to OAuth2 Authorization Code Grant and OIDC Authorization Code Flow, Hybrid Flow
         // Namely, flows using authorization code.
-        if (parsedResponseType != null && parsedResponseType.isImplicitFlow()) return;
+        if (parsedResponseType.isImplicitFlow()) return;
 
         String pkceCodeChallengeMethod = OIDCAdvancedConfigWrapper.fromClientModel(client).getPkceCodeChallengeMethod();
 

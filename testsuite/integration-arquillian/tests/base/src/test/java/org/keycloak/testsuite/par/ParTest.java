@@ -67,7 +67,7 @@ import org.keycloak.testsuite.client.AbstractClientPoliciesTest;
 import org.keycloak.testsuite.client.resources.TestApplicationResourceUrls;
 import org.keycloak.testsuite.client.resources.TestOIDCEndpointsApplicationResource;
 import org.keycloak.testsuite.rest.resource.TestingOIDCEndpointsApplicationResource;
-import org.keycloak.testsuite.services.clientpolicy.executor.TestRaiseExceptionExecutorFactory;
+import org.keycloak.testsuite.services.clientpolicy.executor.TestRaiseExeptionExecutorFactory;
 import org.keycloak.testsuite.util.ClientBuilder;
 import org.keycloak.testsuite.util.OAuthClient;
 import org.keycloak.testsuite.util.RoleBuilder;
@@ -79,7 +79,6 @@ import org.keycloak.testsuite.util.OAuthClient.ParResponse;
 import org.keycloak.util.JsonSerialization;
 
 import static org.keycloak.testsuite.util.ClientPoliciesUtil.createClientRolesConditionConfig;
-import static org.keycloak.testsuite.util.ClientPoliciesUtil.createTestRaiseExeptionExecutorConfig;
 
 public class ParTest extends AbstractClientPoliciesTest {
 
@@ -1148,8 +1147,7 @@ public class ParTest extends AbstractClientPoliciesTest {
         // register profiles
         String json = (new ClientProfilesBuilder()).addProfile(
                 (new ClientProfileBuilder()).createProfile(PROFILE_NAME, "Den Forste Profilen")
-                    .addExecutor(TestRaiseExceptionExecutorFactory.PROVIDER_ID,
-                            createTestRaiseExeptionExecutorConfig(Arrays.asList(ClientPolicyEvent.PUSHED_AUTHORIZATION_REQUEST)))
+                    .addExecutor(TestRaiseExeptionExecutorFactory.PROVIDER_ID, null)
                     .toRepresentation()
                 ).toString();
         updateProfiles(json);

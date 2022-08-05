@@ -36,6 +36,7 @@ import org.keycloak.models.ClientScopeModel;
 import org.keycloak.models.ClientSessionContext;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.OAuth2DeviceCodeModel;
+import org.keycloak.models.OAuth2DeviceTokenStoreProvider;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserConsentModel;
 import org.keycloak.models.UserModel;
@@ -48,7 +49,6 @@ import org.keycloak.protocol.oidc.grants.ciba.clientpolicy.context.BackchannelTo
 import org.keycloak.protocol.oidc.grants.ciba.endpoints.CibaRootEndpoint;
 import org.keycloak.protocol.oidc.TokenManager;
 import org.keycloak.protocol.oidc.endpoints.TokenEndpoint;
-import org.keycloak.protocol.oidc.grants.device.DeviceGrantType;
 import org.keycloak.services.CorsErrorResponseException;
 import org.keycloak.services.ErrorResponseException;
 import org.keycloak.services.Urls;
@@ -160,7 +160,8 @@ public class CibaGrantType {
             throw new CorsErrorResponseException(cors, OAuthErrorException.INVALID_GRANT, cpe.getErrorDetail(), Response.Status.BAD_REQUEST);
         }
 
-        OAuth2DeviceCodeModel deviceCode = DeviceGrantType.getDeviceByDeviceCode(session, realm, request.getId());
+        OAuth2DeviceTokenStoreProvider store = session.getProvider(OAuth2DeviceTokenStoreProvider.class);
+        OAuth2DeviceCodeModel deviceCode = store.getByDeviceCode(realm, request.getId());
 
         if (deviceCode == null) {
             // Auth Req ID has not put onto cache, no need to remove Auth Req ID.
@@ -178,8 +179,8 @@ public class CibaGrantType {
             throw new CorsErrorResponseException(cors, OAuthErrorException.EXPIRED_TOKEN, "authentication timed out", Response.Status.BAD_REQUEST);
         }
 
-        if (!DeviceGrantType.isPollingAllowed(session, deviceCode)) {
-            logDebug("polling.", request);
+        if (!store.isPollingAllowed(deviceCode)) {
+            logDebug("pooling.", request);
             throw new CorsErrorResponseException(cors, OAuthErrorException.SLOW_DOWN, "too early to access", Response.Status.BAD_REQUEST);
         }
 
@@ -197,7 +198,7 @@ public class CibaGrantType {
         UserSessionModel userSession = createUserSession(request, deviceCode.getAdditionalParams());
         UserModel user = userSession.getUser();
 
-        DeviceGrantType.removeDeviceByDeviceCode(session, request. getId());
+        store.removeDeviceCode(realm, request.getId());
 
         // Compute client scopes again from scope parameter. Check if user still has them granted
         // (but in code-to-token request, it could just theoretically happen that they are not available)
@@ -211,7 +212,7 @@ public class CibaGrantType {
         }
 
         ClientSessionContext clientSessionCtx = DefaultClientSessionContext
-                .fromClientSessionAndScopeParameter(userSession.getAuthenticatedClientSessionByClient(client.getId()), scopeParam, session);
+                .fromClientSessionAndClientScopes(userSession.getAuthenticatedClientSessionByClient(client.getId()), TokenManager.getRequestedClientScopes(scopeParam, client), session);
 
         int authTime = Time.currentTime();
         userSession.setNote(AuthenticationManager.AUTH_TIME, String.valueOf(authTime));

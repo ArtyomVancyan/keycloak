@@ -22,12 +22,11 @@ import {
     Form,
     FormGroup,
     TextInput,
-    InputGroup,
-    ModalVariant
+    InputGroup
 } from '@patternfly/react-core';
 import { OkIcon } from '@patternfly/react-icons';
 
-import { Resource, Permission, Permissions, Scope } from './resource-model';
+import { Resource, Permission, Scope } from './resource-model';
 import { Msg } from '../../widgets/Msg';
 import { AccountServiceContext } from '../../account-service/AccountServiceContext';
 import { ContentAlert } from '../ContentAlert';
@@ -46,7 +45,7 @@ interface EditTheResourceState {
 }
 
 export class EditTheResource extends React.Component<EditTheResourceProps, EditTheResourceState> {
-    protected static defaultProps:Permissions = { permissions: [] };
+    protected static defaultProps = { permissions: [] };
     static contextType = AccountServiceContext;
     context: React.ContextType<typeof AccountServiceContext>;
 
@@ -92,7 +91,7 @@ export class EditTheResource extends React.Component<EditTheResourceProps, EditT
 
                 <Modal
                     title={'Edit the resource - ' + this.props.resource.name}
-                    variant={ModalVariant.large}
+                    isLarge
                     isOpen={this.state.isOpen}
                     onClose={this.handleToggleDialog}
                     actions={[

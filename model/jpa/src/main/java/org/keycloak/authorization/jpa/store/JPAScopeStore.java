@@ -1,12 +1,13 @@
 /*
- * Copyright 2022 Red Hat, Inc. and/or its affiliates
- * and other contributors as indicated by the @author tags.
+ * JBoss, Home of Professional Open Source.
+ * Copyright 2016 Red Hat, Inc., and individual contributors
+ * as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -34,9 +35,7 @@ import org.keycloak.authorization.AuthorizationProvider;
 import org.keycloak.authorization.jpa.entities.ScopeEntity;
 import org.keycloak.authorization.model.ResourceServer;
 import org.keycloak.authorization.model.Scope;
-import org.keycloak.authorization.store.PermissionTicketStore;
 import org.keycloak.authorization.store.ScopeStore;
-import org.keycloak.models.RealmModel;
 import org.keycloak.models.utils.KeycloakModelUtils;
 import javax.persistence.LockModeType;
 
@@ -56,12 +55,12 @@ public class JPAScopeStore implements ScopeStore {
     }
 
     @Override
-    public Scope create(final ResourceServer resourceServer, final String name) {
-        return create(resourceServer, null, name);
+    public Scope create(final String name, final ResourceServer resourceServer) {
+        return create(null, name, resourceServer);
     }
 
     @Override
-    public Scope create(final ResourceServer resourceServer, String id, final String name) {
+    public Scope create(String id, final String name, final ResourceServer resourceServer) {
         ScopeEntity entity = new ScopeEntity();
 
         if (id == null) {
@@ -80,7 +79,7 @@ public class JPAScopeStore implements ScopeStore {
     }
 
     @Override
-    public void delete(RealmModel realm, String id) {
+    public void delete(String id) {
         ScopeEntity scope = entityManager.find(ScopeEntity.class, id, LockModeType.PESSIMISTIC_WRITE);
 
         if (scope != null) {
@@ -89,7 +88,7 @@ public class JPAScopeStore implements ScopeStore {
     }
 
     @Override
-    public Scope findById(RealmModel realm, ResourceServer resourceServer, String id) {
+    public Scope findById(String id, String resourceServerId) {
         if (id == null) {
             return null;
         }
@@ -101,45 +100,45 @@ public class JPAScopeStore implements ScopeStore {
     }
 
     @Override
-    public Scope findByName(ResourceServer resourceServer, String name) {
+    public Scope findByName(String name, String resourceServerId) {
         try {
             TypedQuery<String> query = entityManager.createNamedQuery("findScopeIdByName", String.class);
 
             query.setFlushMode(FlushModeType.COMMIT);
-            query.setParameter("serverId", resourceServer.getId());
+            query.setParameter("serverId", resourceServerId);
             query.setParameter("name", name);
 
             String id = query.getSingleResult();
-            return provider.getStoreFactory().getScopeStore().findById(JPAAuthorizationStoreFactory.NULL_REALM, resourceServer, id);
+            return provider.getStoreFactory().getScopeStore().findById(id, resourceServerId);
         } catch (NoResultException nre) {
             return null;
         }
     }
 
     @Override
-    public List<Scope> findByResourceServer(final ResourceServer resourceServer) {
+    public List<Scope> findByResourceServer(final String serverId) {
         TypedQuery<String> query = entityManager.createNamedQuery("findScopeIdByResourceServer", String.class);
 
         query.setFlushMode(FlushModeType.COMMIT);
-        query.setParameter("serverId", resourceServer.getId());
+        query.setParameter("serverId", serverId);
 
         List<String> result = query.getResultList();
         List<Scope> list = new LinkedList<>();
         for (String id : result) {
-            list.add(provider.getStoreFactory().getScopeStore().findById(JPAAuthorizationStoreFactory.NULL_REALM, resourceServer, id));
+            list.add(provider.getStoreFactory().getScopeStore().findById(id, serverId));
         }
         return list;
     }
 
     @Override
-    public List<Scope> findByResourceServer(ResourceServer resourceServer, Map<Scope.FilterOption, String[]> attributes, Integer firstResult, Integer maxResults) {
+    public List<Scope> findByResourceServer(Map<Scope.FilterOption, String[]> attributes, String resourceServerId, int firstResult, int maxResult) {
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<ScopeEntity> querybuilder = builder.createQuery(ScopeEntity.class);
         Root<ScopeEntity> root = querybuilder.from(ScopeEntity.class);
         querybuilder.select(root.get("id"));
         List<Predicate> predicates = new ArrayList();
 
-        predicates.add(builder.equal(root.get("resourceServer").get("id"), resourceServer.getId()));
+        predicates.add(builder.equal(root.get("resourceServer").get("id"), resourceServerId));
 
         attributes.forEach((filterOption, value) -> {
             switch (filterOption) {
@@ -158,10 +157,10 @@ public class JPAScopeStore implements ScopeStore {
 
         TypedQuery query = entityManager.createQuery(querybuilder);
 
-        List result = paginateQuery(query, firstResult, maxResults).getResultList();
+        List result = paginateQuery(query, firstResult, maxResult).getResultList();
         List<Scope> list = new LinkedList<>();
         for (Object id : result) {
-            list.add(provider.getStoreFactory().getScopeStore().findById(JPAAuthorizationStoreFactory.NULL_REALM, resourceServer, (String)id));
+            list.add(provider.getStoreFactory().getScopeStore().findById((String)id, resourceServerId));
         }
         return list;
 

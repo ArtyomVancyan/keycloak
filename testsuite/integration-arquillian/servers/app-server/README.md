@@ -34,5 +34,6 @@ Configures SSL in `standalone.xml`. See profile `ssl`.
 ## App Server - Tomcat
 Submodules are enabled with profiles: `-Papp-server-MODULE`
 ### Modules
+* __`tomcat7` Tomcat 7__
 * __`tomcat8` Tomcat 8__
 * __`tomcat9` Tomcat 9__

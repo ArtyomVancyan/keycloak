@@ -25,7 +25,6 @@ import org.keycloak.authentication.authenticators.client.ClientIdAndSecretAuthen
 import org.keycloak.authentication.authenticators.client.JWTClientAuthenticator;
 import org.keycloak.representations.idm.ClientPoliciesRepresentation;
 import org.keycloak.representations.idm.ClientProfilesRepresentation;
-import org.keycloak.representations.idm.ClientPolicyConditionConfigurationRepresentation;
 import org.keycloak.services.clientpolicy.condition.ClientAccessTypeConditionFactory;
 import org.keycloak.services.clientpolicy.executor.HolderOfKeyEnforcerExecutorFactory;
 import org.keycloak.services.clientpolicy.executor.SecureClientAuthenticatorExecutorFactory;
@@ -317,17 +316,15 @@ public class ClientPoliciesTest extends AbstractRealmTest {
         assertAlertSuccess();
 
         // assert JSON
-        ClientPolicyConditionConfigurationRepresentation conditionConfig =
-                createClientAccessTypeConditionConfig(Arrays.asList(ClientAccessTypeConditionFactory.TYPE_CONFIDENTIAL, ClientAccessTypeConditionFactory.TYPE_BEARERONLY, ClientAccessTypeConditionFactory.TYPE_PUBLIC));
-        conditionConfig.setNegativeLogic(Boolean.FALSE);
-
         ClientPoliciesRepresentation expected = new ClientPoliciesBuilder()
             .addPolicy(new ClientPolicyBuilder()
                 .createPolicy(policyName, policyDesc, true)
-                .addCondition(ClientAccessTypeConditionFactory.PROVIDER_ID, conditionConfig)
+                .addCondition(ClientAccessTypeConditionFactory.PROVIDER_ID,
+                        createClientAccessTypeConditionConfig(Arrays.asList(ClientAccessTypeConditionFactory.TYPE_CONFIDENTIAL, ClientAccessTypeConditionFactory.TYPE_BEARERONLY, ClientAccessTypeConditionFactory.TYPE_PUBLIC)))
                 .addProfile(profileName)
                 .toRepresentation())
             .toRepresentation();
+
         assertClientPolicy(expected);
 
         // remove condition

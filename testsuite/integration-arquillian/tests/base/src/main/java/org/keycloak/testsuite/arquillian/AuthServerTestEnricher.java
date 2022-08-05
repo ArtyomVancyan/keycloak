@@ -120,7 +120,6 @@ public class AuthServerTestEnricher {
     private Event<StopContainer> stopContainerEvent;
 
     private JavaArchive testsuiteProvidersArchive;
-    private JavaArchive testsuiteProvidersDeploymentArchive;
     private String currentContainerName;
 
     public static final String AUTH_SERVER_CONTAINER_DEFAULT = "auth-server-undertow";
@@ -338,15 +337,15 @@ public class AuthServerTestEnricher {
             // init migratedAuthServerInfo
             for (ContainerInfo container : suiteContext.getContainers()) {
                 // migrated auth server
-                if (container.getQualifier().equals("auth-server-jboss-migration") || container.getQualifier().equals("auth-server-migration")) {
+                if (container.getQualifier().equals("auth-server-jboss-migration")) {
                     updateWithAuthServerInfo(container);
                     suiteContext.setMigratedAuthServerInfo(container);
                 }
             }
             // validate setup
             if (suiteContext.getMigratedAuthServerInfo() == null) {
-                throw new RuntimeException("Migration test was enabled but no auth server from which to migrate was activated. "
-                        + "A container matching 'auth-server-jboss-migration' or 'auth-server-migration' needs to be enabled in arquillian.xml.");
+                throw new RuntimeException(String.format("Migration test was enabled but no auth server from which to migrate was activated. "
+                        + "A container matching auth-server-jboss-migration needs to be enabled in arquillian.xml."));
             }
         }
 
@@ -424,25 +423,14 @@ public class AuthServerTestEnricher {
                         .asSingleFile()
                     ).as(JavaArchive.class)
                     .addAsManifestResource("jboss-deployment-structure.xml");
+                    
             event.getDeployableContainer().deploy(testsuiteProvidersArchive);
-
-            this.testsuiteProvidersDeploymentArchive = ShrinkWrap.create(ZipImporter.class, "testsuiteProvidersDeployment.jar")
-                    .importFrom(Maven.configureResolverViaPlugin()
-                        .resolve("org.keycloak.testsuite:integration-arquillian-testsuite-providers-deployment")
-                        .withoutTransitivity()
-                        .asSingleFile()
-                    ).as(JavaArchive.class)
-                    .addAsManifestResource("jboss-deployment-structure.xml");
-            event.getDeployableContainer().deploy(testsuiteProvidersDeploymentArchive);
         }
     }
 
     public void unDeployProviders(@Observes(precedence = 20) BeforeStop event) throws DeploymentException {
         if (testsuiteProvidersArchive != null) {
             event.getDeployableContainer().undeploy(testsuiteProvidersArchive);
-        }
-        if (testsuiteProvidersDeploymentArchive != null) {
-            event.getDeployableContainer().undeploy(testsuiteProvidersDeploymentArchive);
         }
     }
 
@@ -457,7 +445,6 @@ public class AuthServerTestEnricher {
         if (suiteContext.isAuthServerMigrationEnabled()) {
             log.info("## STOP old container: " + suiteContext.getMigratedAuthServerInfo().getQualifier());
             stopContainerEvent.fire(new StopContainer(suiteContext.getMigratedAuthServerInfo().getArquillianContainer()));
-            suiteContext.setMigratedAuthServerInfo(null);
         }
     }
 

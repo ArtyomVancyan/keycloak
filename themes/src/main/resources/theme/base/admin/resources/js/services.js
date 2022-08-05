@@ -387,14 +387,6 @@ module.factory('RealmSpecificLocalizationTexts', function($resource) {
     return $resource(authUrl + '/admin/realms/:id/localization/:locale', {
         id : '@realm',
         locale : '@locale'
-    }, {
-        get: {
-            isArray: false,
-                method: 'GET',
-                params: {
-                    useRealmDefaultLocaleFallback: '@useRealmDefaultLocaleFallback'
-                }
-        }
     });
 });
 
@@ -1526,15 +1518,10 @@ module.factory('ClientSecret', function($resource) {
         realm : '@realm',
         client : '@client'
     },  {
-          update : {
-              method : 'POST'
-          },
-          invalidate: {
-              url:  authUrl + '/admin/realms/:realm/clients/:client/client-secret/rotated',
-              method: 'DELETE'
-          }
+        update : {
+            method : 'POST'
         }
-    );
+    });
 });
 
 module.factory('ClientRegistrationAccessToken', function($resource) {
@@ -1602,15 +1589,15 @@ module.factory('TimeUnit', function() {
         if (time % 60 == 0) {
             unit = 'Minutes';
             time  = time / 60;
-            if (time % 60 == 0) {
-                unit = 'Hours';
-                time = time / 60;
-                if (time % 24 == 0) {
-                    unit = 'Days';
-                }
-            }
         }
-
+        if (time % 60 == 0) {
+            unit = 'Hours';
+            time = time / 60;
+        }
+        if (time % 24 == 0) {
+            unit = 'Days'
+            time = time / 24;
+        }
         return unit;
     }
 
@@ -1655,14 +1642,14 @@ module.factory('TimeUnit2', function() {
                 if (time % 60 == 0) {
                     unit = 'Minutes';
                     time = time / 60;
-                    if (time % 60 == 0) {
-                        unit = 'Hours';
-                        time = time / 60;
-                        if (time % 24 == 0) {
-                            unit = 'Days';
-                            time = time / 24;
-                        }
-                    }
+                }
+                if (time % 60 == 0) {
+                    unit = 'Hours';
+                    time = time / 60;
+                }
+                if (time % 24 == 0) {
+                    unit = 'Days'
+                    time = time / 24;
                 }
             }
         }

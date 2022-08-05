@@ -329,7 +329,6 @@ public class PolicyEnforcerConfig {
 
         @JsonProperty("max-entries")
         int maxEntries = 1000;
-        @JsonProperty("lifespan")
         long lifespan = 30000;
 
         public int getMaxEntries() {

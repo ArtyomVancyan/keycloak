@@ -17,7 +17,6 @@
 
 package org.keycloak.testsuite.client;
 
-import org.junit.After;
 import org.junit.Test;
 import org.keycloak.exportimport.ExportImportConfig;
 import org.keycloak.exportimport.singlefile.SingleFileExportProviderFactory;
@@ -56,11 +55,6 @@ public class ClientPoliciesImportExportTest extends AbstractClientPoliciesTest {
     @Override
     public void beforeAbstractKeycloakTestRealmImport() {
         removeAllRealmsDespiteMaster();
-    }
-
-    @After
-    public void afterImportExport() {
-        testingClient.testing().exportImport().clear();
     }
 
     @Test

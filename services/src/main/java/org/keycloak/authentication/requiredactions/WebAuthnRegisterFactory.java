@@ -17,7 +17,9 @@
 package org.keycloak.authentication.requiredactions;
 
 import com.webauthn4j.validator.attestation.trustworthiness.certpath.CertPathTrustworthinessValidator;
+import org.keycloak.OAuth2Constants;
 import org.keycloak.Config.Scope;
+import org.keycloak.authentication.DisplayTypeRequiredActionFactory;
 import org.keycloak.authentication.RequiredActionFactory;
 import org.keycloak.authentication.RequiredActionProvider;
 import org.keycloak.common.Profile;
@@ -31,7 +33,7 @@ import com.webauthn4j.anchor.TrustAnchorsResolverImpl;
 import com.webauthn4j.validator.attestation.trustworthiness.certpath.NullCertPathTrustworthinessValidator;
 import com.webauthn4j.validator.attestation.trustworthiness.certpath.TrustAnchorCertPathTrustworthinessValidator;
 
-public class WebAuthnRegisterFactory implements RequiredActionFactory, EnvironmentDependentProviderFactory {
+public class WebAuthnRegisterFactory implements RequiredActionFactory, DisplayTypeRequiredActionFactory, EnvironmentDependentProviderFactory {
 
     public static final String PROVIDER_ID = "webauthn-register";
 
@@ -73,6 +75,14 @@ public class WebAuthnRegisterFactory implements RequiredActionFactory, Environme
     @Override
     public String getId() {
         return PROVIDER_ID;
+    }
+
+    @Override
+    public RequiredActionProvider createDisplay(KeycloakSession session, String displayType) {
+        if (displayType == null) return create(session);
+        if (!OAuth2Constants.DISPLAY_CONSOLE.equalsIgnoreCase(displayType)) return null;
+        // TODO : write console typed provider?
+        return null;
     }
 
     @Override

@@ -35,7 +35,6 @@ import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
 import org.keycloak.protocol.saml.mappers.SamlMetadataDescriptorUpdater;
 import org.keycloak.provider.ProviderConfigProperty;
-import org.keycloak.saml.common.constants.JBossSAMLURIConstants;
 import org.keycloak.saml.common.util.StringUtil;
 
 import java.util.ArrayList;
@@ -63,14 +62,12 @@ public class UserAttributeMapper extends AbstractIdentityProviderMapper implemen
 
     public static final String ATTRIBUTE_NAME = "attribute.name";
     public static final String ATTRIBUTE_FRIENDLY_NAME = "attribute.friendly.name";
-    public static final String ATTRIBUTE_NAME_FORMAT = "attribute.name.format";
     public static final String USER_ATTRIBUTE = "user.attribute";
     private static final String EMAIL = "email";
     private static final String FIRST_NAME = "firstName";
     private static final String LAST_NAME = "lastName";
     private static final Set<IdentityProviderSyncMode> IDENTITY_PROVIDER_SYNC_MODES = new HashSet<>(Arrays.asList(IdentityProviderSyncMode.values()));
 
-    public static final List<String> NAME_FORMATS = Arrays.asList(JBossSAMLURIConstants.ATTRIBUTE_FORMAT_BASIC.name(), JBossSAMLURIConstants.ATTRIBUTE_FORMAT_URI.name(), JBossSAMLURIConstants.ATTRIBUTE_FORMAT_UNSPECIFIED.name());
     static {
         ProviderConfigProperty property;
         property = new ProviderConfigProperty();
@@ -84,14 +81,6 @@ public class UserAttributeMapper extends AbstractIdentityProviderMapper implemen
         property.setLabel("Friendly Name");
         property.setHelpText("Friendly name of attribute to search for in assertion.  You can leave this blank and specify a name instead.");
         property.setType(ProviderConfigProperty.STRING_TYPE);
-        configProperties.add(property);
-        property = new ProviderConfigProperty();
-        property.setName(ATTRIBUTE_NAME_FORMAT);
-        property.setLabel("Name Format");
-        property.setHelpText("Name format of attribute to specify in the RequestedAttribute element. Default to basic format.");
-        property.setType(ProviderConfigProperty.LIST_TYPE);
-        property.setOptions(NAME_FORMATS);
-        property.setDefaultValue(JBossSAMLURIConstants.ATTRIBUTE_FORMAT_BASIC.name());
         configProperties.add(property);
         property = new ProviderConfigProperty();
         property.setName(USER_ATTRIBUTE);
@@ -239,7 +228,7 @@ public class UserAttributeMapper extends AbstractIdentityProviderMapper implemen
 
         RequestedAttributeType requestedAttribute = new RequestedAttributeType(attributeName);
         requestedAttribute.setIsRequired(null);
-        requestedAttribute.setNameFormat(mapperModel.getConfig().get(UserAttributeMapper.ATTRIBUTE_NAME_FORMAT) != null ? JBossSAMLURIConstants.valueOf(mapperModel.getConfig().get(UserAttributeMapper.ATTRIBUTE_NAME_FORMAT)).get() :ATTRIBUTE_FORMAT_BASIC.get());
+        requestedAttribute.setNameFormat(ATTRIBUTE_FORMAT_BASIC.get());
 
         if (attributeFriendlyName != null && attributeFriendlyName.length() > 0)
             requestedAttribute.setFriendlyName(attributeFriendlyName);

@@ -62,8 +62,7 @@ public class AdminEventAuthDetailsTest extends AbstractAuthTest {
     private String masterAdminUserId;
     private String masterAdminUser2Id;
 
-    private String testRealmId;
-    private String masterRealmId;
+    private String realmUuid;
     private String client1Uuid;
     private String adminCliUuid;
     private String admin1Id;
@@ -91,14 +90,13 @@ public class AdminEventAuthDetailsTest extends AbstractAuthTest {
     @Before
     public void initConfig() {
         RealmResource masterRealm = adminClient.realm(MASTER);
-        masterRealmId = masterRealm.toRepresentation().getId();
         masterAdminCliUuid = ApiUtil.findClientByClientId(masterRealm, Constants.ADMIN_CLI_CLIENT_ID).toRepresentation().getId();
         masterAdminUserId = ApiUtil.findUserByUsername(masterRealm, "admin").getId();
         masterAdminUser2Id = ApiUtil.createUserAndResetPasswordWithAdminClient(masterRealm, UserBuilder.create().username("admin2").build(), "password");
         masterRealm.users().get(masterAdminUser2Id).roles().realmLevel().add(Collections.singletonList(masterRealm.roles().get("admin").toRepresentation()));
 
         RealmResource testRealm = adminClient.realm("test");
-        testRealmId = testRealm.toRepresentation().getId();
+        realmUuid = testRealm.toRepresentation().getId();
         adminCliUuid = ApiUtil.findClientByClientId(testRealm, Constants.ADMIN_CLI_CLIENT_ID).toRepresentation().getId();
     }
 
@@ -109,17 +107,17 @@ public class AdminEventAuthDetailsTest extends AbstractAuthTest {
 
     @Test
     public void testAuth() {
-        testClient(MASTER, ADMIN, ADMIN, Constants.ADMIN_CLI_CLIENT_ID, masterRealmId, masterAdminCliUuid, masterAdminUserId);
-        testClient(MASTER, "admin2", "password", Constants.ADMIN_CLI_CLIENT_ID, masterRealmId, masterAdminCliUuid, masterAdminUser2Id);
+        testClient(MASTER, ADMIN, ADMIN, Constants.ADMIN_CLI_CLIENT_ID, MASTER, masterAdminCliUuid, masterAdminUserId);
+        testClient(MASTER, "admin2", "password", Constants.ADMIN_CLI_CLIENT_ID, MASTER, masterAdminCliUuid, masterAdminUser2Id);
 
-        testClient("test", "admin1", "password", Constants.ADMIN_CLI_CLIENT_ID, testRealmId, adminCliUuid, admin1Id);
-        testClient("test", "admin2", "password", Constants.ADMIN_CLI_CLIENT_ID, testRealmId, adminCliUuid, admin2Id);
-        testClient("test", "admin1", "password", "client1", testRealmId, client1Uuid, admin1Id);
-        testClient("test", "admin2", "password", "client1", testRealmId, client1Uuid, admin2Id);
+        testClient("test", "admin1", "password", Constants.ADMIN_CLI_CLIENT_ID, realmUuid, adminCliUuid, admin1Id);
+        testClient("test", "admin2", "password", Constants.ADMIN_CLI_CLIENT_ID, realmUuid, adminCliUuid, admin2Id);
+        testClient("test", "admin1", "password", "client1", realmUuid, client1Uuid, admin1Id);
+        testClient("test", "admin2", "password", "client1", realmUuid, client1Uuid, admin2Id);
 
         // Should fail due to different client UUID
         try {
-            testClient("test", "admin1", "password", "client1", testRealmId, adminCliUuid, admin1Id);
+            testClient("test", "admin1", "password", "client1", realmUuid, adminCliUuid, admin1Id);
             Assert.fail("Not expected to pass");
         } catch (ComparisonFailure expected) {
             // expected
@@ -127,7 +125,7 @@ public class AdminEventAuthDetailsTest extends AbstractAuthTest {
 
         // Should fail due to different user ID
         try {
-            testClient("test", "admin1", "password", "client1", testRealmId, client1Uuid, admin2Id);
+            testClient("test", "admin1", "password", "client1", realmUuid, client1Uuid, admin2Id);
             Assert.fail("Not expected to pass");
         } catch (ComparisonFailure expected) {
             // expected
@@ -142,7 +140,7 @@ public class AdminEventAuthDetailsTest extends AbstractAuthTest {
             keycloak.realm("test").users().get(appUserId).update(rep);
 
             assertAdminEvents.expect()
-                    .realmId(testRealmId)
+                    .realmId(realmUuid)
                     .operationType(OperationType.UPDATE)
                     .resourcePath(AdminEventPaths.userResourcePath(appUserId))
                     .resourceType(ResourceType.USER)

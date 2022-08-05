@@ -110,14 +110,9 @@ public class ClientRedirectTest extends AbstractTestRealmKeycloakTest {
             oauth.doLogin("test-user@localhost", "password");
             events.expectLogin().assertEvent();
 
-            String code = oauth.getCurrentQuery().get(OAuth2Constants.CODE);
-            String idTokenHint = oauth.doAccessTokenRequest(code,"password").getIdToken();
-            events.poll();
-
             URI logout = KeycloakUriBuilder.fromUri(suiteContext.getAuthServerInfo().getBrowserContextRoot().toURI())
                     .path("auth" + ServiceUrlConstants.TOKEN_SERVICE_LOGOUT_PATH)
-                    .queryParam(OIDCLoginProtocol.POST_LOGOUT_REDIRECT_URI_PARAM, "http://example.org/redirected")
-                    .queryParam(OIDCLoginProtocol.ID_TOKEN_HINT, idTokenHint)
+                    .queryParam(OIDCLoginProtocol.REDIRECT_URI_PARAM, "http://example.org/redirected")
                     .build("test");
 
             log.debug("log out using: " + logout.toURL());

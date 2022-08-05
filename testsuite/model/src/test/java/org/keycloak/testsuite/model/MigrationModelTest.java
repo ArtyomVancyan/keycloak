@@ -25,7 +25,6 @@ import org.keycloak.common.Version;
 import org.keycloak.common.util.Time;
 import org.keycloak.connections.jpa.JpaConnectionProvider;
 import org.keycloak.migration.MigrationModel;
-import org.keycloak.migration.ModelVersion;
 import org.keycloak.models.ClientProvider;
 import org.keycloak.models.ClientScopeProvider;
 import org.keycloak.models.Constants;
@@ -58,7 +57,7 @@ public class MigrationModelTest extends KeycloakModelTest {
     public void test() {
         inComittedTransaction(1, (session , i) -> {
 
-            String currentVersion = new ModelVersion(Version.VERSION_KEYCLOAK).toString();
+            String currentVersion = Version.VERSION_KEYCLOAK.replaceAll("^(\\d+(?:\\.\\d+){0,2}).*$", "$1");
 
             JpaConnectionProvider p = session.getProvider(JpaConnectionProvider.class);
             EntityManager em = p.getEntityManager();

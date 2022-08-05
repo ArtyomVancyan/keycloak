@@ -6,6 +6,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import org.jboss.resteasy.annotations.cache.NoCache;
 import org.keycloak.representations.idm.ClientPoliciesRepresentation;
 
 /**
@@ -14,6 +15,7 @@ import org.keycloak.representations.idm.ClientPoliciesRepresentation;
 public interface ClientPoliciesPoliciesResource {
 
     @GET
+    @NoCache
     @Produces(MediaType.APPLICATION_JSON)
     ClientPoliciesRepresentation getPolicies();
 

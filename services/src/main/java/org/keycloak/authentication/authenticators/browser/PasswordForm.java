@@ -44,7 +44,7 @@ public class PasswordForm extends UsernamePasswordForm implements CredentialVali
 
     @Override
     public boolean configuredFor(KeycloakSession session, RealmModel realm, UserModel user) {
-        return user.credentialManager().isConfiguredFor(getCredentialProvider(session).getType());
+        return session.userCredentialManager().isConfiguredFor(realm, user, getCredentialProvider(session).getType());
     }
 
     @Override

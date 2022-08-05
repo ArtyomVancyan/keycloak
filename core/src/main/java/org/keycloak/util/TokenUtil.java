@@ -154,13 +154,7 @@ public class TokenUtil {
     }
 
     public static String jweKeyEncryptionEncode(Key encryptionKEK, byte[] contentBytes, String algAlgorithm, String encAlgorithm, String kid, JWEAlgorithmProvider jweAlgorithmProvider, JWEEncryptionProvider jweEncryptionProvider) throws JWEException {
-        return jweKeyEncryptionEncode(encryptionKEK, contentBytes, algAlgorithm, encAlgorithm, kid, jweAlgorithmProvider, jweEncryptionProvider, "JWT");
-    }
-
-    public static String jweKeyEncryptionEncode(Key encryptionKEK, byte[] contentBytes, String algAlgorithm,
-                                                String encAlgorithm, String kid, JWEAlgorithmProvider jweAlgorithmProvider,
-                                                JWEEncryptionProvider jweEncryptionProvider, String jweContentType) throws JWEException {
-        JWEHeader jweHeader = new JWEHeader(algAlgorithm, encAlgorithm, null, kid, jweContentType);
+        JWEHeader jweHeader = new JWEHeader(algAlgorithm, encAlgorithm, null, kid, "JWT");
         return jweKeyEncryptionEncode(encryptionKEK, contentBytes, jweHeader, jweAlgorithmProvider, jweEncryptionProvider);
     }
 
@@ -203,7 +197,7 @@ public class TokenUtil {
             default: throw new IllegalArgumentException("Bad size for Encryption key: " + aesKey + ". Valid sizes are 16, 24, 32.");
         }
 
-        JWEHeader jweHeader = new JWEHeader(JWEConstants.DIRECT, encAlgorithm, null);
+        JWEHeader jweHeader = new JWEHeader(JWEConstants.DIR, encAlgorithm, null);
         JWE jwe = new JWE()
                 .header(jweHeader)
                 .content(contentBytes);

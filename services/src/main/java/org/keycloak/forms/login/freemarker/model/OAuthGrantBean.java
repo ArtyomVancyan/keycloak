@@ -19,7 +19,6 @@ package org.keycloak.forms.login.freemarker.model;
 import org.keycloak.models.ClientModel;
 import org.keycloak.models.ClientScopeModel;
 import org.keycloak.models.OrderedModel;
-import org.keycloak.rar.AuthorizationDetails;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,13 +34,12 @@ public class OAuthGrantBean {
     private String code;
     private ClientModel client;
 
-    public OAuthGrantBean(String code, ClientModel client, List<AuthorizationDetails> clientScopesRequested) {
+    public OAuthGrantBean(String code, ClientModel client, List<ClientScopeModel> clientScopesRequested) {
         this.code = code;
         this.client = client;
 
-        for (AuthorizationDetails authDetails : clientScopesRequested) {
-            ClientScopeModel clientScope = authDetails.getClientScope();
-            this.clientScopesRequested.add(new ClientScopeEntry(clientScope.getConsentScreenText(), clientScope.getGuiOrder(), authDetails));
+        for (ClientScopeModel clientScope : clientScopesRequested) {
+            this.clientScopesRequested.add(new ClientScopeEntry(clientScope.getConsentScreenText(), clientScope.getGuiOrder()));
         }
         this.clientScopesRequested.sort(COMPARATOR_INSTANCE);
     }
@@ -66,12 +64,10 @@ public class OAuthGrantBean {
 
         private final String consentScreenText;
         private final String guiOrder;
-        private final String dynamicScopeParameter;
 
-        public ClientScopeEntry(String consentScreenText, String guiOrder, AuthorizationDetails authorizationDetails) {
+        private ClientScopeEntry(String consentScreenText, String guiOrder) {
             this.consentScreenText = consentScreenText;
             this.guiOrder = guiOrder;
-            this.dynamicScopeParameter = authorizationDetails.getDynamicScopeParam();
         }
 
         public String getConsentScreenText() {
@@ -81,10 +77,6 @@ public class OAuthGrantBean {
         @Override
         public String getGuiOrder() {
             return guiOrder;
-        }
-
-        public String getDynamicScopeParameter() {
-            return dynamicScopeParameter;
         }
     }
 }

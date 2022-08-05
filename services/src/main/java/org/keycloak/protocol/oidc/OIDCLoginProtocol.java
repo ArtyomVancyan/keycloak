@@ -41,8 +41,6 @@ import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserSessionModel;
 import org.keycloak.protocol.LoginProtocol;
-import org.keycloak.protocol.oidc.endpoints.LogoutEndpoint;
-import org.keycloak.protocol.oidc.utils.LogoutUtil;
 import org.keycloak.protocol.oidc.utils.OIDCRedirectUriBuilder;
 import org.keycloak.protocol.oidc.utils.OIDCResponseMode;
 import org.keycloak.protocol.oidc.utils.OIDCResponseType;
@@ -54,7 +52,6 @@ import org.keycloak.services.managers.AuthenticationSessionManager;
 import org.keycloak.protocol.oidc.utils.OAuth2Code;
 import org.keycloak.protocol.oidc.utils.OAuth2CodeParser;
 import org.keycloak.services.managers.ResourceAdminManager;
-import org.keycloak.services.messages.Messages;
 import org.keycloak.sessions.AuthenticationSessionModel;
 import org.keycloak.util.TokenUtil;
 
@@ -76,12 +73,12 @@ public class OIDCLoginProtocol implements LoginProtocol {
 
     public static final String LOGIN_PROTOCOL = "openid-connect";
     public static final String STATE_PARAM = "state";
+    public static final String LOGOUT_STATE_PARAM = "OIDC_LOGOUT_STATE_PARAM";
     public static final String SCOPE_PARAM = "scope";
     public static final String CODE_PARAM = "code";
     public static final String RESPONSE_TYPE_PARAM = "response_type";
     public static final String GRANT_TYPE_PARAM = "grant_type";
     public static final String REDIRECT_URI_PARAM = "redirect_uri";
-    public static final String POST_LOGOUT_REDIRECT_URI_PARAM = "post_logout_redirect_uri";
     public static final String CLIENT_ID_PARAM = "client_id";
     public static final String NONCE_PARAM = "nonce";
     public static final String MAX_AGE_PARAM = OAuth2Constants.MAX_AGE;
@@ -94,11 +91,7 @@ public class OIDCLoginProtocol implements LoginProtocol {
     public static final String ACR_PARAM = "acr_values";
     public static final String ID_TOKEN_HINT = "id_token_hint";
 
-    public static final String LOGOUT_STATE_PARAM = "OIDC_LOGOUT_STATE_PARAM";
     public static final String LOGOUT_REDIRECT_URI = "OIDC_LOGOUT_REDIRECT_URI";
-    public static final String LOGOUT_VALIDATED_ID_TOKEN_SESSION_STATE = "OIDC_LOGOUT_VALIDATED_ID_TOKEN_SESSION_STATE";
-    public static final String LOGOUT_VALIDATED_ID_TOKEN_ISSUED_AT = "OIDC_LOGOUT_VALIDATED_ID_TOKEN_ISSUED_AT";
-
     public static final String ISSUER = "iss";
 
     public static final String RESPONSE_MODE_PARAM = "response_mode";
@@ -231,7 +224,7 @@ public class OIDCLoginProtocol implements LoginProtocol {
         // Standard or hybrid flow
         String code = null;
         if (responseType.hasResponseType(OIDCResponseType.CODE)) {
-            OAuth2Code codeData = new OAuth2Code(UUID.randomUUID().toString(),
+            OAuth2Code codeData = new OAuth2Code(UUID.randomUUID(),
                     Time.currentTime() + userSession.getRealm().getAccessCodeLifespan(),
                     nonce,
                     authSession.getClientNote(OAuth2Constants.SCOPE),
@@ -357,21 +350,28 @@ public class OIDCLoginProtocol implements LoginProtocol {
     }
 
     @Override
-    public Response finishBrowserLogout(UserSessionModel userSession, AuthenticationSessionModel logoutSession) {
+    public Response finishLogout(UserSessionModel userSession) {
+        String redirectUri = userSession.getNote(OIDCLoginProtocol.LOGOUT_REDIRECT_URI);
+        String state = userSession.getNote(OIDCLoginProtocol.LOGOUT_STATE_PARAM);
         event.event(EventType.LOGOUT);
-
-        String redirectUri = logoutSession.getAuthNote(OIDCLoginProtocol.LOGOUT_REDIRECT_URI);
         if (redirectUri != null) {
             event.detail(Details.REDIRECT_URI, redirectUri);
         }
         event.user(userSession.getUser()).session(userSession).success();
         FrontChannelLogoutHandler frontChannelLogoutHandler = FrontChannelLogoutHandler.current(session);
         if (frontChannelLogoutHandler != null) {
-            String finalRedirectUri = redirectUri == null ? null : LogoutUtil.getRedirectUriWithAttachedState(redirectUri, logoutSession).toString();
-            return frontChannelLogoutHandler.renderLogoutPage(finalRedirectUri);
+            return frontChannelLogoutHandler.renderLogoutPage(redirectUri);
         }
-
-        return LogoutUtil.sendResponseAfterLogoutFinished(session, logoutSession);
+        if (redirectUri != null) {
+            UriBuilder uriBuilder = UriBuilder.fromUri(redirectUri);
+            if (state != null)
+                uriBuilder.queryParam(STATE_PARAM, state);
+            return Response.status(302).location(uriBuilder.build()).build();
+        } else {
+            // TODO Empty content with ok makes no sense. Should it display a page? Or use noContent?
+            session.getProvider(SecurityHeadersProvider.class).options().allowEmptyContentType();
+            return Response.ok().build();
+        }
     }
 
 

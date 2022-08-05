@@ -31,6 +31,7 @@ import org.keycloak.testsuite.arquillian.annotation.EnableFeature;
 
 import java.util.Set;
 
+@EnableFeature(value = Profile.Feature.WEB_AUTHN, skipRestart = true, onlyForProduct = true)
 public class WebAuthnFeatureTest extends AbstractTestRealmKeycloakTest {
 
     @Override

@@ -31,7 +31,8 @@ public class Base64Url {
     public static byte[] decode(String s) {
         s = encodeBase64UrlToBase64(s);
         try {
-            return Base64.decode(s);
+            // KEYCLOAK-2479 : Avoid to try gzip decoding as for some objects, it may display exception to STDERR. And we know that object wasn't encoded as GZIP
+            return Base64.decode(s, Base64.DONT_GUNZIP);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

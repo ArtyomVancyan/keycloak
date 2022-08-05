@@ -18,50 +18,32 @@
 package org.keycloak.quarkus.runtime.configuration;
 
 import static io.smallrye.config.common.utils.StringUtil.replaceNonAlphanumericByUnderscores;
+import static org.keycloak.quarkus.runtime.configuration.Configuration.getMappedPropertyName;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import org.keycloak.quarkus.runtime.configuration.mappers.PropertyMapper;
-import org.keycloak.quarkus.runtime.configuration.mappers.PropertyMappers;
 
 import io.smallrye.config.EnvConfigSource;
 
 public class KcEnvConfigSource extends EnvConfigSource {
 
-    public KcEnvConfigSource() {
-        super(buildProperties(), 500);
-    }
-
     private static Map<String, String> buildProperties() {
         Map<String, String> properties = new HashMap<>();
-        String kcPrefix = replaceNonAlphanumericByUnderscores(MicroProfileConfigProvider.NS_KEYCLOAK_PREFIX.toUpperCase());
 
         for (Map.Entry<String, String> entry : System.getenv().entrySet()) {
             String key = entry.getKey();
-            String value = entry.getValue();
-
-            if (key.startsWith(kcPrefix)) {
-                properties.put(key, value);
-
-                PropertyMapper mapper = PropertyMappers.getMapper(key);
-
-                if (mapper != null) {
-                    String to = mapper.getTo();
-
-                    if (to != null) {
-                        properties.put(to, value);
-                    }
-
-                    properties.put(mapper.getFrom(), value);
-                }
+            if (key.startsWith(replaceNonAlphanumericByUnderscores(MicroProfileConfigProvider.NS_KEYCLOAK_PREFIX.toUpperCase()))) {
+                properties.put(getMappedPropertyName(key), entry.getValue());
             }
         }
 
         return properties;
     }
 
-    @Override
+    public KcEnvConfigSource() {
+        super(buildProperties(), 350);
+    }
+
     public String getName() {
         return "KcEnvVarConfigSource";
     }

@@ -4,7 +4,6 @@ import org.jboss.logging.Logger;
 import org.keycloak.common.util.reflections.Types;
 import org.keycloak.component.ComponentModel;
 import org.keycloak.models.KeycloakSession;
-import org.keycloak.models.LegacyRealmModel;
 import org.keycloak.models.ModelException;
 import org.keycloak.models.RealmModel;
 import org.keycloak.storage.UserStorageProvider;
@@ -21,6 +20,10 @@ public class UserStorageProvidersTestUtils {
     public static boolean isStorageProviderEnabled(RealmModel realm, String providerId) {
         UserStorageProviderModel model = getStorageProviderModel(realm, providerId);
         return model.isEnabled();
+    }
+
+    public static Stream<UserStorageProviderModel> getStorageProviders(RealmModel realm) {
+        return realm.getUserStorageProvidersStream();
     }
 
     private static UserStorageProviderFactory getUserStorageProviderFactory(UserStorageProviderModel model, KeycloakSession session) {
@@ -47,7 +50,7 @@ public class UserStorageProvidersTestUtils {
     }
 
     public static <T> Stream<UserStorageProviderModel> getStorageProviders(RealmModel realm, KeycloakSession session, Class<T> type) {
-        return ((LegacyRealmModel) realm).getUserStorageProvidersStream()
+        return realm.getUserStorageProvidersStream()
                 .filter(model -> {
                     UserStorageProviderFactory factory = getUserStorageProviderFactory(model, session);
                     if (factory == null) {

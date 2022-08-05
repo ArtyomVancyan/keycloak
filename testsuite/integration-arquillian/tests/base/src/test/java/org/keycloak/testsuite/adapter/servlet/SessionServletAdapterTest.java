@@ -30,15 +30,12 @@ import org.keycloak.protocol.oidc.OIDCLoginProtocolService;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
-import org.keycloak.testsuite.Assert;
 import org.keycloak.testsuite.adapter.AbstractServletsAdapterTest;
 import org.keycloak.testsuite.adapter.page.SessionPortal;
 import org.keycloak.testsuite.arquillian.annotation.DisableFeature;
 import org.keycloak.testsuite.auth.page.account.Sessions;
 import org.keycloak.testsuite.auth.page.login.Login;
 import org.keycloak.testsuite.arquillian.annotation.AppServerContainer;
-import org.keycloak.testsuite.pages.InfoPage;
-import org.keycloak.testsuite.pages.LogoutConfirmPage;
 import org.keycloak.testsuite.utils.arquillian.ContainerConstants;
 import org.keycloak.testsuite.util.SecondBrowser;
 import org.openqa.selenium.By;
@@ -49,7 +46,6 @@ import static org.junit.Assert.*;
 import static org.keycloak.testsuite.auth.page.AuthRealm.DEMO;
 import static org.keycloak.testsuite.util.URLAssert.assertCurrentUrlEquals;
 import static org.keycloak.testsuite.util.URLAssert.assertCurrentUrlStartsWithLoginUrlOf;
-import static org.keycloak.testsuite.util.WaitUtils.waitForPageToLoad;
 
 /**
  *
@@ -57,9 +53,11 @@ import static org.keycloak.testsuite.util.WaitUtils.waitForPageToLoad;
  */
 @AppServerContainer(ContainerConstants.APP_SERVER_UNDERTOW)
 @AppServerContainer(ContainerConstants.APP_SERVER_WILDFLY)
+@AppServerContainer(ContainerConstants.APP_SERVER_WILDFLY_DEPRECATED)
 @AppServerContainer(ContainerConstants.APP_SERVER_EAP)
 @AppServerContainer(ContainerConstants.APP_SERVER_EAP6)
 @AppServerContainer(ContainerConstants.APP_SERVER_EAP71)
+@AppServerContainer(ContainerConstants.APP_SERVER_TOMCAT7)
 @AppServerContainer(ContainerConstants.APP_SERVER_TOMCAT8)
 @AppServerContainer(ContainerConstants.APP_SERVER_TOMCAT9)
 public class SessionServletAdapterTest extends AbstractServletsAdapterTest {
@@ -69,12 +67,6 @@ public class SessionServletAdapterTest extends AbstractServletsAdapterTest {
 
     @Page
     private Sessions testRealmSessions;
-
-    @Page
-    protected LogoutConfirmPage logoutConfirmPage;
-
-    @Page
-    protected InfoPage infoPage;
 
     @Override
     public void setDefaultPageUriParameters() {
@@ -119,13 +111,9 @@ public class SessionServletAdapterTest extends AbstractServletsAdapterTest {
 
         // Logout in browser1
         String logoutUri = OIDCLoginProtocolService.logoutUrl(authServerPage.createUriBuilder())
-                .build("demo").toString();
+                .queryParam(OAuth2Constants.REDIRECT_URI, sessionPortalPage.toString()).build("demo").toString();
         driver.navigate().to(logoutUri);
-
-        logoutConfirmPage.assertCurrent();
-        logoutConfirmPage.confirmLogout();
-        waitForPageToLoad();
-        infoPage.assertCurrent();
+        assertCurrentUrlStartsWithLoginUrlOf(testRealmPage);
 
         // Assert that I am logged out in browser1
         sessionPortalPage.navigateTo();
@@ -137,10 +125,9 @@ public class SessionServletAdapterTest extends AbstractServletsAdapterTest {
         pageSource = driver2.getPageSource();
         assertThat(pageSource, containsString("Counter=3"));
 
-        // Logout in driver2
         driver2.navigate().to(logoutUri);
-        driver2.findElement(By.cssSelector("input[type=\"submit\"]")).click();
-        Assert.assertEquals("You are logged out", driver2.findElement(By.className("instruction")).getText());
+        assertCurrentUrlStartsWithLoginUrlOf(testRealmPage, driver2);
+
     }
 
     //KEYCLOAK-741
@@ -164,12 +151,8 @@ public class SessionServletAdapterTest extends AbstractServletsAdapterTest {
 
         // Logout
         String logoutUri = OIDCLoginProtocolService.logoutUrl(authServerPage.createUriBuilder())
-                .build("demo").toString();
+                .queryParam(OAuth2Constants.REDIRECT_URI, sessionPortalPage.toString()).build("demo").toString();
         driver.navigate().to(logoutUri);
-        logoutConfirmPage.assertCurrent();
-        logoutConfirmPage.confirmLogout();
-        waitForPageToLoad();
-        infoPage.assertCurrent();
 
         // Assert that http session was invalidated
         sessionPortalPage.navigateTo();
@@ -200,12 +183,8 @@ public class SessionServletAdapterTest extends AbstractServletsAdapterTest {
         String pageSource = driver.getPageSource();
         assertTrue(pageSource.contains("Counter=3"));
         String logoutUri = OIDCLoginProtocolService.logoutUrl(authServerPage.createUriBuilder())
-                .build("demo").toString();
+                .queryParam(OAuth2Constants.REDIRECT_URI, sessionPortalPage.toString()).build("demo").toString();
         driver.navigate().to(logoutUri);
-        logoutConfirmPage.assertCurrent();
-        logoutConfirmPage.confirmLogout();
-        waitForPageToLoad();
-        infoPage.assertCurrent();
     }
 
     //KEYCLOAK-1216

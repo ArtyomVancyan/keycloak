@@ -16,16 +16,13 @@
  */
 package org.keycloak.models.map.storage.chm;
 
-import org.keycloak.models.map.common.ExpirableEntity;
-import org.keycloak.models.map.common.ExpirationUtils;
-import org.keycloak.models.map.common.StringKeyConverter;
+import org.keycloak.models.map.common.StringKeyConvertor;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.map.storage.MapKeycloakTransaction;
 import org.keycloak.models.map.common.AbstractEntity;
 import org.keycloak.models.map.common.DeepCloner;
 import org.keycloak.models.map.common.UpdatableEntity;
 import org.keycloak.models.map.storage.MapStorage;
-import org.keycloak.models.map.storage.ModelEntityUtil;
 import org.keycloak.models.map.storage.QueryParameters;
 import org.keycloak.models.map.storage.criteria.DefaultModelCriteria;
 import org.keycloak.storage.SearchableModelField;
@@ -41,7 +38,6 @@ import org.keycloak.models.map.storage.chm.MapModelCriteriaBuilder.UpdatePredica
 import java.util.Objects;
 import java.util.function.Predicate;
 
-import static org.keycloak.models.map.common.ExpirationUtils.isExpired;
 import static org.keycloak.utils.StreamsUtil.paginatedStream;
 
 /**
@@ -58,24 +54,22 @@ public class ConcurrentHashMapStorage<K, V extends AbstractEntity & UpdatableEnt
     protected final ConcurrentMap<K, V> store = new ConcurrentHashMap<>();
 
     protected final Map<SearchableModelField<? super M>, UpdatePredicatesFunc<K, V, M>> fieldPredicates;
-    protected final StringKeyConverter<K> keyConverter;
+    protected final StringKeyConvertor<K> keyConvertor;
     protected final DeepCloner cloner;
-    private final boolean isExpirableEntity;
 
     @SuppressWarnings("unchecked")
-    public ConcurrentHashMapStorage(Class<M> modelClass, StringKeyConverter<K> keyConverter, DeepCloner cloner) {
+    public ConcurrentHashMapStorage(Class<M> modelClass, StringKeyConvertor<K> keyConvertor, DeepCloner cloner) {
         this.fieldPredicates = MapFieldPredicates.getPredicates(modelClass);
-        this.keyConverter = keyConverter;
+        this.keyConvertor = keyConvertor;
         this.cloner = cloner;
-        this.isExpirableEntity = ExpirableEntity.class.isAssignableFrom(ModelEntityUtil.getEntityType(modelClass));
     }
 
     @Override
     public V create(V value) {
-        K key = keyConverter.fromStringSafe(value.getId());
+        K key = keyConvertor.fromStringSafe(value.getId());
         if (key == null) {
-            key = keyConverter.yieldNewUniqueKey();
-            value = cloner.from(keyConverter.keyToString(key), value);
+            key = keyConvertor.yieldNewUniqueKey();
+            value = cloner.from(keyConvertor.keyToString(key), value);
         }
         store.putIfAbsent(key, value);
         return value;
@@ -84,22 +78,19 @@ public class ConcurrentHashMapStorage<K, V extends AbstractEntity & UpdatableEnt
     @Override
     public V read(String key) {
         Objects.requireNonNull(key, "Key must be non-null");
-        K k = keyConverter.fromStringSafe(key);
-
-        V v = store.get(k);
-        if (v == null) return null;
-        return isExpirableEntity && isExpired((ExpirableEntity) v, true) ? null : v;
+        K k = keyConvertor.fromStringSafe(key);
+        return store.get(k);
     }
 
     @Override
     public V update(V value) {
-        K key = getKeyConverter().fromStringSafe(value.getId());
+        K key = getKeyConvertor().fromStringSafe(value.getId());
         return store.replace(key, value);
     }
 
     @Override
     public boolean delete(String key) {
-        K k = getKeyConverter().fromStringSafe(key);
+        K k = getKeyConvertor().fromStringSafe(key);
         return store.remove(k) != null;
     }
 
@@ -138,20 +129,15 @@ public class ConcurrentHashMapStorage<K, V extends AbstractEntity & UpdatableEnt
     @SuppressWarnings("unchecked")
     public MapKeycloakTransaction<V, M> createTransaction(KeycloakSession session) {
         MapKeycloakTransaction<V, M> sessionTransaction = session.getAttribute("map-transaction-" + hashCode(), MapKeycloakTransaction.class);
-
-        if (sessionTransaction == null) {
-            sessionTransaction = new ConcurrentHashMapKeycloakTransaction<>(this, keyConverter, cloner, fieldPredicates);
-            session.setAttribute("map-transaction-" + hashCode(), sessionTransaction);
-        }
-        return sessionTransaction;
+        return sessionTransaction == null ? new ConcurrentHashMapKeycloakTransaction<>(this, keyConvertor, cloner, fieldPredicates) : sessionTransaction;
     }
 
     public MapModelCriteriaBuilder<K, V, M> createCriteriaBuilder() {
-        return new MapModelCriteriaBuilder<>(keyConverter, fieldPredicates);
+        return new MapModelCriteriaBuilder<>(keyConvertor, fieldPredicates);
     }
 
-    public StringKeyConverter<K> getKeyConverter() {
-        return keyConverter;
+    public StringKeyConvertor<K> getKeyConvertor() {
+        return keyConvertor;
     }
 
     @Override
@@ -166,14 +152,7 @@ public class ConcurrentHashMapStorage<K, V extends AbstractEntity & UpdatableEnt
         Stream<Entry<K, V>> stream = store.entrySet().stream();
 
         Predicate<? super K> keyFilter = mcb.getKeyFilter();
-        Predicate<? super V> entityFilter;
-
-        if (isExpirableEntity) {
-            entityFilter = mcb.getEntityFilter().and(ExpirationUtils::isNotExpired);
-        } else {
-            entityFilter = mcb.getEntityFilter();
-        }
-
+        Predicate<? super V> entityFilter = mcb.getEntityFilter();
         Stream<V> valueStream = stream.filter(me -> keyFilter.test(me.getKey()) && entityFilter.test(me.getValue()))
                 .map(Map.Entry::getValue);
 

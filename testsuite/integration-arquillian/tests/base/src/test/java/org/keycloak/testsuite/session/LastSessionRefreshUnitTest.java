@@ -20,9 +20,7 @@ package org.keycloak.testsuite.session;
 import org.infinispan.Cache;
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import org.keycloak.common.Profile;
 import org.keycloak.common.util.Retry;
 import org.keycloak.common.util.Time;
 import org.keycloak.connections.infinispan.InfinispanConnectionProvider;
@@ -34,7 +32,6 @@ import org.keycloak.models.sessions.infinispan.changes.sessions.SessionData;
 import org.keycloak.models.sessions.infinispan.entities.UserSessionEntity;
 import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.testsuite.AbstractKeycloakTest;
-import org.keycloak.testsuite.ProfileAssume;
 import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude;
 import org.keycloak.testsuite.arquillian.annotation.AuthServerContainerExclude.AuthServer;
 import org.keycloak.testsuite.runonserver.RunOnServer;
@@ -55,10 +52,6 @@ public class LastSessionRefreshUnitTest extends AbstractKeycloakTest {
 
     }
 
-    @BeforeClass
-    public static void checkNotMapStorage() {
-        ProfileAssume.assumeFeatureDisabled(Profile.Feature.MAP_STORAGE);
-    }
 
     @After
     public void cleanupPeriodicTask() {
@@ -125,38 +118,37 @@ public class LastSessionRefreshUnitTest extends AbstractKeycloakTest {
 
         @Override
         public void run(KeycloakSession session) {
+            // Long timer interval. No message due the timer wasn't executed
+            CrossDCLastSessionRefreshStore customStore1 = createStoreInstance(session, 100000, 10);
+            Time.setOffset(100);
+
             try {
-                // Long timer interval. No message due the timer wasn't executed
-                CrossDCLastSessionRefreshStore customStore1 = createStoreInstance(session, 100000, 10);
-                Time.setOffset(100);
-
-                try {
-                    Thread.sleep(50);
-                } catch (InterruptedException ie) {
-                    throw new RuntimeException();
-                }
-                Assert.assertEquals(0, counter.get());
-
-                // Short timer interval 10 ms. 1 message due the interval is executed and lastRun was in the past due to Time.setOffset
-                CrossDCLastSessionRefreshStore customStore2 = createStoreInstance(session, 10, 10);
-                Time.setOffset(200);
-
-                Retry.execute(() -> {
-                    Assert.assertEquals(1, counter.get());
-                }, 100, 10);
-
-                Assert.assertEquals(1, counter.get());
-
-                // Another sleep won't send message. lastRun was updated
-                try {
-                    Thread.sleep(50);
-                } catch (InterruptedException ie) {
-                    throw new RuntimeException();
-                }
-                Assert.assertEquals(1, counter.get());
-            } finally {
-                Time.setOffset(0);
+                Thread.sleep(50);
+            } catch (InterruptedException ie) {
+                throw new RuntimeException();
             }
+            Assert.assertEquals(0, counter.get());
+
+            // Short timer interval 10 ms. 1 message due the interval is executed and lastRun was in the past due to Time.setOffset
+            CrossDCLastSessionRefreshStore customStore2 = createStoreInstance(session, 10, 10);
+            Time.setOffset(200);
+
+            Retry.execute(() -> {
+                Assert.assertEquals(1, counter.get());
+            }, 100, 10);
+
+            Assert.assertEquals(1, counter.get());
+
+            // Another sleep won't send message. lastRun was updated
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException ie) {
+                throw new RuntimeException();
+            }
+            Assert.assertEquals(1, counter.get());
+
+
+            Time.setOffset(0);
         }
 
     }

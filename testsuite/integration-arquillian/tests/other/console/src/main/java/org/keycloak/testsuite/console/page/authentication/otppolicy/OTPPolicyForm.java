@@ -44,9 +44,6 @@ public class OTPPolicyForm extends Form {
     
     @FindBy(id = "lookAhead")
     private WebElement lookAhead;
-
-    @FindBy(id = "lookAround")
-    private WebElement lookAround;
     
     @FindBy(id = "period")
     private WebElement period;
@@ -54,18 +51,18 @@ public class OTPPolicyForm extends Form {
     @FindBy(id = "counter")
     private WebElement counter;
     
-    public void setValues(OTPType otpType, OTPHashAlg otpHashAlg, Digits digits, String lookAheadOrAround, String periodOrCounter) {
+    public void setValues(OTPType otpType, OTPHashAlg otpHashAlg, Digits digits, String lookAhead, String periodOrCounter) {
         this.otpType.selectByValue(otpType.getName());
         this.otpHashAlg.selectByValue(otpHashAlg.getName());
         this.digits.selectByVisibleText("" + digits.getName());
+
+        UIUtils.setTextInputValue(this.lookAhead, lookAhead);
         
         switch (otpType) {
             case TIME_BASED:
-                UIUtils.setTextInputValue(this.lookAround, lookAheadOrAround);
                 UIUtils.setTextInputValue(period, periodOrCounter);
                 break;
             case COUNTER_BASED:
-                UIUtils.setTextInputValue(this.lookAhead, lookAheadOrAround);
                 UIUtils.setTextInputValue(counter, periodOrCounter);
                 break;
         }
