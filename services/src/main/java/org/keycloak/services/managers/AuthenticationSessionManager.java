@@ -142,12 +142,23 @@ public class AuthenticationSessionManager {
         UriInfo uriInfo = session.getContext().getUri();
         String cookiePath = AuthenticationManager.getRealmCookiePath(realm, uriInfo);
 
+        String sessionIdCookie = AUTH_SESSION_ID;
+
+        if (session.getContext().getClient() != null) {
+            String clientId = session.getContext().getClient().getClientId().toUpperCase().replaceAll("-", "_");
+            sessionIdCookie = String.join("_", AUTH_SESSION_ID, clientId);
+        }
+
         boolean sslRequired = realm.getSslRequired().isRequired(session.getContext().getConnection());
 
         StickySessionEncoderProvider encoder = session.getProvider(StickySessionEncoderProvider.class);
         String encodedAuthSessionId = encoder.encodeSessionId(authSessionId);
 
-        CookieHelper.addCookie(AUTH_SESSION_ID, encodedAuthSessionId, cookiePath, null, null, -1, sslRequired, true, SameSiteAttributeValue.NONE);
+        CookieHelper.addCookie(sessionIdCookie, encodedAuthSessionId, cookiePath, null, null, -1, sslRequired, true, SameSiteAttributeValue.NONE);
+
+        if (session.getContext().getClient() == null) {
+            CookieHelper.addCookie(sessionIdCookie, "", cookiePath, null, "Expiring cookie", 0, sslRequired, true, SameSiteAttributeValue.NONE);
+        }
 
         log.debugf("Set AUTH_SESSION_ID cookie with value %s", encodedAuthSessionId);
     }
@@ -182,7 +193,14 @@ public class AuthenticationSessionManager {
      * @return list of the values of AUTH_SESSION_ID cookies. It is assumed that values could be encoded with route added (EG. "5e161e00-d426-4ea6-98e9-52eb9844e2d7.node1" )
      */
     List<String> getAuthSessionCookies(RealmModel realm) {
-        Set<String> cookiesVal = CookieHelper.getCookieValue(AUTH_SESSION_ID);
+        String sessionIdCookie = AUTH_SESSION_ID;
+
+        if (session.getContext().getClient() != null) {
+            String clientId = session.getContext().getClient().getClientId().toUpperCase().replaceAll("-", "_");
+            sessionIdCookie = String.join("_", AUTH_SESSION_ID, clientId);
+        }
+
+        Set<String> cookiesVal = CookieHelper.getCookieValue(sessionIdCookie);
 
         if (cookiesVal.size() > 1) {
             AuthenticationManager.expireOldAuthSessionCookie(realm, session.getContext().getUri(), session.getContext().getConnection());

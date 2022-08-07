@@ -53,6 +53,7 @@ import org.keycloak.services.managers.UserSessionManager;
 import org.keycloak.services.messages.Messages;
 import org.keycloak.services.resources.Cors;
 import org.keycloak.services.util.MtlsHoKTokenUtil;
+import org.keycloak.url.utils.URLParser;
 import org.keycloak.util.TokenUtil;
 
 import javax.ws.rs.Consumes;
@@ -129,6 +130,11 @@ public class LogoutEndpoint {
                            @QueryParam("initiating_idp") String initiatingIdp) {
         String redirect = postLogoutRedirectUri != null ? postLogoutRedirectUri : redirectUri;
         IDToken idToken = null;
+
+        URLParser parser = new URLParser(redirect);
+        String clientId = parser.get(OIDCLoginProtocol.CLIENT_ID_PARAM);
+        redirect = parser.remove(OIDCLoginProtocol.CLIENT_ID_PARAM);
+
         if (encodedIdToken != null) {
             try {
                 idToken = tokenManager.verifyIDTokenSignature(session, encodedIdToken);
@@ -173,7 +179,7 @@ public class LogoutEndpoint {
         }
 
         // authenticate identity cookie, but ignore an access token timeout as we're logging out anyways.
-        AuthenticationManager.AuthResult authResult = AuthenticationManager.authenticateIdentityCookie(session, realm, false);
+        AuthenticationManager.AuthResult authResult = AuthenticationManager.authenticateIdentityCookie(session, realm, false, clientId);
         if (authResult != null) {
             userSession = userSession != null ? userSession : authResult.getSession();
             return initiateBrowserLogout(userSession, redirect, state, initiatingIdp);

@@ -21,7 +21,7 @@
     var init;
 
     function checkState(clientId, origin, sessionState, callback) {
-        var cookie = getCookie();
+        var cookie = getCookie(clientId);
 
         var checkCookie = function() {
             if (clientId === init.clientId && origin === init.origin) {
@@ -79,11 +79,11 @@
         }
     }
 
-    function getCookie()
+    function getCookie(clientId)
     {
-        var cookie = getCookieByName('KEYCLOAK_SESSION');
+        var cookie = getCookieByName('KEYCLOAK_SESSION_' + clientId.toUpperCase().replaceAll("-", "_"));
         if (cookie === null) {
-            return getCookieByName('KEYCLOAK_SESSION_LEGACY');
+            return getCookieByName('KEYCLOAK_SESSION_' + clientId.toUpperCase().replaceAll("-", "_") + '_LEGACY');
         }
         return cookie;
     }
